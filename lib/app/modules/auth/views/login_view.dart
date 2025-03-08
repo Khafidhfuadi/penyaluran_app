@@ -110,18 +110,6 @@ class LoginView extends GetView<AuthController> {
                               ),
                       )),
                   const SizedBox(height: 20),
-
-                  // Register Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Belum punya akun?'),
-                      TextButton(
-                        onPressed: () => Get.toNamed(Routes.register),
-                        child: const Text('Daftar'),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),

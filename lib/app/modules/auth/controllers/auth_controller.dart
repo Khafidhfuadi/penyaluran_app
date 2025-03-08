@@ -23,7 +23,6 @@ class AuthController extends GetxController {
 
   // Form keys
   final GlobalKey<FormState> loginFormKey = GlobalKey<FormState>();
-  final GlobalKey<FormState> registerFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> wargaProfileFormKey = GlobalKey<FormState>();
 
   @override
@@ -123,7 +122,6 @@ class AuthController extends GetxController {
 
       // Reset form state jika ada
       loginFormKey.currentState?.reset();
-      registerFormKey.currentState?.reset();
       wargaProfileFormKey.currentState?.reset();
     } catch (e) {
       print('Error clearing form dependencies: $e');
@@ -173,97 +171,14 @@ class AuthController extends GetxController {
         _user.value = user;
         clearControllers();
 
-        // Periksa apakah profil warga sudah lengkap
-        await checkWargaProfileStatus();
-
         // Arahkan ke dashboard sesuai peran
         navigateBasedOnRole(user.role);
-
-        // Tampilkan notifikasi jika profil belum lengkap untuk warga
-        if (user.role == 'WARGA' && !isWargaProfileComplete.value) {
-          Get.snackbar(
-            'Informasi',
-            'Profil Anda belum lengkap. Silakan lengkapi profil Anda melalui menu Profil',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.blue,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 5),
-          );
-        } else {
-          Get.snackbar(
-            'Berhasil',
-            'Login berhasil',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-          );
-        }
       }
     } catch (e) {
       print('Error login: $e');
       Get.snackbar(
         'Error',
         'Login gagal: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  // Metode untuk register
-  Future<void> register() async {
-    if (!registerFormKey.currentState!.validate()) return;
-
-    // Simpan nilai dari controller sebelum melakukan operasi asinkron
-    final email = emailController.text.trim();
-    final password = passwordController.text;
-    final confirmPassword = confirmPasswordController.text;
-
-    if (password != confirmPassword) {
-      Get.snackbar(
-        'Error',
-        'Password dan konfirmasi password tidak sama',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    try {
-      isLoading.value = true;
-      final user = await _authProvider.signUp(
-        email,
-        password,
-      );
-
-      if (user != null) {
-        _user.value = user;
-        clearControllers();
-
-        // Periksa status profil
-        await checkWargaProfileStatus();
-
-        // Arahkan ke dashboard sesuai peran
-        navigateBasedOnRole(user.role);
-
-        // Tampilkan notifikasi untuk melengkapi profil
-        Get.snackbar(
-          'Berhasil',
-          'Registrasi berhasil. Silakan lengkapi profil Anda melalui menu Profil',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 5),
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Registrasi gagal: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -347,36 +262,6 @@ class AuthController extends GetxController {
       print('Error validating confirm password: $e');
       return 'Terjadi kesalahan saat validasi';
     }
-  }
-
-  // Validasi NIK
-  String? validateNIK(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'NIK tidak boleh kosong';
-    }
-    if (value.length != 16) {
-      return 'NIK harus 16 digit';
-    }
-    if (!GetUtils.isNumericOnly(value)) {
-      return 'NIK harus berupa angka';
-    }
-    return null;
-  }
-
-  // Validasi nama lengkap
-  String? validateNamaLengkap(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Nama lengkap tidak boleh kosong';
-    }
-    return null;
-  }
-
-  // Validasi jenis kelamin
-  String? validateJenisKelamin(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Jenis kelamin tidak boleh kosong';
-    }
-    return null;
   }
 
   // Mendapatkan rute target berdasarkan peran

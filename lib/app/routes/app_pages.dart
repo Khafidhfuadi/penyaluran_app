@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/auth/views/login_view.dart';
-import 'package:penyaluran_app/app/modules/auth/views/register_view.dart';
 import 'package:penyaluran_app/app/modules/home/views/home_view.dart';
 import 'package:penyaluran_app/app/modules/dashboard/views/warga_dashboard_view.dart';
 import 'package:penyaluran_app/app/modules/dashboard/views/petugas_verifikasi_dashboard_view.dart';
@@ -26,11 +25,6 @@ class AppPages {
     GetPage(
       name: _Paths.login,
       page: () => const LoginView(),
-      binding: AuthBinding(),
-    ),
-    GetPage(
-      name: _Paths.register,
-      page: () => const RegisterView(),
       binding: AuthBinding(),
     ),
     GetPage(
