@@ -10,6 +10,9 @@ class DashboardController extends GetxController {
   final RxBool isLoading = false.obs;
   final Rx<Map<String, dynamic>?> roleData = Rx<Map<String, dynamic>?>(null);
 
+  // Indeks kategori yang dipilih untuk filter
+  final RxInt selectedCategoryIndex = 0.obs;
+
   UserModel? get user => _authController.user;
   String get role => user?.role ?? 'WARGA';
 
