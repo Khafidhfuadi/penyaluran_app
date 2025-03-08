@@ -43,6 +43,13 @@ class PetugasDesaController extends GetxController {
   final RxDouble stokMasuk = 0.0.obs;
   final RxDouble stokKeluar = 0.0.obs;
 
+  // Data untuk penitipan
+  final RxList<Map<String, dynamic>> daftarPenitipan =
+      <Map<String, dynamic>>[].obs;
+  final RxInt jumlahMenunggu = 0.obs;
+  final RxInt jumlahTerverifikasi = 0.obs;
+  final RxInt jumlahDitolak = 0.obs;
+
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
 
@@ -58,6 +65,7 @@ class PetugasDesaController extends GetxController {
     loadJadwalData();
     loadNotifikasiData();
     loadInventarisData();
+    loadPenitipanData();
   }
 
   @override
@@ -281,6 +289,65 @@ class PetugasDesaController extends GetxController {
     }
   }
 
+  Future<void> loadPenitipanData() async {
+    try {
+      // Simulasi data untuk penitipan
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      daftarPenitipan.value = [
+        {
+          'id': '1',
+          'donatur': 'PT Sejahtera Abadi',
+          'jenis_bantuan': 'Sembako',
+          'jumlah': '500 kg',
+          'tanggal_pengajuan': '15 April 2023',
+          'status': 'Menunggu',
+        },
+        {
+          'id': '2',
+          'donatur': 'Yayasan Peduli Sesama',
+          'jenis_bantuan': 'Pakaian',
+          'jumlah': '200 pcs',
+          'tanggal_pengajuan': '14 April 2023',
+          'status': 'Terverifikasi',
+        },
+        {
+          'id': '3',
+          'donatur': 'Bank BRI',
+          'jenis_bantuan': 'Beras',
+          'jumlah': '300 kg',
+          'tanggal_pengajuan': '13 April 2023',
+          'status': 'Terverifikasi',
+        },
+        {
+          'id': '4',
+          'donatur': 'Komunitas Peduli',
+          'jenis_bantuan': 'Alat Tulis',
+          'jumlah': '100 set',
+          'tanggal_pengajuan': '12 April 2023',
+          'status': 'Ditolak',
+        },
+      ];
+
+      // Hitung jumlah penitipan berdasarkan status
+      jumlahMenunggu.value =
+          daftarPenitipan.where((p) => p['status'] == 'Menunggu').length;
+      jumlahTerverifikasi.value =
+          daftarPenitipan.where((p) => p['status'] == 'Terverifikasi').length;
+      jumlahDitolak.value =
+          daftarPenitipan.where((p) => p['status'] == 'Ditolak').length;
+
+      // Di implementasi nyata, data akan diambil dari Supabase
+      // final result = await _supabaseService.getPenitipanData();
+      // daftarPenitipan.value = result ?? [];
+      // jumlahMenunggu.value = daftarPenitipan.where((p) => p['status'] == 'Menunggu').length;
+      // jumlahTerverifikasi.value = daftarPenitipan.where((p) => p['status'] == 'Terverifikasi').length;
+      // jumlahDitolak.value = daftarPenitipan.where((p) => p['status'] == 'Ditolak').length;
+    } catch (e) {
+      print('Error loading penitipan data: $e');
+    }
+  }
+
   void tandaiNotifikasiDibaca(String id) {
     // Implementasi untuk menandai notifikasi sebagai dibaca
     // Di implementasi nyata, akan memanggil Supabase untuk memperbarui status notifikasi
@@ -306,6 +373,25 @@ class PetugasDesaController extends GetxController {
 
     // Perbarui data lokal
     loadInventarisData();
+  }
+
+  void terimaPermohonanPenitipan(String id) {
+    // Implementasi untuk menerima permohonan penitipan
+    // Di implementasi nyata, akan memanggil Supabase untuk memperbarui status penitipan
+    // await _supabaseService.acceptDeposit(id);
+
+    // Perbarui data lokal
+    loadPenitipanData();
+    loadInventarisData(); // Perbarui inventaris karena ada penambahan stok
+  }
+
+  void tolakPermohonanPenitipan(String id) {
+    // Implementasi untuk menolak permohonan penitipan
+    // Di implementasi nyata, akan memanggil Supabase untuk memperbarui status penitipan
+    // await _supabaseService.rejectDeposit(id);
+
+    // Perbarui data lokal
+    loadPenitipanData();
   }
 
   void logout() {

@@ -5,6 +5,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/dashboard_view.dar
 import 'package:penyaluran_app/app/modules/petugas_desa/views/jadwal_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/notifikasi_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/inventaris_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/penitipan_view.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class PetugasDesaView extends GetView<PetugasDesaController> {
@@ -24,9 +25,9 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
             case 1:
               return const Text('Jadwal Penyaluran');
             case 2:
-              return const Text('Notifikasi');
-            case 3:
               return const Text('Inventaris');
+            case 3:
+              return const Text('Penitipan');
             default:
               return const Text('Petugas Desa');
           }
@@ -49,7 +50,13 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                 IconButton(
                   icon: const Icon(Icons.notifications_outlined),
                   onPressed: () {
-                    controller.changeTab(2); // Pindah ke tab notifikasi
+                    // Navigasi ke halaman notifikasi
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NotifikasiView(),
+                      ),
+                    );
                   },
                 ),
                 if (controller.jumlahNotifikasiBelumDibaca.value > 0)
@@ -95,14 +102,6 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                 ],
               );
             } else if (activeTab == 2) {
-              return IconButton(
-                icon: const Icon(Icons.check_circle_outline),
-                tooltip: 'Tandai Semua Dibaca',
-                onPressed: () {
-                  // Implementasi untuk menandai semua notifikasi sebagai dibaca
-                },
-              );
-            } else if (activeTab == 3) {
               return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -130,9 +129,9 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
           case 1:
             return const JadwalView();
           case 2:
-            return const NotifikasiView();
-          case 3:
             return const InventarisView();
+          case 3:
+            return const PenitipanView();
           default:
             return const DashboardView();
         }
@@ -182,26 +181,76 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               ],
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.dashboard_outlined),
-            title: const Text('Dashboard'),
-            selected: controller.activeTabIndex.value == 0,
-            selectedColor: AppTheme.primaryColor,
-            onTap: () {
-              controller.changeTab(0);
-              Get.back();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.calendar_today_outlined),
-            title: const Text('Jadwal Penyaluran'),
-            selected: controller.activeTabIndex.value == 1,
-            selectedColor: AppTheme.primaryColor,
-            onTap: () {
-              controller.changeTab(1);
-              Get.back();
-            },
-          ),
+          Obx(() => ListTile(
+                leading: const Icon(Icons.dashboard_outlined),
+                title: const Text('Dashboard'),
+                selected: controller.activeTabIndex.value == 0,
+                selectedColor: AppTheme.primaryColor,
+                onTap: () {
+                  controller.changeTab(0);
+                  Navigator.pop(context);
+                },
+              )),
+          Obx(() => ListTile(
+                leading: const Icon(Icons.calendar_today_outlined),
+                title: const Text('Jadwal Penyaluran'),
+                selected: controller.activeTabIndex.value == 1,
+                selectedColor: AppTheme.primaryColor,
+                onTap: () {
+                  controller.changeTab(1);
+                  Navigator.pop(context);
+                },
+              )),
+          Obx(() => ListTile(
+                leading: const Icon(Icons.inventory_2_outlined),
+                title: const Text('Inventaris'),
+                selected: controller.activeTabIndex.value == 2,
+                selectedColor: AppTheme.primaryColor,
+                onTap: () {
+                  controller.changeTab(2);
+                  Navigator.pop(context);
+                },
+              )),
+          Obx(() => ListTile(
+                leading: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(Icons.handshake_outlined),
+                    if (controller.jumlahMenunggu.value > 0)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 12,
+                            minHeight: 12,
+                          ),
+                          child: Text(
+                            controller.jumlahMenunggu.value.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                title: const Text('Penitipan'),
+                selected: controller.activeTabIndex.value == 3,
+                selectedColor: AppTheme.primaryColor,
+                onTap: () {
+                  controller.changeTab(3);
+                  Navigator.pop(context);
+                },
+              )),
+          const Divider(),
           ListTile(
             leading: Stack(
               alignment: Alignment.center,
@@ -234,30 +283,22 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               ],
             ),
             title: const Text('Notifikasi'),
-            selected: controller.activeTabIndex.value == 2,
-            selectedColor: AppTheme.primaryColor,
             onTap: () {
-              controller.changeTab(2);
-              Get.back();
+              Navigator.pop(context); // Tutup drawer terlebih dahulu
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotifikasiView(),
+                ),
+              );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.inventory_2_outlined),
-            title: const Text('Inventaris'),
-            selected: controller.activeTabIndex.value == 3,
-            selectedColor: AppTheme.primaryColor,
-            onTap: () {
-              controller.changeTab(3);
-              Get.back();
-            },
-          ),
-          const Divider(),
           ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Profil'),
             onTap: () {
               // Navigasi ke halaman profil
-              Get.back();
+              Navigator.pop(context);
             },
           ),
           ListTile(
@@ -265,14 +306,14 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
             title: const Text('Pengaturan'),
             onTap: () {
               // Navigasi ke halaman pengaturan
-              Get.back();
+              Navigator.pop(context);
             },
           ),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Keluar'),
             onTap: () {
-              Get.back();
+              Navigator.pop(context);
               controller.logout();
             },
           ),
@@ -288,26 +329,142 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
           type: BottomNavigationBarType.fixed,
           selectedItemColor: AppTheme.primaryColor,
           unselectedItemColor: Colors.grey,
-          items: const [
-            BottomNavigationBarItem(
+          items: [
+            const BottomNavigationBarItem(
               icon: Icon(Icons.dashboard_outlined),
               activeIcon: Icon(Icons.dashboard),
               label: 'Dashboard',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today_outlined),
-              activeIcon: Icon(Icons.calendar_today),
+              icon: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(Icons.calendar_today_outlined),
+                  if (controller.jadwalHariIni.isNotEmpty)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 12,
+                          minHeight: 12,
+                        ),
+                        child: Text(
+                          controller.jadwalHariIni.length.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              activeIcon: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(Icons.calendar_today),
+                  if (controller.jadwalHariIni.isNotEmpty)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 12,
+                          minHeight: 12,
+                        ),
+                        child: Text(
+                          controller.jadwalHariIni.length.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               label: 'Jadwal',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.notifications_outlined),
-              activeIcon: Icon(Icons.notifications),
-              label: 'Notifikasi',
-            ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.inventory_2_outlined),
               activeIcon: Icon(Icons.inventory_2),
               label: 'Inventaris',
+            ),
+            BottomNavigationBarItem(
+              icon: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(Icons.handshake_outlined),
+                  if (controller.jumlahMenunggu.value > 0)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 12,
+                          minHeight: 12,
+                        ),
+                        child: Text(
+                          controller.jumlahMenunggu.value.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              activeIcon: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(Icons.handshake),
+                  if (controller.jumlahMenunggu.value > 0)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 12,
+                          minHeight: 12,
+                        ),
+                        child: Text(
+                          controller.jumlahMenunggu.value.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              label: 'Penitipan',
             ),
           ],
         ));

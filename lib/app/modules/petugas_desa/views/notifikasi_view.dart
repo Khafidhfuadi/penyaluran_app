@@ -10,83 +10,116 @@ class NotifikasiView extends GetView<PetugasDesaController> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Notifikasi hari ini
-            _buildNotifikasiSection(
-              textTheme,
-              title: 'Hari Ini',
-              notifikasiList: [
-                {
-                  'judul': 'Jadwal Penyaluran Baru',
-                  'pesan':
-                      'Jadwal penyaluran beras telah ditambahkan untuk hari ini',
-                  'waktu': '08:30',
-                  'dibaca': false,
-                },
-                {
-                  'judul': 'Pengajuan Bantuan Baru',
-                  'pesan':
-                      'Ada 3 pengajuan bantuan baru yang perlu diverifikasi',
-                  'waktu': '10:15',
-                  'dibaca': false,
-                },
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Notifikasi kemarin
-            _buildNotifikasiSection(
-              textTheme,
-              title: 'Kemarin',
-              notifikasiList: [
-                {
-                  'judul': 'Laporan Penyaluran',
-                  'pesan':
-                      'Laporan penyaluran bantuan tanggal 14 April 2023 telah selesai',
-                  'waktu': '16:45',
-                  'dibaca': true,
-                },
-                {
-                  'judul': 'Pengaduan Warga',
-                  'pesan':
-                      'Ada pengaduan baru dari warga yang perlu ditindaklanjuti',
-                  'waktu': '14:20',
-                  'dibaca': true,
-                },
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Notifikasi minggu ini
-            _buildNotifikasiSection(
-              textTheme,
-              title: 'Minggu Ini',
-              notifikasiList: [
-                {
-                  'judul': 'Perubahan Jadwal',
-                  'pesan':
-                      'Jadwal penyaluran bantuan di Balai Desa A diubah menjadi tanggal 17 April 2023',
-                  'waktu': 'Sen, 13:00',
-                  'dibaca': true,
-                },
-                {
-                  'judul': 'Donasi Baru',
-                  'pesan':
-                      'PT Sejahtera telah mengirimkan donasi baru berupa sembako',
-                  'waktu': 'Sen, 09:30',
-                  'dibaca': true,
-                },
-              ],
-            ),
-          ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Notifikasi'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Get.back(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check_circle_outline),
+            tooltip: 'Tandai Semua Dibaca',
+            onPressed: () {
+              // Implementasi untuk menandai semua notifikasi sebagai dibaca
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Notifikasi hari ini
+              _buildNotifikasiSection(
+                textTheme,
+                title: 'Hari Ini',
+                notifikasiList: [
+                  {
+                    'judul': 'Jadwal Penyaluran Baru',
+                    'pesan':
+                        'Jadwal penyaluran beras telah ditambahkan untuk hari ini',
+                    'waktu': '08:30',
+                    'dibaca': false,
+                  },
+                  {
+                    'judul': 'Pengajuan Bantuan Baru',
+                    'pesan':
+                        'Ada 3 pengajuan bantuan baru yang perlu diverifikasi',
+                    'waktu': '10:15',
+                    'dibaca': false,
+                  },
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Notifikasi kemarin
+              _buildNotifikasiSection(
+                textTheme,
+                title: 'Kemarin',
+                notifikasiList: [
+                  {
+                    'judul': 'Laporan Penyaluran',
+                    'pesan':
+                        'Laporan penyaluran bantuan tanggal 14 April 2023 telah selesai',
+                    'waktu': '16:45',
+                    'dibaca': true,
+                  },
+                  {
+                    'judul': 'Pengaduan Warga',
+                    'pesan':
+                        'Ada pengaduan baru dari warga yang perlu ditindaklanjuti',
+                    'waktu': '14:20',
+                    'dibaca': true,
+                  },
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Notifikasi minggu ini
+              _buildNotifikasiSection(
+                textTheme,
+                title: 'Minggu Ini',
+                notifikasiList: [
+                  {
+                    'judul': 'Perubahan Jadwal',
+                    'pesan':
+                        'Jadwal penyaluran bantuan di Balai Desa A diubah menjadi tanggal 17 April 2023',
+                    'waktu': 'Sen, 13:00',
+                    'dibaca': true,
+                  },
+                  {
+                    'judul': 'Donasi Baru',
+                    'pesan':
+                        'PT Sejahtera telah mengirimkan donasi baru berupa sembako',
+                    'waktu': 'Sen, 09:30',
+                    'dibaca': true,
+                  },
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Implementasi untuk menandai semua notifikasi sebagai dibaca
+          Get.snackbar(
+            'Notifikasi',
+            'Semua notifikasi telah ditandai sebagai dibaca',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.primaryColor,
+            colorText: Colors.white,
+          );
+        },
+        backgroundColor: AppTheme.primaryColor,
+        child: const Icon(Icons.done_all),
+        tooltip: 'Tandai Semua Dibaca',
       ),
     );
   }
@@ -131,51 +164,66 @@ class NotifikasiView extends GetView<PetugasDesaController> {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!dibaca)
-              Container(
-                width: 10,
-                height: 10,
-                margin: const EdgeInsets.only(top: 5, right: 10),
-                decoration: const BoxDecoration(
-                  color: AppTheme.primaryColor,
-                  shape: BoxShape.circle,
+      child: InkWell(
+        onTap: () {
+          // Implementasi untuk menandai notifikasi sebagai dibaca
+          if (!dibaca) {
+            Get.snackbar(
+              'Notifikasi',
+              'Notifikasi ditandai sebagai dibaca',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: AppTheme.primaryColor,
+              colorText: Colors.white,
+            );
+          }
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!dibaca)
+                Container(
+                  width: 10,
+                  height: 10,
+                  margin: const EdgeInsets.only(top: 5, right: 10),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          notifikasi['judul'] ?? '',
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          notifikasi['waktu'] ?? '',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      notifikasi['pesan'] ?? '',
+                      style: textTheme.bodyMedium,
+                    ),
+                  ],
                 ),
               ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        notifikasi['judul'] ?? '',
-                        style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        notifikasi['waktu'] ?? '',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    notifikasi['pesan'] ?? '',
-                    style: textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

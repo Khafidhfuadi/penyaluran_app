@@ -16,6 +16,10 @@ class JadwalView extends GetView<PetugasDesaController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Ringkasan jadwal
+            _buildJadwalSummary(context),
+
+            const SizedBox(height: 20),
             // Jadwal hari ini
             _buildJadwalSection(
               textTheme,
@@ -81,6 +85,102 @@ class JadwalView extends GetView<PetugasDesaController> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildJadwalSummary(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Ringkasan Jadwal',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryItem(
+                  context,
+                  icon: Icons.pending_actions,
+                  title: 'Terjadwal',
+                  value: '5',
+                  color: Colors.blue,
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryItem(
+                  context,
+                  icon: Icons.event_available,
+                  title: 'Aktif',
+                  value: '1',
+                  color: Colors.green,
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryItem(
+                  context,
+                  icon: Icons.event_busy,
+                  title: 'Selesai',
+                  value: '12',
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.white,
+              ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 

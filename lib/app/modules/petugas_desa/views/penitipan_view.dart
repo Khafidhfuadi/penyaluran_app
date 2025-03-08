@@ -3,19 +3,21 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
-class InventarisView extends GetView<PetugasDesaController> {
-  const InventarisView({super.key});
+class PenitipanView extends GetView<PetugasDesaController> {
+  const PenitipanView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ringkasan inventaris
-            _buildInventarisSummary(context),
+            // Ringkasan penitipan
+            _buildPenitipanSummary(context),
 
             const SizedBox(height: 24),
 
@@ -24,15 +26,15 @@ class InventarisView extends GetView<PetugasDesaController> {
 
             const SizedBox(height: 20),
 
-            // Daftar inventaris
-            _buildInventarisList(context),
+            // Daftar penitipan
+            _buildPenitipanList(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInventarisSummary(BuildContext context) {
+  Widget _buildPenitipanSummary(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -44,7 +46,7 @@ class InventarisView extends GetView<PetugasDesaController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Ringkasan Inventaris',
+            'Ringkasan Penitipan',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -56,25 +58,28 @@ class InventarisView extends GetView<PetugasDesaController> {
               Expanded(
                 child: _buildSummaryItem(
                   context,
-                  icon: Icons.inventory_2_outlined,
-                  title: 'Total Stok',
-                  value: '1,250 kg',
+                  icon: Icons.pending_actions,
+                  title: 'Menunggu',
+                  value: '5',
+                  color: Colors.orange,
                 ),
               ),
               Expanded(
                 child: _buildSummaryItem(
                   context,
-                  icon: Icons.input,
-                  title: 'Masuk Bulan Ini',
-                  value: '500 kg',
+                  icon: Icons.check_circle,
+                  title: 'Terverifikasi',
+                  value: '12',
+                  color: Colors.green,
                 ),
               ),
               Expanded(
                 child: _buildSummaryItem(
                   context,
-                  icon: Icons.output,
-                  title: 'Keluar Bulan Ini',
-                  value: '350 kg',
+                  icon: Icons.cancel,
+                  title: 'Ditolak',
+                  value: '2',
+                  color: Colors.red,
                 ),
               ),
             ],
@@ -89,6 +94,7 @@ class InventarisView extends GetView<PetugasDesaController> {
     required IconData icon,
     required String title,
     required String value,
+    required Color color,
   }) {
     return Column(
       children: [
@@ -130,7 +136,7 @@ class InventarisView extends GetView<PetugasDesaController> {
         Expanded(
           child: TextField(
             decoration: InputDecoration(
-              hintText: 'Cari bantuan...',
+              hintText: 'Cari penitipan...',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -160,73 +166,79 @@ class InventarisView extends GetView<PetugasDesaController> {
     );
   }
 
-  Widget _buildInventarisList(BuildContext context) {
-    final List<Map<String, dynamic>> inventarisList = [
+  Widget _buildPenitipanList(BuildContext context) {
+    final List<Map<String, dynamic>> penitipanList = [
       {
-        'nama': 'Beras',
-        'jenis': 'Sembako',
-        'stok': '750 kg',
-        'lokasi': 'Gudang Utama',
-        'tanggal_masuk': '10 April 2023',
-        'kadaluarsa': '10 April 2024',
+        'id': '1',
+        'donatur': 'PT Sejahtera Abadi',
+        'jenis_bantuan': 'Sembako',
+        'jumlah': '500 kg',
+        'tanggal_pengajuan': '15 April 2023',
+        'status': 'Menunggu',
       },
       {
-        'nama': 'Minyak Goreng',
-        'jenis': 'Sembako',
-        'stok': '250 liter',
-        'lokasi': 'Gudang Utama',
-        'tanggal_masuk': '12 April 2023',
-        'kadaluarsa': '12 Oktober 2023',
+        'id': '2',
+        'donatur': 'Yayasan Peduli Sesama',
+        'jenis_bantuan': 'Pakaian',
+        'jumlah': '200 pcs',
+        'tanggal_pengajuan': '14 April 2023',
+        'status': 'Terverifikasi',
       },
       {
-        'nama': 'Paket Sembako',
-        'jenis': 'Paket Bantuan',
-        'stok': '100 paket',
-        'lokasi': 'Gudang Cabang',
-        'tanggal_masuk': '15 April 2023',
-        'kadaluarsa': '15 Juli 2023',
+        'id': '3',
+        'donatur': 'Bank BRI',
+        'jenis_bantuan': 'Beras',
+        'jumlah': '300 kg',
+        'tanggal_pengajuan': '13 April 2023',
+        'status': 'Terverifikasi',
       },
       {
-        'nama': 'Selimut',
-        'jenis': 'Non-Pangan',
-        'stok': '150 buah',
-        'lokasi': 'Gudang Cabang',
-        'tanggal_masuk': '5 April 2023',
-        'kadaluarsa': '-',
+        'id': '4',
+        'donatur': 'Komunitas Peduli',
+        'jenis_bantuan': 'Alat Tulis',
+        'jumlah': '100 set',
+        'tanggal_pengajuan': '12 April 2023',
+        'status': 'Ditolak',
       },
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Daftar Inventaris',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            TextButton.icon(
-              onPressed: () {
-                // Navigasi ke halaman tambah inventaris
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Tambah'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppTheme.primaryColor,
+        Text(
+          'Daftar Penitipan',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-            ),
-          ],
         ),
         const SizedBox(height: 12),
-        ...inventarisList.map((item) => _buildInventarisItem(context, item)),
+        ...penitipanList.map((item) => _buildPenitipanItem(context, item)),
       ],
     );
   }
 
-  Widget _buildInventarisItem(BuildContext context, Map<String, dynamic> item) {
+  Widget _buildPenitipanItem(BuildContext context, Map<String, dynamic> item) {
+    Color statusColor;
+    IconData statusIcon;
+
+    switch (item['status']) {
+      case 'Menunggu':
+        statusColor = Colors.orange;
+        statusIcon = Icons.pending_actions;
+        break;
+      case 'Terverifikasi':
+        statusColor = Colors.green;
+        statusIcon = Icons.check_circle;
+        break;
+      case 'Ditolak':
+        statusColor = Colors.red;
+        statusIcon = Icons.cancel;
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusIcon = Icons.help_outline;
+    }
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
@@ -250,25 +262,39 @@ class InventarisView extends GetView<PetugasDesaController> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  item['nama'] ?? '',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                Expanded(
+                  child: Text(
+                    item['donatur'] ?? '',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    item['jenis'] ?? '',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        statusIcon,
+                        size: 16,
+                        color: statusColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        item['status'] ?? '',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: statusColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -279,70 +305,85 @@ class InventarisView extends GetView<PetugasDesaController> {
                 Expanded(
                   child: _buildItemDetail(
                     context,
-                    icon: Icons.inventory,
-                    label: 'Stok',
-                    value: item['stok'] ?? '',
+                    icon: Icons.category,
+                    label: 'Jenis Bantuan',
+                    value: item['jenis_bantuan'] ?? '',
                   ),
                 ),
                 Expanded(
                   child: _buildItemDetail(
                     context,
-                    icon: Icons.location_on_outlined,
-                    label: 'Lokasi',
-                    value: item['lokasi'] ?? '',
+                    icon: Icons.inventory,
+                    label: 'Jumlah',
+                    value: item['jumlah'] ?? '',
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon: Icons.calendar_today,
-                    label: 'Tanggal Masuk',
-                    value: item['tanggal_masuk'] ?? '',
-                  ),
-                ),
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon: Icons.timelapse,
-                    label: 'Kadaluarsa',
-                    value: item['kadaluarsa'] ?? '',
-                  ),
-                ),
-              ],
+            _buildItemDetail(
+              context,
+              icon: Icons.calendar_today,
+              label: 'Tanggal Pengajuan',
+              value: item['tanggal_pengajuan'] ?? '',
             ),
             const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  onPressed: () {
-                    // Tampilkan detail inventaris
-                  },
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  label: const Text('Edit'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+            if (item['status'] == 'Menunggu')
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      // Implementasi untuk menerima penitipan
+                    },
+                    icon: const Icon(Icons.check, size: 18),
+                    label: const Text('Terima'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
                   ),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    // Tampilkan dialog konfirmasi hapus
-                  },
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                  label: const Text('Hapus'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  TextButton.icon(
+                    onPressed: () {
+                      // Implementasi untuk menolak penitipan
+                    },
+                    icon: const Icon(Icons.close, size: 18),
+                    label: const Text('Tolak'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  TextButton.icon(
+                    onPressed: () {
+                      // Implementasi untuk melihat detail penitipan
+                    },
+                    icon: const Icon(Icons.info_outline, size: 18),
+                    label: const Text('Detail'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+                ],
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      // Implementasi untuk melihat detail penitipan
+                    },
+                    icon: const Icon(Icons.info_outline, size: 18),
+                    label: const Text('Detail'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
