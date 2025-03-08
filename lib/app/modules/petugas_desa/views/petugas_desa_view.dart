@@ -19,7 +19,6 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
     // Perbarui counter pengaduan secara manual saat aplikasi dimulai
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.updatePengaduanCounter();
-      print('Counter pengaduan diperbarui saat aplikasi dimulai');
     });
 
     return Scaffold(
@@ -283,8 +282,6 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               )),
           Obx(() {
             final int jumlahPengaduanDiproses = controller.jumlahDiproses.value;
-            print(
-                'Drawer - Jumlah pengaduan diproses: $jumlahPengaduanDiproses');
 
             return ListTile(
               leading: Stack(
@@ -414,9 +411,6 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
     print('Jumlah jadwal hari ini: ${controller.jadwalHariIni.length}');
 
     return Obx(() {
-      // Hitung jumlah pengaduan yang diproses
-      final int jumlahPengaduanDiproses = controller.jumlahDiproses.value;
-
       return BottomNavigationBar(
         currentIndex: controller.activeTabIndex.value,
         onTap: controller.changeTab,
