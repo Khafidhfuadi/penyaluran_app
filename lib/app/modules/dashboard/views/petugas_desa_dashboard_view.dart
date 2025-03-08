@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/dashboard/controllers/dashboard_controller.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,12 +11,14 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
   Widget build(BuildContext context) {
     final TextTheme textTheme =
         GoogleFonts.dmSansTextTheme(Theme.of(context).textTheme);
+    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Theme(
       data: Theme.of(context).copyWith(
         textTheme: textTheme,
       ),
       child: Scaffold(
+        key: _scaffoldKey,
         drawer: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,
@@ -60,7 +63,12 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.home),
+                leading: SvgPicture.asset(
+                  'assets/icons/home-icon.svg',
+                  width: 24,
+                  height: 24,
+                  color: Colors.grey[700],
+                ),
                 title: const Text('Beranda'),
                 onTap: () {
                   Get.back();
@@ -110,6 +118,11 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // add drawer button
+                    IconButton(
+                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                      icon: const Icon(Icons.menu),
+                    ),
                     // Header dengan greeting
                     _buildGreetingHeader(textTheme),
                     const SizedBox(height: 20),
@@ -122,7 +135,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
                       dateTime: '15 April 2023, 13:00 - 14:00',
                       isToday: true,
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 20),
 
                     // Jadwal penyaluran mendatang
                     _buildScheduleCard(
@@ -144,6 +157,11 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
 
                     // Daftar penerima
                     _buildRecipientsList(textTheme),
+
+                    // Daftar Donasi
+                    _buildDonationList(textTheme),
+                    // Daftar Donatur
+                    _buildDonorsList(textTheme),
                   ],
                 );
               }),
@@ -155,21 +173,37 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: textTheme.bodySmall,
           unselectedLabelStyle: textTheme.bodySmall,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
+              icon: SvgPicture.asset(
+                'assets/icons/home-icon.svg',
+                width: 24,
+                height: 24,
+              ),
               label: 'Beranda',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today),
+              icon: SvgPicture.asset(
+                'assets/icons/jadwal-icon.svg',
+                width: 24,
+                height: 24,
+              ),
               label: 'Jadwal',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.notifications),
+              icon: SvgPicture.asset(
+                'assets/icons/notif-icon.svg',
+                width: 24,
+                height: 24,
+              ),
               label: 'Notifikasi',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.inventory),
+              icon: SvgPicture.asset(
+                'assets/icons/inventory-icon.svg',
+                width: 24,
+                height: 24,
+              ),
               label: 'Inventaris',
             ),
           ],
@@ -272,11 +306,11 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
     return Row(
       children: [
         Expanded(
-          child: _buildStatCard('Penerima', '3', 'Konfirmasi', textTheme),
+          child: _buildStatCard('Penitipan', '3', 'Konfirmasi', textTheme),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: _buildStatCard('Pengajuan', '1', 'Pengajuan', textTheme),
+          child: _buildStatCard('Penjadwalan', '1', 'Pengajuan', textTheme),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -304,6 +338,13 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
+            title,
+            style: textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
+          Text(
             count,
             style: textTheme.headlineSmall?.copyWith(
               fontSize: 24,
@@ -325,48 +366,60 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
   }
 
   Widget _buildProgressSection(TextTheme textTheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Progress Penyaluran',
-          style: textTheme.titleMedium?.copyWith(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2E5077), Color(0xFF5882B1)],
+          transform: GradientRotation(96.93 * 3.14159 / 180),
         ),
-        const SizedBox(height: 10),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: 0.7,
-            minHeight: 10,
-            backgroundColor: Colors.grey[300],
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2E5077)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Progress Penyaluran',
+            style: textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.8),
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          '70% Selesai',
-          style: textTheme.bodyMedium?.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF2E5077),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: 0.7,
+              minHeight: 10,
+              backgroundColor: Colors.white.withOpacity(0.3),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        _buildProgressDetailRow('Telah Menerima', 70, textTheme),
-        _buildProgressDetailRow('Dijedwalkan', 20, textTheme),
-        _buildProgressDetailRow('Belum Dijadwalkan', 10, textTheme),
-        const SizedBox(height: 5),
-        Text(
-          'Total : 100 Penerima, Telah Disalurkan : 70 Penerima, Belum Disalurkan : 30',
-          style: textTheme.bodySmall?.copyWith(
-            fontSize: 12,
-            color: Colors.grey[600],
+          const SizedBox(height: 10),
+          Text(
+            '70% Selesai',
+            style: textTheme.bodyMedium?.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          _buildProgressDetailRow('Telah Menerima', 70, textTheme),
+          _buildProgressDetailRow('Dijedwalkan', 20, textTheme),
+          _buildProgressDetailRow('Belum Dijadwalkan', 10, textTheme),
+          const SizedBox(height: 5),
+          Text(
+            'Total : 100 Penerima, Telah Disalurkan : 70 Penerima, Belum Disalurkan : 30',
+            style: textTheme.bodySmall?.copyWith(
+              fontSize: 12,
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -376,17 +429,17 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
       child: Row(
         children: [
           Expanded(
-            flex: 3,
+            flex: 5,
             child: Text(
               label,
               style: textTheme.bodyMedium?.copyWith(
                 fontSize: 14,
-                color: Colors.grey[700],
+                color: Colors.white,
               ),
             ),
           ),
           Expanded(
-            flex: 7,
+            flex: 5,
             child: Stack(
               children: [
                 Container(
@@ -402,7 +455,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
                       0.7 *
                       (value / 100),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E5077),
+                    color: const Color(0xFFE4F1AC),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -411,10 +464,11 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
           ),
           const SizedBox(width: 10),
           Text(
-            '$value',
+            '$value%',
             style: textTheme.bodyMedium?.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
         ],
@@ -423,6 +477,31 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
   }
 
   Widget _buildRecipientsList(TextTheme textTheme) {
+    return _buildList(
+      textTheme: textTheme,
+      title: 'Daftar Penerima',
+      items: [
+        {
+          'title': 'Siti Rahayu',
+          'subtitle': '3201020107030010',
+          'status': 'Selesai'
+        },
+        {
+          'title': 'Siti Rahayu',
+          'subtitle': '3201020107030010',
+          'status': 'Selesai'
+        },
+        {
+          'title': 'Siti Rahayu',
+          'subtitle': '3201020107030010',
+          'status': 'Selesai'
+        },
+      ],
+      idLabel: 'NIK',
+    );
+  }
+
+  Widget _buildDonorsList(TextTheme textTheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -430,7 +509,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Daftar Penerima',
+              'Daftar Donatur',
               style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -457,18 +536,14 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
           ],
         ),
         const SizedBox(height: 10),
-        _buildRecipientItem(
-            'Siti Rahayu', '3201020107030010', 'Selesai', textTheme),
-        _buildRecipientItem(
-            'Siti Rahayu', '3201020107030010', 'Selesai', textTheme),
-        _buildRecipientItem(
-            'Siti Rahayu', '3201020107030010', 'Selesai', textTheme),
+        _buildDonorItem('PT Sejahtera', 'D-2023-001', textTheme),
+        _buildDonorItem('Yayasan Peduli', 'D-2023-002', textTheme),
+        _buildDonorItem('CV Makmur', 'D-2023-003', textTheme),
       ],
     );
   }
 
-  Widget _buildRecipientItem(
-      String name, String nik, String status, TextTheme textTheme) {
+  Widget _buildDonorItem(String name, String id, TextTheme textTheme) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 10),
@@ -492,7 +567,117 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
           ),
         ),
         subtitle: Text(
-          'NIK: $nik',
+          id,
+          style: textTheme.bodyMedium,
+        ),
+        trailing: IconButton(
+          icon: const Icon(
+            Icons.chevron_right,
+            color: Colors.grey,
+          ),
+          onPressed: () {},
+        ),
+      ),
+    );
+  }
+
+  //daftar donasi
+  Widget _buildDonationList(TextTheme textTheme) {
+    return _buildList(
+      textTheme: textTheme,
+      title: 'Daftar Donasi',
+      items: [
+        {
+          'title': 'Rp 100.000',
+          'subtitle': 'Siti Rahayu',
+          'status': 'Selesai',
+        },
+        {
+          'title': 'Rp 100.000',
+          'subtitle': 'Siti Rahayu',
+          'status': 'Selesai',
+        },
+      ],
+      idLabel: '',
+    );
+  }
+
+  Widget _buildList({
+    required TextTheme textTheme,
+    required String title,
+    required List<Map<String, String>> items,
+    required String idLabel,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: textTheme.titleMedium?.copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: () {},
+              child: Row(
+                children: [
+                  Text(
+                    'Lihat Semua',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF2E5077),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: const Color(0xFF2E5077),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ...items.map((item) => _buildItem(
+              item['title'] ?? '',
+              item['subtitle'] ?? '',
+              item['status'] ?? '',
+              textTheme,
+            )),
+      ],
+    );
+  }
+
+  Widget _buildItem(
+      String title, String subtitle, String status, TextTheme textTheme) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: ListTile(
+        title: Text(
+          title,
+          style: textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
           style: textTheme.bodyMedium,
         ),
         trailing: Row(
