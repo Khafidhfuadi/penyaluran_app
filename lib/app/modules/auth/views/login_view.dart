@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
-import 'package:penyaluran_app/app/routes/app_pages.dart';
 
 class LoginView extends GetView<AuthController> {
-  const LoginView({Key? key}) : super(key: key);
+  const LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {

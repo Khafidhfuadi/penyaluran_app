@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/dashboard/controllers/dashboard_controller.dart';
 
 class DonaturDashboardView extends GetView<DashboardController> {
-  const DonaturDashboardView({Key? key}) : super(key: key);
+  const DonaturDashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -145,8 +145,8 @@ class DonaturDashboardView extends GetView<DashboardController> {
         onPressed: () {
           // Navigasi ke halaman penitipan bantuan baru
         },
-        child: const Icon(Icons.add),
         tooltip: 'Titipkan Bantuan Baru',
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -187,7 +187,7 @@ class DonaturDashboardView extends GetView<DashboardController> {
               Container(
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withAlpha(26),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Icon(

@@ -4,7 +4,7 @@ import 'package:penyaluran_app/app/modules/dashboard/controllers/dashboard_contr
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 
 class WargaDashboardView extends GetView<DashboardController> {
-  const WargaDashboardView({Key? key}) : super(key: key);
+  const WargaDashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -253,7 +253,7 @@ class WargaDashboardView extends GetView<DashboardController> {
               Container(
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withAlpha(26),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Icon(

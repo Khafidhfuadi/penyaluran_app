@@ -5,20 +5,20 @@ import 'package:penyaluran_app/app/modules/dashboard/controllers/dashboard_contr
 import 'package:google_fonts/google_fonts.dart';
 
 class PetugasDesaDashboardView extends GetView<DashboardController> {
-  const PetugasDesaDashboardView({Key? key}) : super(key: key);
+  const PetugasDesaDashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final TextTheme textTheme =
         GoogleFonts.dmSansTextTheme(Theme.of(context).textTheme);
-    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Theme(
       data: Theme.of(context).copyWith(
         textTheme: textTheme,
       ),
       child: Scaffold(
-        key: _scaffoldKey,
+        key: scaffoldKey,
         drawer: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,
@@ -67,7 +67,6 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
                   'assets/icons/home-icon.svg',
                   width: 24,
                   height: 24,
-                  color: Colors.grey[700],
                 ),
                 title: const Text('Beranda'),
                 onTap: () {
@@ -120,7 +119,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
                   children: [
                     // add drawer button
                     IconButton(
-                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                      onPressed: () => scaffoldKey.currentState?.openDrawer(),
                       icon: const Icon(Icons.menu),
                     ),
                     // Header dengan greeting
@@ -221,7 +220,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha(26), // 0.1 * 255 ≈ 26
             spreadRadius: 1,
             blurRadius: 3,
             offset: const Offset(0, 1),
@@ -277,7 +276,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
             title,
             style: textTheme.bodyMedium?.copyWith(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withAlpha(204), // 0.8 * 255 ≈ 204
             ),
           ),
           const SizedBox(height: 8),
@@ -341,7 +340,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
             title,
             style: textTheme.bodyMedium?.copyWith(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withAlpha(204), // 0.8 * 255 ≈ 204
             ),
           ),
           Text(
@@ -366,60 +365,48 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
   }
 
   Widget _buildProgressSection(TextTheme textTheme) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2E5077), Color(0xFF5882B1)],
-          transform: GradientRotation(96.93 * 3.14159 / 180),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Progress Penyaluran',
+          style: textTheme.titleMedium?.copyWith(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Progress Penyaluran',
-            style: textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.8),
-            ),
+        const SizedBox(height: 10),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: 0.7,
+            minHeight: 10,
+            backgroundColor: Colors.grey[300],
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2E5077)),
           ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: 0.7,
-              minHeight: 10,
-              backgroundColor: Colors.white.withOpacity(0.3),
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '70% Selesai',
+          style: textTheme.bodyMedium?.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF2E5077),
           ),
-          const SizedBox(height: 10),
-          Text(
-            '70% Selesai',
-            style: textTheme.bodyMedium?.copyWith(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+        ),
+        const SizedBox(height: 10),
+        _buildProgressDetailRow('Telah Menerima', 70, textTheme),
+        _buildProgressDetailRow('Dijedwalkan', 20, textTheme),
+        _buildProgressDetailRow('Belum Dijadwalkan', 10, textTheme),
+        const SizedBox(height: 5),
+        Text(
+          'Total : 100 Penerima, Telah Disalurkan : 70 Penerima, Belum Disalurkan : 30',
+          style: textTheme.bodySmall?.copyWith(
+            fontSize: 12,
+            color: Colors.grey[600],
           ),
-          const SizedBox(height: 10),
-          _buildProgressDetailRow('Telah Menerima', 70, textTheme),
-          _buildProgressDetailRow('Dijedwalkan', 20, textTheme),
-          _buildProgressDetailRow('Belum Dijadwalkan', 10, textTheme),
-          const SizedBox(height: 5),
-          Text(
-            'Total : 100 Penerima, Telah Disalurkan : 70 Penerima, Belum Disalurkan : 30',
-            style: textTheme.bodySmall?.copyWith(
-              fontSize: 12,
-              color: Colors.white.withOpacity(0.8),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -455,7 +442,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
                       0.7 *
                       (value / 100),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE4F1AC),
+                    color: const Color(0xFF2E5077),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -552,7 +539,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha(26), // 0.1 * 255 ≈ 26
             spreadRadius: 1,
             blurRadius: 3,
             offset: const Offset(0, 1),
@@ -662,7 +649,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha(26), // 0.1 * 255 ≈ 26
             spreadRadius: 1,
             blurRadius: 3,
             offset: const Offset(0, 1),
@@ -686,7 +673,7 @@ class PetugasDesaDashboardView extends GetView<DashboardController> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withAlpha(26), // 0.1 * 255 ≈ 26
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(

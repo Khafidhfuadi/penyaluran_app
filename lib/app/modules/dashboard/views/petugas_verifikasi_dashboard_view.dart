@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/dashboard/controllers/dashboard_controller.dart';
 
 class PetugasVerifikasiDashboardView extends GetView<DashboardController> {
-  const PetugasVerifikasiDashboardView({Key? key}) : super(key: key);
+  const PetugasVerifikasiDashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +174,7 @@ class PetugasVerifikasiDashboardView extends GetView<DashboardController> {
               Container(
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withAlpha(26),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Icon(
