@@ -2,25 +2,22 @@ part of 'app_pages.dart';
 
 abstract class Routes {
   Routes._();
-  static const HOME = _Paths.HOME;
-  static const LOGIN = _Paths.LOGIN;
-  static const REGISTER = _Paths.REGISTER;
-  static const COMPLETE_PROFILE = _Paths.COMPLETE_PROFILE;
-  static const WARGA_DASHBOARD = _Paths.WARGA_DASHBOARD;
-  static const PETUGAS_VERIFIKASI_DASHBOARD =
-      _Paths.PETUGAS_VERIFIKASI_DASHBOARD;
-  static const PETUGAS_DESA_DASHBOARD = _Paths.PETUGAS_DESA_DASHBOARD;
-  static const DONATUR_DASHBOARD = _Paths.DONATUR_DASHBOARD;
+  static const home = _Paths.home;
+  static const login = _Paths.login;
+  static const register = _Paths.register;
+  static const wargaDashboard = _Paths.wargaDashboard;
+  static const petugasVerifikasiDashboard = _Paths.petugasVerifikasiDashboard;
+  static const petugasDesaDashboard = _Paths.petugasDesaDashboard;
+  static const donaturDashboard = _Paths.donaturDashboard;
 }
 
 abstract class _Paths {
   _Paths._();
-  static const HOME = '/home';
-  static const LOGIN = '/login';
-  static const REGISTER = '/register';
-  static const COMPLETE_PROFILE = '/complete-profile';
-  static const WARGA_DASHBOARD = '/warga-dashboard';
-  static const PETUGAS_VERIFIKASI_DASHBOARD = '/petugas-verifikasi-dashboard';
-  static const PETUGAS_DESA_DASHBOARD = '/petugas-desa-dashboard';
-  static const DONATUR_DASHBOARD = '/donatur-dashboard';
+  static const home = '/home';
+  static const login = '/login';
+  static const register = '/register';
+  static const wargaDashboard = '/warga-dashboard';
+  static const petugasVerifikasiDashboard = '/petugas-verifikasi-dashboard';
+  static const petugasDesaDashboard = '/petugas-desa-dashboard';
+  static const donaturDashboard = '/donatur-dashboard';
 }

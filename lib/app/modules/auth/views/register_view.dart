@@ -124,7 +124,7 @@ class RegisterView extends GetView<AuthController> {
                     children: [
                       const Text('Sudah punya akun?'),
                       TextButton(
-                        onPressed: () => Get.offAllNamed(Routes.LOGIN),
+                        onPressed: () => Get.offAllNamed(Routes.login),
                         child: const Text('Masuk'),
                       ),
                     ],

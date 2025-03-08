@@ -42,7 +42,7 @@ class LoginView extends GetView<AuthController> {
                     ),
                   ),
                   const SizedBox(height: 50),
-                  
+
                   // Email Field
                   TextFormField(
                     controller: controller.emailController,
@@ -57,7 +57,7 @@ class LoginView extends GetView<AuthController> {
                     validator: controller.validateEmail,
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Password Field
                   TextFormField(
                     controller: controller.passwordController,
@@ -72,7 +72,7 @@ class LoginView extends GetView<AuthController> {
                     validator: controller.validatePassword,
                   ),
                   const SizedBox(height: 10),
-                  
+
                   // Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
@@ -84,40 +84,40 @@ class LoginView extends GetView<AuthController> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Login Button
                   Obx(() => ElevatedButton(
-                    onPressed: controller.isLoading.value
-                        ? null
-                        : controller.login,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: controller.isLoading.value
-                        ? const SpinKitThreeBounce(
-                            color: Colors.white,
-                            size: 24,
-                          )
-                        : const Text(
-                            'MASUK',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        onPressed: controller.isLoading.value
+                            ? null
+                            : controller.login,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                  )),
+                        ),
+                        child: controller.isLoading.value
+                            ? const SpinKitThreeBounce(
+                                color: Colors.white,
+                                size: 24,
+                              )
+                            : const Text(
+                                'MASUK',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      )),
                   const SizedBox(height: 20),
-                  
+
                   // Register Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text('Belum punya akun?'),
                       TextButton(
-                        onPressed: () => Get.toNamed(Routes.REGISTER),
+                        onPressed: () => Get.toNamed(Routes.register),
                         child: const Text('Daftar'),
                       ),
                     ],
@@ -130,4 +130,4 @@ class LoginView extends GetView<AuthController> {
       ),
     );
   }
-} 
+}

@@ -21,16 +21,6 @@ class AuthController extends GetxController {
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
-  // Form controllers untuk data warga
-  final TextEditingController nikController = TextEditingController();
-  final TextEditingController namaLengkapController = TextEditingController();
-  final TextEditingController jenisKelaminController = TextEditingController();
-  final TextEditingController noHpController = TextEditingController();
-  final TextEditingController alamatController = TextEditingController();
-  final TextEditingController tempatLahirController = TextEditingController();
-  final TextEditingController tanggalLahirController = TextEditingController();
-  final TextEditingController agamaController = TextEditingController();
-
   // Form keys
   final GlobalKey<FormState> loginFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> registerFormKey = GlobalKey<FormState>();
@@ -58,30 +48,13 @@ class AuthController extends GetxController {
     try {
       if (emailController.text.isNotEmpty) emailController.clear();
       if (passwordController.text.isNotEmpty) passwordController.clear();
-      if (confirmPasswordController.text.isNotEmpty)
+      if (confirmPasswordController.text.isNotEmpty) {
         confirmPasswordController.clear();
-      if (nikController.text.isNotEmpty) nikController.clear();
-      if (namaLengkapController.text.isNotEmpty) namaLengkapController.clear();
-      if (jenisKelaminController.text.isNotEmpty)
-        jenisKelaminController.clear();
-      if (noHpController.text.isNotEmpty) noHpController.clear();
-      if (alamatController.text.isNotEmpty) alamatController.clear();
-      if (tempatLahirController.text.isNotEmpty) tempatLahirController.clear();
-      if (tanggalLahirController.text.isNotEmpty)
-        tanggalLahirController.clear();
-      if (agamaController.text.isNotEmpty) agamaController.clear();
+      }
 
       emailController.dispose();
       passwordController.dispose();
       confirmPasswordController.dispose();
-      nikController.dispose();
-      namaLengkapController.dispose();
-      jenisKelaminController.dispose();
-      noHpController.dispose();
-      alamatController.dispose();
-      tempatLahirController.dispose();
-      tanggalLahirController.dispose();
-      agamaController.dispose();
     } catch (e) {
       print('Error disposing controllers: $e');
     }
@@ -108,19 +81,19 @@ class AuthController extends GetxController {
         }
       } else {
         // Jika tidak ada user yang login, arahkan ke halaman login
-        if (Get.currentRoute != Routes.LOGIN) {
+        if (Get.currentRoute != Routes.login) {
           // Bersihkan dependensi form sebelum navigasi
           clearFormDependencies();
-          Get.offAllNamed(Routes.LOGIN);
+          Get.offAllNamed(Routes.login);
         }
       }
     } catch (e) {
       print('Error checking auth status: $e');
       // Jika terjadi error, arahkan ke halaman login
-      if (Get.currentRoute != Routes.LOGIN) {
+      if (Get.currentRoute != Routes.login) {
         // Bersihkan dependensi form sebelum navigasi
         clearFormDependencies();
-        Get.offAllNamed(Routes.LOGIN);
+        Get.offAllNamed(Routes.login);
       }
     } finally {
       isLoading.value = false;
@@ -164,19 +137,19 @@ class AuthController extends GetxController {
 
     switch (role) {
       case 'WARGA':
-        Get.offAllNamed(Routes.WARGA_DASHBOARD);
+        Get.offAllNamed(Routes.wargaDashboard);
         break;
       case 'PETUGASVERIFIKASI':
-        Get.offAllNamed(Routes.PETUGAS_VERIFIKASI_DASHBOARD);
+        Get.offAllNamed(Routes.petugasVerifikasiDashboard);
         break;
       case 'PETUGASDESA':
-        Get.offAllNamed(Routes.PETUGAS_DESA_DASHBOARD);
+        Get.offAllNamed(Routes.petugasDesaDashboard);
         break;
       case 'DONATUR':
-        Get.offAllNamed(Routes.DONATUR_DASHBOARD);
+        Get.offAllNamed(Routes.donaturDashboard);
         break;
       default:
-        Get.offAllNamed(Routes.HOME);
+        Get.offAllNamed(Routes.home);
         break;
     }
   }
@@ -300,86 +273,6 @@ class AuthController extends GetxController {
     }
   }
 
-  // Metode untuk melengkapi profil warga
-  Future<void> completeWargaProfile() async {
-    if (!wargaProfileFormKey.currentState!.validate()) return;
-
-    // Simpan nilai dari controller sebelum melakukan operasi asinkron
-    final nik = nikController.text.trim();
-    final namaLengkap = namaLengkapController.text.trim();
-    final jenisKelamin = jenisKelaminController.text.trim();
-    final noHp = noHpController.text.trim();
-    final alamat = alamatController.text.trim();
-    final tempatLahir = tempatLahirController.text.trim();
-    final tanggalLahirText = tanggalLahirController.text;
-    final agama = agamaController.text.trim();
-
-    try {
-      isLoading.value = true;
-
-      DateTime? tanggalLahir;
-      if (tanggalLahirText.isNotEmpty) {
-        try {
-          final parts = tanggalLahirText.split('-');
-          if (parts.length == 3) {
-            tanggalLahir = DateTime(
-              int.parse(parts[2]), // tahun
-              int.parse(parts[1]), // bulan
-              int.parse(parts[0]), // hari
-            );
-          }
-        } catch (e) {
-          print('Error parsing date: $e');
-        }
-      }
-
-      await _authProvider.createWargaProfile(
-        nik: nik,
-        namaLengkap: namaLengkap,
-        jenisKelamin: jenisKelamin,
-        noHp: noHp,
-        alamat: alamat,
-        tempatLahir: tempatLahir,
-        tanggalLahir: tanggalLahir,
-        agama: agama,
-      );
-
-      isWargaProfileComplete.value = true;
-
-      // Kembali ke halaman sebelumnya jika menggunakan Get.toNamed
-      if (Get.previousRoute.isNotEmpty) {
-        Get.back();
-        Get.snackbar(
-          'Berhasil',
-          'Profil berhasil dilengkapi',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-      } else {
-        // Jika tidak ada halaman sebelumnya, navigasi ke dashboard warga
-        Get.offAllNamed(Routes.WARGA_DASHBOARD);
-        Get.snackbar(
-          'Berhasil',
-          'Profil berhasil dilengkapi',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Gagal melengkapi profil: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
   // Metode untuk logout
   Future<void> logout() async {
     try {
@@ -390,7 +283,7 @@ class AuthController extends GetxController {
       // Bersihkan dependensi form sebelum navigasi
       clearFormDependencies();
 
-      Get.offAllNamed(Routes.LOGIN);
+      Get.offAllNamed(Routes.login);
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -407,8 +300,9 @@ class AuthController extends GetxController {
     try {
       if (emailController.text.isNotEmpty) emailController.clear();
       if (passwordController.text.isNotEmpty) passwordController.clear();
-      if (confirmPasswordController.text.isNotEmpty)
+      if (confirmPasswordController.text.isNotEmpty) {
         confirmPasswordController.clear();
+      }
     } catch (e) {
       print('Error clearing controllers: $e');
     }
@@ -489,24 +383,15 @@ class AuthController extends GetxController {
   String _getTargetRouteForRole(String role) {
     switch (role) {
       case 'WARGA':
-        return Routes.WARGA_DASHBOARD;
+        return Routes.wargaDashboard;
       case 'PETUGASVERIFIKASI':
-        return Routes.PETUGAS_VERIFIKASI_DASHBOARD;
+        return Routes.petugasVerifikasiDashboard;
       case 'PETUGASDESA':
-        return Routes.PETUGAS_DESA_DASHBOARD;
+        return Routes.petugasDesaDashboard;
       case 'DONATUR':
-        return Routes.DONATUR_DASHBOARD;
+        return Routes.donaturDashboard;
       default:
-        return Routes.HOME;
+        return Routes.home;
     }
-  }
-
-  // Metode untuk navigasi ke halaman lengkapi profil
-  void navigateToCompleteProfile() {
-    // Bersihkan dependensi form sebelum navigasi
-    clearFormDependencies();
-
-    // Gunakan preventDuplicates untuk mencegah navigasi berulang
-    Get.toNamed(Routes.COMPLETE_PROFILE, preventDuplicates: true);
   }
 }

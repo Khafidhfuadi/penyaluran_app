@@ -211,14 +211,6 @@ class WargaDashboardView extends GetView<DashboardController> {
               style: TextStyle(fontSize: 12),
             ),
             const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: authController.navigateToCompleteProfile,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Lengkapi Profil'),
-            ),
           ],
         ),
       ),
