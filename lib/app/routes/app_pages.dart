@@ -9,6 +9,7 @@ import 'package:penyaluran_app/app/modules/home/bindings/home_binding.dart';
 import 'package:penyaluran_app/app/modules/dashboard/bindings/dashboard_binding.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/petugas_desa_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/petugas_desa_binding.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/permintaan_penjadwalan_view.dart';
 
 part 'app_routes.dart';
 
@@ -47,6 +48,11 @@ class AppPages {
       name: _Paths.donaturDashboard,
       page: () => const DonaturDashboardView(),
       binding: DashboardBinding(),
+    ),
+    GetPage(
+      name: _Paths.permintaanPenjadwalan,
+      page: () => const PermintaanPenjadwalanView(),
+      binding: PetugasDesaBinding(),
     ),
   ];
 }

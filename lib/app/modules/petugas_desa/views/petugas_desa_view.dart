@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/dashboard_view.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/views/jadwal_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/notifikasi_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/inventaris_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/penitipan_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/pengaduan_view.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class PetugasDesaView extends GetView<PetugasDesaController> {
@@ -15,6 +16,12 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
   Widget build(BuildContext context) {
     final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
+    // Perbarui counter pengaduan secara manual saat aplikasi dimulai
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.updatePengaduanCounter();
+      print('Counter pengaduan diperbarui saat aplikasi dimulai');
+    });
+
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
@@ -23,11 +30,13 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
             case 0:
               return const Text('Dashboard');
             case 1:
-              return const Text('Jadwal Penyaluran');
+              return const Text('Penyaluran');
             case 2:
-              return const Text('Inventaris');
-            case 3:
               return const Text('Penitipan');
+            case 3:
+              return const Text('Pengaduan');
+            case 4:
+              return const Text('Inventaris');
             default:
               return const Text('Petugas Desa');
           }
@@ -115,6 +124,35 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                   notificationButton,
                 ],
               );
+            } else if (activeTab == 4) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    tooltip: 'Tambah Pengaduan',
+                    onPressed: () {
+                      // Implementasi untuk menambah pengaduan baru
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.filter_list),
+                    tooltip: 'Filter Pengaduan',
+                    onPressed: () {
+                      // Implementasi untuk filter pengaduan
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Perbarui Counter',
+                    onPressed: () {
+                      // Perbarui counter pengaduan secara manual
+                      controller.updatePengaduanCounter();
+                    },
+                  ),
+                  notificationButton,
+                ],
+              );
             } else {
               return notificationButton;
             }
@@ -127,11 +165,14 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
           case 0:
             return const DashboardView();
           case 1:
-            return const JadwalView();
+            return const PenyaluranView();
+
           case 2:
-            return const InventarisView();
-          case 3:
             return const PenitipanView();
+          case 3:
+            return const PengaduanView();
+          case 4:
+            return const InventarisView();
           default:
             return const DashboardView();
         }
@@ -193,21 +234,11 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               )),
           Obx(() => ListTile(
                 leading: const Icon(Icons.calendar_today_outlined),
-                title: const Text('Jadwal Penyaluran'),
+                title: const Text('Penyaluran'),
                 selected: controller.activeTabIndex.value == 1,
                 selectedColor: AppTheme.primaryColor,
                 onTap: () {
                   controller.changeTab(1);
-                  Navigator.pop(context);
-                },
-              )),
-          Obx(() => ListTile(
-                leading: const Icon(Icons.inventory_2_outlined),
-                title: const Text('Inventaris'),
-                selected: controller.activeTabIndex.value == 2,
-                selectedColor: AppTheme.primaryColor,
-                onTap: () {
-                  controller.changeTab(2);
                   Navigator.pop(context);
                 },
               )),
@@ -243,10 +274,65 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                   ],
                 ),
                 title: const Text('Penitipan'),
-                selected: controller.activeTabIndex.value == 3,
+                selected: controller.activeTabIndex.value == 2,
                 selectedColor: AppTheme.primaryColor,
                 onTap: () {
-                  controller.changeTab(3);
+                  controller.changeTab(2);
+                  Navigator.pop(context);
+                },
+              )),
+          Obx(() {
+            final int jumlahPengaduanDiproses = controller.jumlahDiproses.value;
+            print(
+                'Drawer - Jumlah pengaduan diproses: $jumlahPengaduanDiproses');
+
+            return ListTile(
+              leading: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(Icons.report_problem_outlined),
+                  // Selalu tampilkan badge untuk debugging
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: Text(
+                        jumlahPengaduanDiproses.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              title: const Text('Pengaduan'),
+              selected: controller.activeTabIndex.value == 3,
+              selectedColor: AppTheme.primaryColor,
+              onTap: () {
+                controller.changeTab(3);
+                Navigator.pop(context);
+              },
+            );
+          }),
+          Obx(() => ListTile(
+                leading: const Icon(Icons.inventory_2_outlined),
+                title: const Text('Inventaris'),
+                selected: controller.activeTabIndex.value == 4,
+                selectedColor: AppTheme.primaryColor,
+                onTap: () {
+                  controller.changeTab(4);
                   Navigator.pop(context);
                 },
               )),
@@ -323,150 +409,222 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
   }
 
   Widget _buildBottomNavigationBar() {
-    return Obx(() => BottomNavigationBar(
-          currentIndex: controller.activeTabIndex.value,
-          onTap: controller.changeTab,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: AppTheme.primaryColor,
-          unselectedItemColor: Colors.grey,
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
-            ),
-            BottomNavigationBarItem(
-              icon: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Icon(Icons.calendar_today_outlined),
-                  if (controller.jadwalHariIni.isNotEmpty)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.blue,
-                          shape: BoxShape.circle,
+    // Tambahkan print statement untuk debugging
+    print('Jumlah pengaduan diproses: ${controller.jumlahDiproses.value}');
+    print('Jumlah jadwal hari ini: ${controller.jadwalHariIni.length}');
+
+    return Obx(() {
+      // Hitung jumlah pengaduan yang diproses
+      final int jumlahPengaduanDiproses = controller.jumlahDiproses.value;
+
+      return BottomNavigationBar(
+        currentIndex: controller.activeTabIndex.value,
+        onTap: controller.changeTab,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppTheme.primaryColor,
+        unselectedItemColor: Colors.grey,
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.calendar_today_outlined),
+                if (controller.jadwalHariIni.isNotEmpty)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: Text(
+                        controller.jadwalHariIni.length.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
                         ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: Text(
-                          controller.jadwalHariIni.length.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                ],
-              ),
-              activeIcon: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Icon(Icons.calendar_today),
-                  if (controller.jadwalHariIni.isNotEmpty)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.blue,
-                          shape: BoxShape.circle,
+                  ),
+              ],
+            ),
+            activeIcon: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.calendar_today),
+                if (controller.jadwalHariIni.isNotEmpty)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: Text(
+                        controller.jadwalHariIni.length.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
                         ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: Text(
-                          controller.jadwalHariIni.length.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                ],
-              ),
-              label: 'Jadwal',
+                  ),
+              ],
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.inventory_2_outlined),
-              activeIcon: Icon(Icons.inventory_2),
-              label: 'Inventaris',
-            ),
-            BottomNavigationBarItem(
-              icon: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Icon(Icons.handshake_outlined),
-                  if (controller.jumlahMenunggu.value > 0)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.orange,
-                          shape: BoxShape.circle,
+            label: 'Penyaluran',
+          ),
+          BottomNavigationBarItem(
+            icon: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.handshake_outlined),
+                if (controller.jumlahMenunggu.value > 0)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: Text(
+                        controller.jumlahMenunggu.value.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
                         ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: Text(
-                          controller.jumlahMenunggu.value.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                ],
-              ),
-              activeIcon: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Icon(Icons.handshake),
-                  if (controller.jumlahMenunggu.value > 0)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.orange,
-                          shape: BoxShape.circle,
+                  ),
+              ],
+            ),
+            activeIcon: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.handshake),
+                if (controller.jumlahMenunggu.value > 0)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: Text(
+                        controller.jumlahMenunggu.value.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
                         ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: Text(
-                          controller.jumlahMenunggu.value.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                ],
-              ),
-              label: 'Penitipan',
+                  ),
+              ],
             ),
-          ],
-        ));
+            label: 'Penitipan',
+          ),
+          BottomNavigationBarItem(
+            icon: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.report_problem_outlined),
+                // Selalu tampilkan badge untuk debugging
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 12,
+                      minHeight: 12,
+                    ),
+                    child: Text(
+                      controller.jumlahDiproses.value.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            activeIcon: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.report_problem),
+                // Selalu tampilkan badge untuk debugging
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 12,
+                      minHeight: 12,
+                    ),
+                    child: Text(
+                      controller.jumlahDiproses.value.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            label: 'Pengaduan',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.inventory_2_outlined),
+            activeIcon: Icon(Icons.inventory_2),
+            label: 'Inventaris',
+          ),
+        ],
+      );
+    });
   }
 }

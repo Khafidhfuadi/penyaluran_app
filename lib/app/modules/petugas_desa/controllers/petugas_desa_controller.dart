@@ -31,6 +31,11 @@ class PetugasDesaController extends GetxController {
   final RxList<Map<String, dynamic>> jadwalSelesai =
       <Map<String, dynamic>>[].obs;
 
+  // Data untuk permintaan penjadwalan
+  final RxList<Map<String, dynamic>> permintaanPenjadwalan =
+      <Map<String, dynamic>>[].obs;
+  final RxInt jumlahPermintaanPenjadwalan = 0.obs;
+
   // Data untuk notifikasi
   final RxList<Map<String, dynamic>> notifikasiBelumDibaca =
       <Map<String, dynamic>>[].obs;
@@ -50,6 +55,13 @@ class PetugasDesaController extends GetxController {
   final RxInt jumlahTerverifikasi = 0.obs;
   final RxInt jumlahDitolak = 0.obs;
 
+  // Data untuk pengaduan
+  final RxList<Map<String, dynamic>> daftarPengaduan =
+      <Map<String, dynamic>>[].obs;
+  final RxInt jumlahDiproses = 0.obs;
+  final RxInt jumlahTindakan = 0.obs;
+  final RxInt jumlahSelesai = 0.obs;
+
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
 
@@ -60,12 +72,19 @@ class PetugasDesaController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    // Inisialisasi manual untuk pengaduan (untuk debugging)
+    jumlahDiproses.value = 3;
+    print('onInit - Jumlah pengaduan diproses: ${jumlahDiproses.value}');
+
     loadRoleData();
     loadDashboardData();
     loadJadwalData();
+    loadPermintaanPenjadwalanData();
     loadNotifikasiData();
     loadInventarisData();
     loadPenitipanData();
+    loadPengaduanData();
   }
 
   @override
@@ -184,6 +203,43 @@ class PetugasDesaController extends GetxController {
       // jadwalSelesai.value = result['selesai'] ?? [];
     } catch (e) {
       print('Error loading jadwal data: $e');
+    }
+  }
+
+  Future<void> loadPermintaanPenjadwalanData() async {
+    try {
+      // Simulasi data untuk permintaan penjadwalan
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      permintaanPenjadwalan.value = [
+        {
+          'id': '1',
+          'nama': 'Ahmad Sulaiman',
+          'nik': '3201234567890001',
+          'jenis_bantuan': 'Beras',
+          'tanggal_permintaan': '14 April 2023',
+          'alamat': 'Dusun Sukamaju RT 02/03',
+          'status': 'menunggu',
+        },
+        {
+          'id': '2',
+          'nama': 'Siti Aminah',
+          'nik': '3201234567890002',
+          'jenis_bantuan': 'Sembako',
+          'tanggal_permintaan': '13 April 2023',
+          'alamat': 'Dusun Sukamaju RT 01/03',
+          'status': 'menunggu',
+        },
+      ];
+
+      jumlahPermintaanPenjadwalan.value = permintaanPenjadwalan.length;
+
+      // Di implementasi nyata, data akan diambil dari Supabase
+      // final result = await _supabaseService.getPermintaanPenjadwalanData();
+      // permintaanPenjadwalan.value = result ?? [];
+      // jumlahPermintaanPenjadwalan.value = permintaanPenjadwalan.length;
+    } catch (e) {
+      print('Error loading permintaan penjadwalan data: $e');
     }
   }
 
@@ -348,6 +404,126 @@ class PetugasDesaController extends GetxController {
     }
   }
 
+  Future<void> loadPengaduanData() async {
+    try {
+      // Simulasi data untuk pengaduan
+      await Future.delayed(const Duration(milliseconds: 650));
+
+      // Pastikan data pengaduan tidak kosong
+      daftarPengaduan.value = [
+        {
+          'id': '1',
+          'nama': 'Budi Santoso',
+          'nik': '3201020107030011',
+          'jenis_pengaduan': 'Bantuan Tidak Diterima',
+          'deskripsi':
+              'Saya belum menerima bantuan beras yang dijadwalkan minggu lalu',
+          'tanggal': '15 April 2023',
+          'status': 'Diproses',
+        },
+        {
+          'id': '2',
+          'nama': 'Siti Rahayu',
+          'nik': '3201020107030010',
+          'jenis_pengaduan': 'Kualitas Bantuan',
+          'deskripsi':
+              'Beras yang diterima berkualitas buruk dan tidak layak konsumsi',
+          'tanggal': '14 April 2023',
+          'status': 'Tindakan',
+          'tindakan':
+              'Pengecekan kualitas beras di gudang dan pengambilan sampel',
+        },
+        {
+          'id': '3',
+          'nama': 'Ahmad Fauzi',
+          'nik': '3201020107030013',
+          'jenis_pengaduan': 'Jumlah Bantuan',
+          'deskripsi':
+              'Jumlah bantuan yang diterima tidak sesuai dengan yang dijanjikan',
+          'tanggal': '13 April 2023',
+          'status': 'Tindakan',
+          'tindakan':
+              'Verifikasi data penerima dan jumlah bantuan yang seharusnya diterima',
+        },
+        {
+          'id': '4',
+          'nama': 'Dewi Lestari',
+          'nik': '3201020107030012',
+          'jenis_pengaduan': 'Jadwal Penyaluran',
+          'deskripsi':
+              'Jadwal penyaluran bantuan sering berubah tanpa pemberitahuan',
+          'tanggal': '10 April 2023',
+          'status': 'Selesai',
+          'tindakan':
+              'Koordinasi dengan tim penyaluran untuk perbaikan sistem pemberitahuan',
+          'hasil':
+              'Implementasi sistem notifikasi perubahan jadwal melalui SMS dan pengumuman di balai desa',
+        },
+        // Tambahkan data pengaduan dengan status 'Diproses' untuk memastikan counter muncul
+        {
+          'id': '5',
+          'nama': 'Joko Widodo',
+          'nik': '3201020107030014',
+          'jenis_pengaduan': 'Bantuan Tidak Sesuai',
+          'deskripsi':
+              'Bantuan yang diterima tidak sesuai dengan yang dijanjikan',
+          'tanggal': '16 April 2023',
+          'status': 'Diproses',
+        },
+        {
+          'id': '6',
+          'nama': 'Anita Sari',
+          'nik': '3201020107030015',
+          'jenis_pengaduan': 'Bantuan Tidak Tepat Sasaran',
+          'deskripsi':
+              'Bantuan diberikan kepada warga yang tidak berhak menerima',
+          'tanggal': '17 April 2023',
+          'status': 'Diproses',
+        },
+      ];
+
+      // Hitung jumlah pengaduan berdasarkan status
+      int jumlahDiprosesTemp =
+          daftarPengaduan.where((p) => p['status'] == 'Diproses').length;
+      int jumlahTindakanTemp =
+          daftarPengaduan.where((p) => p['status'] == 'Tindakan').length;
+      int jumlahSelesaiTemp =
+          daftarPengaduan.where((p) => p['status'] == 'Selesai').length;
+
+      // Update nilai Rx
+      jumlahDiproses.value = jumlahDiprosesTemp;
+      jumlahTindakan.value = jumlahTindakanTemp;
+      jumlahSelesai.value = jumlahSelesaiTemp;
+
+      // Print untuk debugging
+      print('Data pengaduan dimuat:');
+      print('Jumlah pengaduan diproses: ${jumlahDiproses.value}');
+      print('Jumlah pengaduan tindakan: ${jumlahTindakan.value}');
+      print('Jumlah pengaduan selesai: ${jumlahSelesai.value}');
+      print('Total pengaduan: ${daftarPengaduan.length}');
+
+      // Perbarui UI secara manual
+      update();
+
+      // Di implementasi nyata, data akan diambil dari Supabase
+      // final result = await _supabaseService.getPengaduanData();
+      // daftarPengaduan.value = result ?? [];
+      // jumlahDiproses.value = daftarPengaduan.where((p) => p['status'] == 'Diproses').length;
+      // jumlahTindakan.value = daftarPengaduan.where((p) => p['status'] == 'Tindakan').length;
+      // jumlahSelesai.value = daftarPengaduan.where((p) => p['status'] == 'Selesai').length;
+    } catch (e) {
+      print('Error loading pengaduan data: $e');
+    }
+  }
+
+  // Method untuk memperbarui jumlah pengaduan secara manual (untuk debugging)
+  void updatePengaduanCounter() {
+    jumlahDiproses.value = 5; // Set nilai secara manual
+    update(); // Perbarui UI
+    print(
+        'Counter pengaduan diperbarui secara manual: ${jumlahDiproses.value}');
+  }
+
   void tandaiNotifikasiDibaca(String id) {
     // Implementasi untuk menandai notifikasi sebagai dibaca
     // Di implementasi nyata, akan memanggil Supabase untuk memperbarui status notifikasi
@@ -394,11 +570,107 @@ class PetugasDesaController extends GetxController {
     loadPenitipanData();
   }
 
+  void prosesPengaduan(String id, String tindakan) {
+    // Implementasi untuk memproses pengaduan
+    // Di implementasi nyata, akan memanggil Supabase untuk memperbarui status pengaduan
+    // await _supabaseService.processPengaduan(id, tindakan);
+
+    // Perbarui data lokal
+    loadPengaduanData();
+  }
+
+  void selesaikanPengaduan(String id, String hasil) {
+    // Implementasi untuk menyelesaikan pengaduan
+    // Di implementasi nyata, akan memanggil Supabase untuk memperbarui status pengaduan
+    // await _supabaseService.completePengaduan(id, hasil);
+
+    // Perbarui data lokal
+    loadPengaduanData();
+  }
+
   void logout() {
     _authController.logout();
   }
 
   void changeTab(int index) {
     activeTabIndex.value = index;
+  }
+
+  // Metode untuk konfirmasi permintaan penjadwalan
+  Future<void> konfirmasiPermintaanPenjadwalan(
+      String id, String jadwalId) async {
+    try {
+      if (id.isEmpty || jadwalId.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'ID permintaan atau jadwal tidak valid',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      isLoading.value = true;
+
+      // Simulasi proses konfirmasi
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      // Hapus permintaan dari daftar
+      permintaanPenjadwalan.removeWhere((item) => item['id'] == id);
+      jumlahPermintaanPenjadwalan.value = permintaanPenjadwalan.length;
+
+      // Di implementasi nyata, data akan diupdate ke Supabase
+      // await _supabaseService.konfirmasiPermintaanPenjadwalan(id, jadwalId);
+      // await loadPermintaanPenjadwalanData();
+      // await loadJadwalData();
+    } catch (e) {
+      print('Error konfirmasi permintaan penjadwalan: $e');
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan saat mengkonfirmasi permintaan',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Metode untuk menolak permintaan penjadwalan
+  Future<void> tolakPermintaanPenjadwalan(String id, String alasan) async {
+    try {
+      if (id.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'ID permintaan tidak valid',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      isLoading.value = true;
+
+      // Simulasi proses penolakan
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      // Hapus permintaan dari daftar
+      permintaanPenjadwalan.removeWhere((item) => item['id'] == id);
+      jumlahPermintaanPenjadwalan.value = permintaanPenjadwalan.length;
+
+      // Di implementasi nyata, data akan diupdate ke Supabase
+      // await _supabaseService.tolakPermintaanPenjadwalan(id, alasan);
+      // await loadPermintaanPenjadwalanData();
+    } catch (e) {
+      print('Error tolak permintaan penjadwalan: $e');
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan saat menolak permintaan',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

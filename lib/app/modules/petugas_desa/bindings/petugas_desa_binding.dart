@@ -6,6 +6,7 @@ class PetugasDesaBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<PetugasDesaController>(
       () => PetugasDesaController(),
+      fenix: true,
     );
   }
 }

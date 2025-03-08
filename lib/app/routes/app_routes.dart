@@ -9,6 +9,8 @@ abstract class Routes {
   static const petugasVerifikasiDashboard = _Paths.petugasVerifikasiDashboard;
   static const petugasDesaDashboard = _Paths.petugasDesaDashboard;
   static const donaturDashboard = _Paths.donaturDashboard;
+  static const splash = _Paths.splash;
+  static const permintaanPenjadwalan = _Paths.permintaanPenjadwalan;
 }
 
 abstract class _Paths {
@@ -20,4 +22,6 @@ abstract class _Paths {
   static const petugasVerifikasiDashboard = '/petugas-verifikasi-dashboard';
   static const petugasDesaDashboard = '/petugas-desa-dashboard';
   static const donaturDashboard = '/donatur-dashboard';
+  static const splash = '/splash';
+  static const permintaanPenjadwalan = '/permintaan-penjadwalan';
 }
