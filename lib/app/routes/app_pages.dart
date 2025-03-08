@@ -3,11 +3,12 @@ import 'package:penyaluran_app/app/modules/auth/views/login_view.dart';
 import 'package:penyaluran_app/app/modules/home/views/home_view.dart';
 import 'package:penyaluran_app/app/modules/dashboard/views/warga_dashboard_view.dart';
 import 'package:penyaluran_app/app/modules/dashboard/views/petugas_verifikasi_dashboard_view.dart';
-import 'package:penyaluran_app/app/modules/dashboard/views/petugas_desa_dashboard_view.dart';
 import 'package:penyaluran_app/app/modules/dashboard/views/donatur_dashboard_view.dart';
 import 'package:penyaluran_app/app/modules/auth/bindings/auth_binding.dart';
 import 'package:penyaluran_app/app/modules/home/bindings/home_binding.dart';
 import 'package:penyaluran_app/app/modules/dashboard/bindings/dashboard_binding.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/petugas_desa_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/bindings/petugas_desa_binding.dart';
 
 part 'app_routes.dart';
 
@@ -39,8 +40,8 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.petugasDesaDashboard,
-      page: () => const PetugasDesaDashboardView(),
-      binding: DashboardBinding(),
+      page: () => const PetugasDesaView(),
+      binding: PetugasDesaBinding(),
     ),
     GetPage(
       name: _Paths.donaturDashboard,
