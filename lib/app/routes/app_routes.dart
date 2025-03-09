@@ -11,6 +11,8 @@ abstract class Routes {
   static const donaturDashboard = _Paths.donaturDashboard;
   static const splash = _Paths.splash;
   static const permintaanPenjadwalan = _Paths.permintaanPenjadwalan;
+  static const daftarPenerima = _Paths.daftarPenerima;
+  static const detailPenerima = _Paths.detailPenerima;
 }
 
 abstract class _Paths {
@@ -24,4 +26,6 @@ abstract class _Paths {
   static const donaturDashboard = '/donatur-dashboard';
   static const splash = '/splash';
   static const permintaanPenjadwalan = '/permintaan-penjadwalan';
+  static const daftarPenerima = '/daftar-penerima';
+  static const detailPenerima = '/daftar-penerima/detail';
 }

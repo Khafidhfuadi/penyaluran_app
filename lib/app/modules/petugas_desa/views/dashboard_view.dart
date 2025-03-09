@@ -4,6 +4,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/components/greeting_head
 import 'package:penyaluran_app/app/modules/petugas_desa/components/progress_section.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/schedule_card.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penerima_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/widgets/statistic_card.dart';
 
@@ -114,7 +115,9 @@ class DashboardView extends GetView<PetugasDesaController> {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Get.toNamed('/daftar-penerima');
+              },
               child: Row(
                 children: [
                   Text(
@@ -135,11 +138,11 @@ class DashboardView extends GetView<PetugasDesaController> {
         ),
         const SizedBox(height: 10),
         _buildRecipientItem(
-            'Siti Rahayu', '3201020107030010', 'Selesai', textTheme),
+            'Siti Rahayu', '3201020107030011', 'Selesai', textTheme),
         _buildRecipientItem(
-            'Budi Santoso', '3201020107030011', 'Selesai', textTheme),
+            'Budi Santoso', '3201020107030012', 'Selesai', textTheme),
         _buildRecipientItem(
-            'Dewi Lestari', '3201020107030012', 'Selesai', textTheme),
+            'Dewi Lestari', '3201020107030013', 'Selesai', textTheme),
       ],
     );
   }
@@ -153,31 +156,45 @@ class DashboardView extends GetView<PetugasDesaController> {
         gradient: AppTheme.primaryGradient,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: ListTile(
-        title: Text(
-          name,
-          style: textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        subtitle: Text(
-          'NIK: $nik',
-          style: textTheme.bodyMedium?.copyWith(
-            color: Colors.white,
-          ),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            status,
-            style: textTheme.bodySmall?.copyWith(
+      child: InkWell(
+        onTap: () {
+          // Navigasi ke detail penerima dengan ID statis
+          // Kita gunakan ID 1 untuk Siti Rahayu, 2 untuk Budi Santoso, 3 untuk Dewi Lestari
+          String id = "1"; // Default
+          if (nik == "3201020107030011") {
+            id = "2";
+          } else if (nik == "3201020107030012") {
+            id = "3";
+          }
+          Get.toNamed('/daftar-penerima/detail', arguments: id);
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: ListTile(
+          title: Text(
+            name,
+            style: textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
               color: Colors.white,
-              fontSize: 12,
+            ),
+          ),
+          subtitle: Text(
+            'NIK: $nik',
+            style: textTheme.bodyMedium?.copyWith(
+              color: Colors.white,
+            ),
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              status,
+              style: textTheme.bodySmall?.copyWith(
+                color: Colors.white,
+                fontSize: 12,
+              ),
             ),
           ),
         ),

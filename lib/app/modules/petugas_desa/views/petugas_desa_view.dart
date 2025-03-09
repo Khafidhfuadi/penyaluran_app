@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penerima_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_penerima_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/dashboard_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/notifikasi_view.dart';
@@ -334,6 +336,14 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                 },
               )),
           const Divider(),
+          ListTile(
+            leading: const Icon(Icons.people_outline),
+            title: const Text('Daftar Penerima'),
+            onTap: () {
+              Navigator.pop(context); // Tutup drawer terlebih dahulu
+              Get.toNamed('/daftar-penerima');
+            },
+          ),
           ListTile(
             leading: Stack(
               alignment: Alignment.center,
