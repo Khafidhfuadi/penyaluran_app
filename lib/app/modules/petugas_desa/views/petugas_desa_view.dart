@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penerima_controller.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_penerima_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/dashboard_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/notifikasi_view.dart';

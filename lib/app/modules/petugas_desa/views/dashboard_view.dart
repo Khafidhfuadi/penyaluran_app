@@ -4,7 +4,6 @@ import 'package:penyaluran_app/app/modules/petugas_desa/components/greeting_head
 import 'package:penyaluran_app/app/modules/petugas_desa/components/progress_section.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/schedule_card.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penerima_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/widgets/statistic_card.dart';
 

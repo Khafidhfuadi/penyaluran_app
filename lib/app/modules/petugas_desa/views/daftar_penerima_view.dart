@@ -37,15 +37,125 @@ class DaftarPenerimaView extends GetView<PenerimaController> {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: controller.daftarPenerima.length,
-          itemBuilder: (context, index) {
-            final penerima = controller.daftarPenerima[index];
-            return _buildPenerimaCard(context, penerima);
-          },
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildPenerimaSummary(context),
+              const SizedBox(height: 16),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                itemCount: controller.daftarPenerima.length,
+                itemBuilder: (context, index) {
+                  final penerima = controller.daftarPenerima[index];
+                  return _buildPenerimaCard(context, penerima);
+                },
+              ),
+            ],
+          ),
         );
       }),
+    );
+  }
+
+  // Ringkasan daftar penerima
+  Widget _buildPenerimaSummary(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Ringkasan Penerima Bantuan',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryItem(
+                  context,
+                  icon: Icons.people_alt_outlined,
+                  title: 'Total',
+                  value: '${controller.daftarPenerima.length}',
+                  color: Colors.blue,
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryItem(
+                  context,
+                  icon: Icons.check_circle_outline,
+                  title: 'Tersalurkan',
+                  value:
+                      '${controller.daftarPenerima.where((p) => p['status'] == 'Selesai').length}',
+                  color: Colors.green,
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryItem(
+                  context,
+                  icon: Icons.pending_outlined,
+                  title: 'Menunggu',
+                  value:
+                      '${controller.daftarPenerima.where((p) => p['status'] != 'Selesai').length}',
+                  color: Colors.orange,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.white,
+              ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
@@ -152,6 +262,9 @@ class DaftarPenerimaView extends GetView<PenerimaController> {
                         color: Colors.grey[600],
                       ),
                     ),
+                    const SizedBox(height: 4),
+
+                    _buildStatusBadge(penerima['status']),
                     // const SizedBox(height: 8),
                     // Row(
                     //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
