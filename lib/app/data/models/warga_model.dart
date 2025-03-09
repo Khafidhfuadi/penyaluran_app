@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-class PenerimaBantuanModel {
+// warga == penerima bantuan
+class WargaModel {
   final String id;
   final String nama;
   final String? nik;
@@ -16,7 +17,7 @@ class PenerimaBantuanModel {
   final DateTime createdAt;
   final DateTime? updatedAt;
 
-  PenerimaBantuanModel({
+  WargaModel({
     required this.id,
     required this.nama,
     this.nik,
@@ -33,13 +34,12 @@ class PenerimaBantuanModel {
     this.updatedAt,
   });
 
-  factory PenerimaBantuanModel.fromRawJson(String str) =>
-      PenerimaBantuanModel.fromJson(json.decode(str));
+  factory WargaModel.fromRawJson(String str) =>
+      WargaModel.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory PenerimaBantuanModel.fromJson(Map<String, dynamic> json) =>
-      PenerimaBantuanModel(
+  factory WargaModel.fromJson(Map<String, dynamic> json) => WargaModel(
         id: json["id"],
         nama: json["nama"],
         nik: json["nik"],
