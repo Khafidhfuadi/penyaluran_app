@@ -38,14 +38,6 @@ class DetailPenerimaView extends GetView<PenerimaController> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Detail Penerima'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                // Implementasi edit penerima
-              },
-            ),
-          ],
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -413,7 +405,9 @@ class DetailPenerimaView extends GetView<PenerimaController> {
           Expanded(
             child: ElevatedButton.icon(
               onPressed: () {
-                // Implementasi konfirmasi penyaluran
+                // Navigasi ke halaman konfirmasi penerima
+                Get.toNamed('/daftar-penerima/konfirmasi',
+                    arguments: penerima['id']);
               },
               icon: const Icon(Icons.check_circle),
               label: const Text('Konfirmasi Penyaluran'),

@@ -12,7 +12,8 @@ import 'package:penyaluran_app/app/modules/petugas_desa/bindings/petugas_desa_bi
 import 'package:penyaluran_app/app/modules/petugas_desa/views/permintaan_penjadwalan_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_penerima_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_penerima_view.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penerima_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerima_view.dart';
+
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/penerima_binding.dart';
 
 part 'app_routes.dart';
@@ -66,6 +67,11 @@ class AppPages {
     GetPage(
       name: _Paths.detailPenerima,
       page: () => const DetailPenerimaView(),
+      binding: PenerimaBinding(),
+    ),
+    GetPage(
+      name: _Paths.konfirmasiPenerima,
+      page: () => const KonfirmasiPenerimaView(),
       binding: PenerimaBinding(),
     ),
   ];

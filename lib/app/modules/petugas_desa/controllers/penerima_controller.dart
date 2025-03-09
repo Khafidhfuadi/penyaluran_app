@@ -1,9 +1,20 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class PenerimaController extends GetxController {
   final RxList<Map<String, dynamic>> daftarPenerima =
       <Map<String, dynamic>>[].obs;
   final RxBool isLoading = false.obs;
+
+  // Variabel untuk halaman konfirmasi penerima
+  final RxBool isKonfirmasiChecked = false.obs;
+  final RxBool isIdentitasChecked = false.obs;
+  final RxBool isDataValidChecked = false.obs;
+  final RxString tanggalPenyaluran = ''.obs;
+  final RxString fotoBuktiPath = ''.obs;
+  final RxString tandaTanganPath = ''.obs;
+  final TextEditingController catatanController = TextEditingController();
 
   @override
   void onInit() {
@@ -18,6 +29,12 @@ class PenerimaController extends GetxController {
     if (daftarPenerima.isEmpty) {
       fetchDaftarPenerima();
     }
+  }
+
+  @override
+  void onClose() {
+    catatanController.dispose();
+    super.onClose();
   }
 
   void fetchDaftarPenerima() {
@@ -148,5 +165,148 @@ class PenerimaController extends GetxController {
     } catch (e) {
       return null;
     }
+  }
+
+  // Fungsi untuk memilih tanggal penyaluran
+  Future<void> pilihTanggalPenyaluran(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF2E5077),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      tanggalPenyaluran.value =
+          DateFormat('dd MMMM yyyy', 'id_ID').format(picked);
+    }
+  }
+
+  // Fungsi untuk memilih foto bukti
+  void pilihFotoBukti() {
+    // Simulasi pemilihan foto
+    // Dalam implementasi nyata, gunakan image_picker
+    fotoBuktiPath.value = 'assets/images/bukti_penyaluran.jpg';
+  }
+
+  // Fungsi untuk menghapus foto bukti
+  void hapusFotoBukti() {
+    fotoBuktiPath.value = '';
+  }
+
+  // Fungsi untuk membuka signature pad
+  void bukaSignaturePad(BuildContext context) {
+    // Simulasi tanda tangan
+    // Dalam implementasi nyata, gunakan signature_pad atau library serupa
+    tandaTanganPath.value = 'assets/images/tanda_tangan.png';
+  }
+
+  // Fungsi untuk menghapus tanda tangan
+  void hapusTandaTangan() {
+    tandaTanganPath.value = '';
+  }
+
+  // Fungsi untuk konfirmasi penyaluran
+  void konfirmasiPenyaluran(String id) {
+    // Validasi input
+    if (!isKonfirmasiChecked.value) {
+      Get.snackbar(
+        'Perhatian',
+        'Anda harus mengkonfirmasi penyaluran bantuan',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (!isIdentitasChecked.value) {
+      Get.snackbar(
+        'Perhatian',
+        'Anda harus memverifikasi identitas penerima',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (!isDataValidChecked.value) {
+      Get.snackbar(
+        'Perhatian',
+        'Anda harus menyatakan kebenaran data',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (fotoBuktiPath.value.isEmpty) {
+      Get.snackbar(
+        'Perhatian',
+        'Bukti foto penyaluran harus diunggah',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (tandaTanganPath.value.isEmpty) {
+      Get.snackbar(
+        'Perhatian',
+        'Tanda tangan penerima harus diisi',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Simulasi proses konfirmasi
+    isLoading.value = true;
+
+    // Dalam implementasi nyata, kirim data ke API
+    Future.delayed(const Duration(seconds: 2), () {
+      // Update status penerima
+      final index =
+          daftarPenerima.indexWhere((penerima) => penerima['id'] == id);
+      if (index != -1) {
+        final updatedPenerima =
+            Map<String, dynamic>.from(daftarPenerima[index]);
+        updatedPenerima['status'] = 'Selesai';
+        daftarPenerima[index] = updatedPenerima;
+      }
+
+      isLoading.value = false;
+
+      // Reset form
+      isKonfirmasiChecked.value = false;
+      isIdentitasChecked.value = false;
+      isDataValidChecked.value = false;
+      fotoBuktiPath.value = '';
+      tandaTanganPath.value = '';
+      catatanController.clear();
+
+      // Tampilkan pesan sukses
+      Get.snackbar(
+        'Sukses',
+        'Konfirmasi penyaluran bantuan berhasil disimpan',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+
+      // Kembali ke halaman sebelumnya
+      Get.back();
+    });
   }
 }
