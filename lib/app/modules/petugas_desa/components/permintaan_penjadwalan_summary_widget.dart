@@ -181,7 +181,7 @@ class PermintaanPenjadwalanSummaryWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Jenis: ${permintaanData['jenis_bantuan'] ?? ''}',
+            'Kategori: ${permintaanData['kategori_bantuan'] ?? ''}',
             style: textTheme.bodySmall,
             overflow: TextOverflow.ellipsis,
           ),

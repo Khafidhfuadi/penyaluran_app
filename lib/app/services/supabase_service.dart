@@ -9,6 +9,9 @@ class SupabaseService extends GetxService {
   // Cache untuk profil pengguna
   Map<String, dynamic>? _cachedUserProfile;
 
+  // Flag untuk menandai apakah sesi sudah diinisialisasi
+  bool _isSessionInitialized = false;
+
   // Ganti dengan URL dan API key Supabase Anda
   static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL',
       defaultValue: 'http://labulabs.net:8000');
@@ -17,13 +20,47 @@ class SupabaseService extends GetxService {
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzMxODYyODAwLAogICJleHAiOiAxODg5NjI5MjAwCn0.4IpwhwCVbfYXxb8JlZOLSBzCt6kQmypkvuso7N8Aicc');
 
   Future<SupabaseService> init() async {
-    await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseKey,
-    );
+    try {
+      await Supabase.initialize(
+        url: supabaseUrl,
+        anonKey: supabaseKey,
+        debug: true, // Aktifkan debug untuk melihat log autentikasi
+      );
 
-    client = Supabase.instance.client;
-    return this;
+      client = Supabase.instance.client;
+
+      // Tambahkan listener untuk perubahan autentikasi
+      client.auth.onAuthStateChange.listen((data) {
+        final AuthChangeEvent event = data.event;
+        print('DEBUG: Auth state changed: $event');
+
+        if (event == AuthChangeEvent.signedIn) {
+          print('DEBUG: User signed in');
+          _isSessionInitialized = true;
+        } else if (event == AuthChangeEvent.signedOut) {
+          print('DEBUG: User signed out');
+          _cachedUserProfile = null;
+          _isSessionInitialized = false;
+        } else if (event == AuthChangeEvent.tokenRefreshed) {
+          print('DEBUG: Token refreshed');
+          _isSessionInitialized = true;
+        }
+      });
+
+      // Periksa apakah ada sesi yang aktif
+      final session = client.auth.currentSession;
+      if (session != null) {
+        print('DEBUG: Session aktif ditemukan saat inisialisasi');
+        _isSessionInitialized = true;
+      } else {
+        print('DEBUG: Tidak ada session aktif saat inisialisasi');
+      }
+
+      return this;
+    } catch (e) {
+      print('ERROR: Gagal inisialisasi Supabase: $e');
+      rethrow;
+    }
   }
 
   // Metode untuk mendaftar pengguna baru
@@ -37,23 +74,52 @@ class SupabaseService extends GetxService {
 
   // Metode untuk login
   Future<AuthResponse> signIn(String email, String password) async {
-    return await client.auth.signInWithPassword(
+    final response = await client.auth.signInWithPassword(
       email: email,
       password: password,
     );
+
+    if (response.user != null) {
+      _isSessionInitialized = true;
+      print('DEBUG: Login berhasil, sesi diinisialisasi');
+    }
+
+    return response;
   }
 
   // Metode untuk logout
   Future<void> signOut() async {
     _cachedUserProfile = null; // Hapus cache saat logout
+    _isSessionInitialized = false;
     await client.auth.signOut();
+    print('DEBUG: Logout berhasil, sesi dihapus');
   }
 
   // Metode untuk mendapatkan user saat ini
   User? get currentUser => client.auth.currentUser;
 
   // Metode untuk memeriksa apakah user sudah login
-  bool get isAuthenticated => currentUser != null;
+  bool get isAuthenticated {
+    final user = currentUser;
+    final session = client.auth.currentSession;
+
+    if (user != null && session != null) {
+      // Periksa apakah token masih valid
+      final now = DateTime.now().millisecondsSinceEpoch / 1000;
+      final isValid = session.expiresAt != null && session.expiresAt! > now;
+
+      if (isValid) {
+        print('DEBUG: Sesi valid, user terautentikasi');
+        return true;
+      } else {
+        print('DEBUG: Sesi kedaluwarsa, user tidak terautentikasi');
+        return false;
+      }
+    }
+
+    print('DEBUG: Tidak ada user atau sesi, user tidak terautentikasi');
+    return false;
+  }
 
   // Metode untuk mendapatkan profil pengguna
   Future<Map<String, dynamic>?> getUserProfile() async {
@@ -270,7 +336,7 @@ class SupabaseService extends GetxService {
     try {
       final response = await client
           .from('stok_bantuan')
-          .select('*, jenis_bantuan:jenis_bantuan_id(id, nama)');
+          .select('*, kategori_bantuan:kategori_bantuan_id(id, nama)');
 
       return response;
     } catch (e) {
@@ -318,18 +384,23 @@ class SupabaseService extends GetxService {
     }
   }
 
-  Future<List<Map<String, dynamic>>?> getJenisBantuan() async {
+  Future<List<Map<String, dynamic>>?> getKategoriBantuan() async {
     try {
-      final response = await client.from('jenis_bantuan').select('*');
+      final response = await client.from('kategori_bantuan').select('*');
       return response;
     } catch (e) {
-      print('Error getting jenis bantuan: $e');
+      print('Error getting kategori bantuan: $e');
       return null;
     }
   }
 
   Future<void> addStok(Map<String, dynamic> stokData) async {
     try {
+      print('stokData: $stokData');
+      // Hapus id dari stokData jika ada, biarkan Supabase yang menghasilkan id
+      if (stokData.containsKey('id')) {
+        stokData.remove('id');
+      }
       await client.from('stok_bantuan').insert(stokData);
     } catch (e) {
       print('Error adding stok: $e');

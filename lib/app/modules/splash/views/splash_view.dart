@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
@@ -14,12 +15,19 @@ class _SplashViewState extends State<SplashView> {
   @override
   void initState() {
     super.initState();
-    _navigateToLogin();
+    _checkAuthAndNavigate();
   }
 
-  _navigateToLogin() async {
+  _checkAuthAndNavigate() async {
+    // Tunggu 2 detik untuk menampilkan splash screen
     await Future.delayed(const Duration(seconds: 2));
-    Get.offAllNamed(Routes.login);
+
+    // Dapatkan AuthController dan periksa status autentikasi
+    final AuthController authController = Get.find<AuthController>();
+    await authController.checkAuthStatus();
+
+    // Navigasi akan ditangani oleh AuthController
+    // Tidak perlu navigasi manual di sini
   }
 
   @override

@@ -3,14 +3,11 @@ import 'dart:convert';
 class StokBantuanModel {
   final String? id;
   final String? nama;
-  final String? bentukBantuanId;
-  final String? sumberBantuanId;
-  final String? jenisBantuanId;
-  final Map<String, dynamic>? jenisBantuan;
+  final String? kategoriBantuanId;
+  final Map<String, dynamic>? kategoriBantuan;
   final double? jumlah;
   final String? satuan;
   final String? deskripsi;
-  final String? status;
   final DateTime? tanggalMasuk;
   final DateTime? tanggalKadaluarsa;
   final DateTime? createdAt;
@@ -19,14 +16,11 @@ class StokBantuanModel {
   StokBantuanModel({
     this.id,
     this.nama,
-    this.bentukBantuanId,
-    this.sumberBantuanId,
-    this.jenisBantuanId,
-    this.jenisBantuan,
+    this.kategoriBantuanId,
+    this.kategoriBantuan,
     this.jumlah,
     this.satuan,
     this.deskripsi,
-    this.status,
     this.tanggalMasuk,
     this.tanggalKadaluarsa,
     this.createdAt,
@@ -42,14 +36,11 @@ class StokBantuanModel {
       StokBantuanModel(
         id: json["id"],
         nama: json["nama"],
-        bentukBantuanId: json["bentuk_bantuan_id"],
-        sumberBantuanId: json["sumber_bantuan_id"],
-        jenisBantuanId: json["jenis_bantuan_id"],
-        jenisBantuan: json["jenis_bantuan"],
+        kategoriBantuanId: json["kategori_bantuan_id"],
+        kategoriBantuan: json["kategori_bantuan"],
         jumlah: json["jumlah"] != null ? json["jumlah"].toDouble() : 0.0,
         satuan: json["satuan"],
         deskripsi: json["deskripsi"],
-        status: json["status"],
         tanggalMasuk: json["tanggal_masuk"] != null
             ? DateTime.parse(json["tanggal_masuk"])
             : null,
@@ -64,19 +55,24 @@ class StokBantuanModel {
             : null,
       );
 
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "nama": nama,
-        "bentuk_bantuan_id": bentukBantuanId,
-        "sumber_bantuan_id": sumberBantuanId,
-        "jenis_bantuan_id": jenisBantuanId,
-        "jumlah": jumlah,
-        "satuan": satuan,
-        "deskripsi": deskripsi,
-        "status": status,
-        "tanggal_masuk": tanggalMasuk?.toIso8601String(),
-        "tanggal_kadaluarsa": tanggalKadaluarsa?.toIso8601String(),
-        "created_at": createdAt?.toIso8601String(),
-        "updated_at": updatedAt?.toIso8601String(),
-      };
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {
+      "nama": nama,
+      "kategori_bantuan_id": kategoriBantuanId,
+      "jumlah": jumlah,
+      "satuan": satuan,
+      "deskripsi": deskripsi,
+      "tanggal_masuk": tanggalMasuk?.toIso8601String(),
+      "tanggal_kadaluarsa": tanggalKadaluarsa?.toIso8601String(),
+      "created_at": createdAt?.toIso8601String(),
+      "updated_at": updatedAt?.toIso8601String(),
+    };
+
+    // Tambahkan id hanya jika tidak null
+    if (id != null) {
+      data["id"] = id;
+    }
+
+    return data;
+  }
 }

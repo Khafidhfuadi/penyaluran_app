@@ -17,45 +17,54 @@ class PetugasDesaBinding extends Bindings {
       Get.put(AuthController(), permanent: true);
     }
 
-    // Main controller
-    Get.lazyPut<PetugasDesaController>(
-      () => PetugasDesaController(),
-      fenix: true,
-    );
+    // Main controller - gunakan put dengan permanent untuk controller utama
+    if (!Get.isRegistered<PetugasDesaController>()) {
+      Get.put(PetugasDesaController(), permanent: true);
+    } else {
+      // Jika sudah terdaftar, gunakan find untuk mendapatkan instance yang ada
+      Get.find<PetugasDesaController>();
+    }
 
     // Dashboard controller
     Get.lazyPut<PetugasDesaDashboardController>(
       () => PetugasDesaDashboardController(),
+      fenix: true,
     );
 
     // Jadwal penyaluran controller
     Get.lazyPut<JadwalPenyaluranController>(
       () => JadwalPenyaluranController(),
+      fenix: true,
     );
 
     // Stok bantuan controller
     Get.lazyPut<StokBantuanController>(
       () => StokBantuanController(),
+      fenix: true,
     );
 
     // Penitipan bantuan controller
     Get.lazyPut<PenitipanBantuanController>(
       () => PenitipanBantuanController(),
+      fenix: true,
     );
 
     // Pengaduan controller
     Get.lazyPut<PengaduanController>(
       () => PengaduanController(),
+      fenix: true,
     );
 
     // Penerima bantuan controller
     Get.lazyPut<PenerimaBantuanController>(
       () => PenerimaBantuanController(),
+      fenix: true,
     );
 
     // Laporan controller
     Get.lazyPut<LaporanController>(
       () => LaporanController(),
+      fenix: true,
     );
   }
 }

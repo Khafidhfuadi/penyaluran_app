@@ -23,7 +23,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
           _showAddStokDialog(context);
         },
         backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -79,7 +79,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                 child: _buildSummaryItem(
                   context,
                   icon: Icons.inventory_2_outlined,
-                  title: 'Total Stok',
+                  title: 'Stok Tersedia',
                   value: DateFormatter.formatNumber(controller.totalStok.value),
                 ),
               ),
@@ -87,7 +87,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                 child: _buildSummaryItem(
                   context,
                   icon: Icons.input,
-                  title: 'Masuk',
+                  title: 'Total Masuk',
                   value: DateFormatter.formatNumber(controller.stokMasuk.value),
                 ),
               ),
@@ -95,9 +95,44 @@ class StokBantuanView extends GetView<StokBantuanController> {
                 child: _buildSummaryItem(
                   context,
                   icon: Icons.output,
-                  title: 'Keluar',
+                  title: 'Total Keluar',
                   value:
                       DateFormatter.formatNumber(controller.stokKeluar.value),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryItem(
+                  context,
+                  icon: Icons.warning_amber_rounded,
+                  title: 'Hampir Habis',
+                  value: '${controller.getStokHampirHabis()}',
+                  valueColor: controller.getStokHampirHabis() > 0
+                      ? Colors.amber
+                      : Colors.white,
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryItem(
+                  context,
+                  icon: Icons.access_time,
+                  title: 'Segera Kadaluarsa',
+                  value: '${controller.getStokSegeraKadaluarsa()}',
+                  valueColor: controller.getStokSegeraKadaluarsa() > 0
+                      ? Colors.amber
+                      : Colors.white,
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryItem(
+                  context,
+                  icon: Icons.category_outlined,
+                  title: 'Kategori Bantuan',
+                  value: '${controller.daftarKategoriBantuan.length}',
                 ),
               ),
             ],
@@ -112,6 +147,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
     required IconData icon,
     required String title,
     required String value,
+    Color? valueColor,
   }) {
     return Column(
       children: [
@@ -132,7 +168,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: valueColor ?? Colors.white,
               ),
         ),
         const SizedBox(height: 4),
@@ -276,9 +312,10 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    item.jenisBantuan != null
-                        ? (item.jenisBantuan!['nama'] ?? 'Tidak Ada Jenis')
-                        : 'Tidak Ada Jenis',
+                    item.kategoriBantuan != null
+                        ? (item.kategoriBantuan!['nama'] ??
+                            'Tidak Ada Kategori')
+                        : 'Tidak Ada Kategori',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppTheme.primaryColor,
                           fontWeight: FontWeight.bold,
@@ -314,7 +351,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     context,
                     icon: Icons.calendar_today,
                     label: 'Tanggal Masuk',
-                    value: DateFormatter.formatDate(item.tanggalMasuk),
+                    value: DateFormatter.formatDateTime(item.tanggalMasuk),
                   ),
                 ),
               ],
@@ -335,7 +372,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     context,
                     icon: Icons.access_time,
                     label: 'Terakhir Diperbarui',
-                    value: DateFormatter.formatDate(item.updatedAt),
+                    value: DateFormatter.formatDateTime(item.updatedAt),
                   ),
                 ),
               ],
@@ -419,185 +456,192 @@ class StokBantuanView extends GetView<StokBantuanController> {
     final satuanController = TextEditingController();
     final deskripsiController = TextEditingController();
     String? selectedJenisBantuanId;
-    DateTime? tanggalMasuk = DateTime.now();
+
+    // Gunakan StatefulBuilder untuk memperbarui state dialog
+    DateTime tanggalMasuk = DateTime.now();
     DateTime? tanggalKadaluarsa;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Tambah Stok Bantuan'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: namaController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama Bantuan',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nama bantuan tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Jenis Bantuan',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: selectedJenisBantuanId,
-                  hint: const Text('Pilih Jenis Bantuan'),
-                  items: controller.daftarJenisBantuan
-                      .map((jenis) => DropdownMenuItem<String>(
-                            value: jenis['id'],
-                            child: Text(jenis['nama'] ?? ''),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    selectedJenisBantuanId = value;
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Jenis bantuan harus dipilih';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: TextFormField(
-                        controller: jumlahController,
-                        decoration: const InputDecoration(
-                          labelText: 'Jumlah',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Jumlah tidak boleh kosong';
-                          }
-                          if (double.tryParse(value) == null) {
-                            return 'Jumlah harus berupa angka';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 1,
-                      child: TextFormField(
-                        controller: satuanController,
-                        decoration: const InputDecoration(
-                          labelText: 'Satuan',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Satuan tidak boleh kosong';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: deskripsiController,
-                  decoration: const InputDecoration(
-                    labelText: 'Deskripsi',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: tanggalMasuk ?? DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (picked != null) {
-                      tanggalMasuk = picked;
-                    }
-                  },
-                  child: InputDecorator(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Tambah Stok Bantuan'),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: namaController,
                     decoration: const InputDecoration(
-                      labelText: 'Tanggal Masuk',
+                      labelText: 'Nama Bantuan',
                       border: OutlineInputBorder(),
                     ),
-                    child: Text(
-                      DateFormatter.formatDate(tanggalMasuk),
-                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Nama bantuan tidak boleh kosong';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 16),
-                InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: tanggalKadaluarsa ??
-                          DateTime.now().add(const Duration(days: 365)),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2030),
-                    );
-                    if (picked != null) {
-                      tanggalKadaluarsa = picked;
-                    }
-                  },
-                  child: InputDecorator(
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
-                      labelText: 'Tanggal Kadaluarsa',
+                      labelText: 'Kategori Bantuan',
                       border: OutlineInputBorder(),
                     ),
-                    child: Text(
-                      DateFormatter.formatDate(tanggalKadaluarsa),
+                    value: selectedJenisBantuanId,
+                    hint: const Text('Pilih Kategori Bantuan'),
+                    items: controller.daftarKategoriBantuan
+                        .map((kategori) => DropdownMenuItem<String>(
+                              value: kategori['id'],
+                              child: Text(kategori['nama'] ?? ''),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      selectedJenisBantuanId = value;
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Kategori bantuan harus dipilih';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: TextFormField(
+                          controller: jumlahController,
+                          decoration: const InputDecoration(
+                            labelText: 'Jumlah',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Jumlah tidak boleh kosong';
+                            }
+                            if (double.tryParse(value) == null) {
+                              return 'Jumlah harus berupa angka';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 1,
+                        child: TextFormField(
+                          controller: satuanController,
+                          decoration: const InputDecoration(
+                            labelText: 'Satuan',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Satuan tidak boleh kosong';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: deskripsiController,
+                    decoration: const InputDecoration(
+                      labelText: 'Deskripsi',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: tanggalMasuk,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          tanggalMasuk = picked;
+                        });
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Tanggal Masuk',
+                        border: OutlineInputBorder(),
+                      ),
+                      child: Text(
+                        DateFormatter.formatDateTime(tanggalMasuk),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: tanggalKadaluarsa ??
+                            DateTime.now().add(const Duration(days: 365)),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2030),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          tanggalKadaluarsa = picked;
+                        });
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Tanggal Kadaluarsa',
+                        border: OutlineInputBorder(),
+                      ),
+                      child: Text(
+                        DateFormatter.formatDate(tanggalKadaluarsa),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  final stok = StokBantuanModel(
+                    nama: namaController.text,
+                    jumlah: double.parse(jumlahController.text),
+                    satuan: satuanController.text,
+                    deskripsi: deskripsiController.text,
+                    kategoriBantuanId: selectedJenisBantuanId,
+                    tanggalMasuk: tanggalMasuk,
+                    tanggalKadaluarsa: tanggalKadaluarsa,
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  );
+                  controller.addStok(stok);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                final stok = StokBantuanModel(
-                  nama: namaController.text,
-                  jumlah: double.parse(jumlahController.text),
-                  satuan: satuanController.text,
-                  deskripsi: deskripsiController.text,
-                  jenisBantuanId: selectedJenisBantuanId,
-                  tanggalMasuk: tanggalMasuk,
-                  tanggalKadaluarsa: tanggalKadaluarsa,
-                  status: 'TERSEDIA',
-                  createdAt: DateTime.now(),
-                  updatedAt: DateTime.now(),
-                );
-                controller.addStok(stok);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
       ),
     );
   }
@@ -609,187 +653,199 @@ class StokBantuanView extends GetView<StokBantuanController> {
         TextEditingController(text: stok.jumlah?.toString());
     final satuanController = TextEditingController(text: stok.satuan);
     final deskripsiController = TextEditingController(text: stok.deskripsi);
-    String? selectedJenisBantuanId = stok.jenisBantuanId;
+    String? selectedJenisBantuanId = stok.kategoriBantuanId;
+
+    // Gunakan StatefulBuilder untuk memperbarui state dialog
     DateTime? tanggalMasuk = stok.tanggalMasuk;
     DateTime? tanggalKadaluarsa = stok.tanggalKadaluarsa;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Stok Bantuan'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: namaController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama Bantuan',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nama bantuan tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Jenis Bantuan',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: selectedJenisBantuanId,
-                  hint: const Text('Pilih Jenis Bantuan'),
-                  items: controller.daftarJenisBantuan
-                      .map((jenis) => DropdownMenuItem<String>(
-                            value: jenis['id'],
-                            child: Text(jenis['nama'] ?? ''),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    selectedJenisBantuanId = value;
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Jenis bantuan harus dipilih';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: TextFormField(
-                        controller: jumlahController,
-                        decoration: const InputDecoration(
-                          labelText: 'Jumlah',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Jumlah tidak boleh kosong';
-                          }
-                          if (double.tryParse(value) == null) {
-                            return 'Jumlah harus berupa angka';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 1,
-                      child: TextFormField(
-                        controller: satuanController,
-                        decoration: const InputDecoration(
-                          labelText: 'Satuan',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Satuan tidak boleh kosong';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: deskripsiController,
-                  decoration: const InputDecoration(
-                    labelText: 'Deskripsi',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: tanggalMasuk ?? DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (picked != null) {
-                      tanggalMasuk = picked;
-                    }
-                  },
-                  child: InputDecorator(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Edit Stok Bantuan'),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: namaController,
                     decoration: const InputDecoration(
-                      labelText: 'Tanggal Masuk',
+                      labelText: 'Nama Bantuan',
                       border: OutlineInputBorder(),
                     ),
-                    child: Text(
-                      DateFormatter.formatDate(tanggalMasuk),
-                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Nama bantuan tidak boleh kosong';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 16),
-                InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: tanggalKadaluarsa ??
-                          DateTime.now().add(const Duration(days: 365)),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2030),
-                    );
-                    if (picked != null) {
-                      tanggalKadaluarsa = picked;
-                    }
-                  },
-                  child: InputDecorator(
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
-                      labelText: 'Tanggal Kadaluarsa',
+                      labelText: 'Kategori Bantuan',
                       border: OutlineInputBorder(),
                     ),
-                    child: Text(
-                      DateFormatter.formatDate(tanggalKadaluarsa),
+                    value: selectedJenisBantuanId,
+                    hint: const Text('Pilih Kategori Bantuan'),
+                    isExpanded: true,
+                    items: controller.daftarKategoriBantuan
+                        .map((kategori) => DropdownMenuItem<String>(
+                              value: kategori['id'],
+                              child: Text(
+                                kategori['nama'] ?? '',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      selectedJenisBantuanId = value;
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Kategori bantuan harus dipilih';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: TextFormField(
+                          controller: jumlahController,
+                          decoration: const InputDecoration(
+                            labelText: 'Jumlah',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Jumlah tidak boleh kosong';
+                            }
+                            if (double.tryParse(value) == null) {
+                              return 'Jumlah harus berupa angka';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 1,
+                        child: TextFormField(
+                          controller: satuanController,
+                          decoration: const InputDecoration(
+                            labelText: 'Satuan',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Satuan tidak boleh kosong';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: deskripsiController,
+                    decoration: const InputDecoration(
+                      labelText: 'Deskripsi',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: tanggalMasuk ?? DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          tanggalMasuk = picked;
+                        });
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Tanggal Masuk',
+                        border: OutlineInputBorder(),
+                      ),
+                      child: Text(
+                        DateFormatter.formatDateTime(tanggalMasuk),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: tanggalKadaluarsa ??
+                            DateTime.now().add(const Duration(days: 365)),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2030),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          tanggalKadaluarsa = picked;
+                        });
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Tanggal Kadaluarsa',
+                        border: OutlineInputBorder(),
+                      ),
+                      child: Text(
+                        DateFormatter.formatDate(tanggalKadaluarsa),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  final updatedStok = StokBantuanModel(
+                    id: stok.id,
+                    nama: namaController.text,
+                    jumlah: double.parse(jumlahController.text),
+                    satuan: satuanController.text,
+                    deskripsi: deskripsiController.text,
+                    kategoriBantuanId: selectedJenisBantuanId,
+                    tanggalMasuk: tanggalMasuk,
+                    tanggalKadaluarsa: tanggalKadaluarsa,
+                    createdAt: stok.createdAt,
+                    updatedAt: DateTime.now(),
+                  );
+                  controller.updateStok(updatedStok);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                final updatedStok = StokBantuanModel(
-                  id: stok.id,
-                  nama: namaController.text,
-                  jumlah: double.parse(jumlahController.text),
-                  satuan: satuanController.text,
-                  deskripsi: deskripsiController.text,
-                  jenisBantuanId: selectedJenisBantuanId,
-                  tanggalMasuk: tanggalMasuk,
-                  tanggalKadaluarsa: tanggalKadaluarsa,
-                  status: stok.status,
-                  createdAt: stok.createdAt,
-                  updatedAt: DateTime.now(),
-                );
-                controller.updateStok(updatedStok);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
       ),
     );
   }

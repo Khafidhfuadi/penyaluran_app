@@ -116,8 +116,13 @@ class AuthController extends GetxController {
     final targetRoute = _getTargetRouteForRole(role);
     print('Target rute: $targetRoute');
 
-    if (currentRoute != targetRoute) {
+    // Jika berada di splash atau login, navigasi ke dashboard
+    if (currentRoute == Routes.splash || currentRoute == Routes.login) {
       print('Navigasi ke rute target berdasarkan role');
+      navigateBasedOnRole(role);
+    } else if (currentRoute != targetRoute) {
+      // Jika berada di rute lain yang tidak sesuai dengan role, navigasi ke dashboard
+      print('Berada di rute yang tidak sesuai, navigasi ke rute target');
       navigateBasedOnRole(role);
     } else {
       print('Sudah berada di rute yang sesuai, tidak perlu navigasi');
@@ -334,7 +339,7 @@ class AuthController extends GetxController {
     }
   }
 
-  // Mendapatkan rute target berdasarkan peran
+  // Mendapatkan rute target berdasarkan role
   String _getTargetRouteForRole(String role) {
     switch (role) {
       case 'WARGA':

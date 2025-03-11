@@ -169,7 +169,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
       {
         'id': '1',
         'donatur': 'PT Sejahtera Abadi',
-        'jenis_bantuan': 'Sembako',
+        'kategori_bantuan': 'Sembako',
         'jumlah': '500 kg',
         'tanggal_pengajuan': '15 April 2023',
         'status': 'Menunggu',
@@ -177,7 +177,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
       {
         'id': '2',
         'donatur': 'Yayasan Peduli Sesama',
-        'jenis_bantuan': 'Pakaian',
+        'kategori_bantuan': 'Pakaian',
         'jumlah': '200 pcs',
         'tanggal_pengajuan': '14 April 2023',
         'status': 'Terverifikasi',
@@ -185,7 +185,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
       {
         'id': '3',
         'donatur': 'Bank BRI',
-        'jenis_bantuan': 'Beras',
+        'kategori_bantuan': 'Beras',
         'jumlah': '300 kg',
         'tanggal_pengajuan': '13 April 2023',
         'status': 'Terverifikasi',
@@ -193,7 +193,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
       {
         'id': '4',
         'donatur': 'Komunitas Peduli',
-        'jenis_bantuan': 'Alat Tulis',
+        'kategori_bantuan': 'Alat Tulis',
         'jumlah': '100 set',
         'tanggal_pengajuan': '12 April 2023',
         'status': 'Ditolak',
@@ -304,8 +304,8 @@ class PenitipanView extends GetView<PetugasDesaController> {
                   child: _buildItemDetail(
                     context,
                     icon: Icons.category,
-                    label: 'Jenis Bantuan',
-                    value: item['jenis_bantuan'] ?? '',
+                    label: 'Kategori Bantuan',
+                    value: item['kategori_bantuan'] ?? '',
                   ),
                 ),
                 Expanded(

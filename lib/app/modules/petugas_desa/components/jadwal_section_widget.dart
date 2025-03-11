@@ -148,7 +148,7 @@ class JadwalSectionWidget extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Jenis Bantuan: ${jadwalData['jenis_bantuan'] ?? ''}',
+                'Kategori Bantuan: ${jadwalData['kategori_bantuan'] ?? ''}',
                 style: textTheme.bodyMedium,
               ),
               const SizedBox(height: 4),

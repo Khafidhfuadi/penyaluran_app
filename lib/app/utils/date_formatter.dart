@@ -14,6 +14,35 @@ class DateFormatter {
     }
   }
 
+  static String formatTime(DateTime? time,
+      {String format = 'HH:mm',
+      String locale = 'id_ID',
+      String defaultValue = '-'}) {
+    if (time == null) return defaultValue;
+    try {
+      return DateFormat(format, locale).format(time);
+    } catch (e) {
+      print('Error formatting time: $e');
+      return time
+          .toString()
+          .split(' ')[1]
+          .substring(0, 5); // Fallback to basic format
+    }
+  }
+
+  static String formatDateTime(DateTime? dateTime,
+      {String format = 'dd MMMM yyyy HH:mm',
+      String locale = 'id_ID',
+      String defaultValue = '-'}) {
+    if (dateTime == null) return defaultValue;
+    try {
+      return DateFormat(format, locale).format(dateTime);
+    } catch (e) {
+      print('Error formatting date time: $e');
+      return dateTime.toString().split('.')[0]; // Fallback to basic format
+    }
+  }
+
   static String formatNumber(num? number,
       {String locale = 'id_ID', String defaultValue = '0'}) {
     if (number == null) return defaultValue;
