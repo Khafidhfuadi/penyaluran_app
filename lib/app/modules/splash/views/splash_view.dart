@@ -4,7 +4,7 @@ import 'package:penyaluran_app/app/routes/app_pages.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class SplashView extends StatefulWidget {
-  const SplashView({Key? key}) : super(key: key);
+  const SplashView({super.key});
 
   @override
   State<SplashView> createState() => _SplashViewState();

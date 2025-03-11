@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class PermintaanPenjadwalanSummaryWidget extends StatelessWidget {
-  final PetugasDesaController controller;
+  final JadwalPenyaluranController controller;
 
   const PermintaanPenjadwalanSummaryWidget({
-    Key? key,
+    super.key,
     required this.controller,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -134,8 +134,11 @@ class PermintaanPenjadwalanSummaryWidget extends StatelessWidget {
     });
   }
 
-  Widget _buildPermintaanPreview(
-      TextTheme textTheme, Map<String, dynamic> permintaan) {
+  Widget _buildPermintaanPreview(TextTheme textTheme, dynamic permintaan) {
+    // Konversi permintaan ke Map jika itu adalah PenyaluranBantuanModel
+    final Map<String, dynamic> permintaanData =
+        permintaan is Map<String, dynamic> ? permintaan : permintaan.toJson();
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 8),
@@ -152,7 +155,7 @@ class PermintaanPenjadwalanSummaryWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  permintaan['nama'] ?? '',
+                  permintaanData['nama'] ?? '',
                   style: textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -178,12 +181,12 @@ class PermintaanPenjadwalanSummaryWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Jenis: ${permintaan['jenis_bantuan'] ?? ''}',
+            'Jenis: ${permintaanData['jenis_bantuan'] ?? ''}',
             style: textTheme.bodySmall,
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            'Tanggal: ${permintaan['tanggal_permintaan'] ?? ''}',
+            'Tanggal: ${permintaanData['tanggal_permintaan'] ?? ''}',
             style: textTheme.bodySmall,
             overflow: TextOverflow.ellipsis,
           ),

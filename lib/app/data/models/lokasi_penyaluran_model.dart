@@ -46,9 +46,8 @@ class LokasiPenyaluranModel {
         kabupaten: json["kabupaten"],
         provinsi: json["provinsi"],
         kodePos: json["kode_pos"],
-        latitude: json["latitude"] != null ? json["latitude"].toDouble() : null,
-        longitude:
-            json["longitude"] != null ? json["longitude"].toDouble() : null,
+        latitude: json["latitude"]?.toDouble(),
+        longitude: json["longitude"]?.toDouble(),
         petugasDesaId: json["petugas_desa_id"],
         createdAt: DateTime.parse(json["created_at"]),
         updatedAt: json["updated_at"] == null

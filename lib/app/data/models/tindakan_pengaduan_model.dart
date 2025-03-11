@@ -1,27 +1,25 @@
 import 'dart:convert';
 
 class TindakanPengaduanModel {
-  final String id;
-  final String pengaduanId; // Referensi ke Pengaduan
-  final String? userId; // Pengguna yang melakukan tindakan
-  final String tindakan; // Deskripsi tindakan yang dilakukan
-  final String status; // Contoh: 'diproses', 'selesai'
+  final String? id;
+  final String? pengaduanId;
+  final String? tindakan;
   final String? catatan;
-  final List<String>? gambarUrls; // URL gambar bukti tindakan
-  final DateTime tanggalTindakan;
-  final DateTime createdAt;
+  final String? status;
+  final String? petugasId;
+  final DateTime? tanggalTindakan;
+  final DateTime? createdAt;
   final DateTime? updatedAt;
 
   TindakanPengaduanModel({
-    required this.id,
-    required this.pengaduanId,
-    this.userId,
-    required this.tindakan,
-    required this.status,
+    this.id,
+    this.pengaduanId,
+    this.tindakan,
     this.catatan,
-    this.gambarUrls,
-    required this.tanggalTindakan,
-    required this.createdAt,
+    this.status,
+    this.petugasId,
+    this.tanggalTindakan,
+    this.createdAt,
     this.updatedAt,
   });
 
@@ -34,32 +32,30 @@ class TindakanPengaduanModel {
       TindakanPengaduanModel(
         id: json["id"],
         pengaduanId: json["pengaduan_id"],
-        userId: json["user_id"],
         tindakan: json["tindakan"],
-        status: json["status"],
         catatan: json["catatan"],
-        gambarUrls: json["gambar_urls"] == null
-            ? null
-            : List<String>.from(json["gambar_urls"].map((x) => x)),
-        tanggalTindakan: DateTime.parse(json["tanggal_tindakan"]),
-        createdAt: DateTime.parse(json["created_at"]),
-        updatedAt: json["updated_at"] == null
-            ? null
-            : DateTime.parse(json["updated_at"]),
+        status: json["status"],
+        petugasId: json["petugas_id"],
+        tanggalTindakan: json["tanggal_tindakan"] != null
+            ? DateTime.parse(json["tanggal_tindakan"])
+            : null,
+        createdAt: json["created_at"] != null
+            ? DateTime.parse(json["created_at"])
+            : null,
+        updatedAt: json["updated_at"] != null
+            ? DateTime.parse(json["updated_at"])
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
         "pengaduan_id": pengaduanId,
-        "user_id": userId,
         "tindakan": tindakan,
-        "status": status,
         "catatan": catatan,
-        "gambar_urls": gambarUrls == null
-            ? null
-            : List<dynamic>.from(gambarUrls!.map((x) => x)),
-        "tanggal_tindakan": tanggalTindakan.toIso8601String(),
-        "created_at": createdAt.toIso8601String(),
+        "status": status,
+        "petugas_id": petugasId,
+        "tanggal_tindakan": tanggalTindakan?.toIso8601String(),
+        "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
 }

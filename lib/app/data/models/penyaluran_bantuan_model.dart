@@ -1,31 +1,29 @@
 import 'dart:convert';
 
 class PenyaluranBantuanModel {
-  final String id;
-  final String? penitipanBantuanId; // Referensi ke PenitipanBantuan
-  final String? lokasiPenyaluranId; // Referensi ke LokasiPenyaluran
-  final String? petugasDesaId; // Referensi ke PetugasDesa
-  final double jumlah;
-  final String? satuan; // Contoh: kg, buah, paket, dll
+  final String? id;
+  final String? judul;
   final String? deskripsi;
-  final String status; // Contoh: 'diproses', 'disalurkan', 'dibatalkan'
-  final List<String>? gambarUrls; // URL gambar bukti penyaluran
-  final DateTime tanggalPenyaluran;
-  final DateTime createdAt;
+  final String? lokasiPenyaluranId;
+  final String? petugasId;
+  final String? status;
+  final String? alasanPenolakan;
+  final DateTime? tanggalPenjadwalan;
+  final DateTime? tanggalPenyaluran;
+  final DateTime? createdAt;
   final DateTime? updatedAt;
 
   PenyaluranBantuanModel({
-    required this.id,
-    this.penitipanBantuanId,
-    this.lokasiPenyaluranId,
-    this.petugasDesaId,
-    required this.jumlah,
-    this.satuan,
+    this.id,
+    this.judul,
     this.deskripsi,
-    required this.status,
-    this.gambarUrls,
-    required this.tanggalPenyaluran,
-    required this.createdAt,
+    this.lokasiPenyaluranId,
+    this.petugasId,
+    this.status,
+    this.alasanPenolakan,
+    this.tanggalPenjadwalan,
+    this.tanggalPenyaluran,
+    this.createdAt,
     this.updatedAt,
   });
 
@@ -37,37 +35,37 @@ class PenyaluranBantuanModel {
   factory PenyaluranBantuanModel.fromJson(Map<String, dynamic> json) =>
       PenyaluranBantuanModel(
         id: json["id"],
-        penitipanBantuanId: json["penitipan_bantuan_id"],
-        lokasiPenyaluranId: json["lokasi_penyaluran_id"],
-        petugasDesaId: json["petugas_desa_id"],
-        jumlah: json["jumlah"].toDouble(),
-        satuan: json["satuan"],
+        judul: json["judul"],
         deskripsi: json["deskripsi"],
+        lokasiPenyaluranId: json["lokasi_penyaluran_id"],
+        petugasId: json["petugas_id"],
         status: json["status"],
-        gambarUrls: json["gambar_urls"] == null
-            ? null
-            : List<String>.from(json["gambar_urls"].map((x) => x)),
-        tanggalPenyaluran: DateTime.parse(json["tanggal_penyaluran"]),
-        createdAt: DateTime.parse(json["created_at"]),
-        updatedAt: json["updated_at"] == null
-            ? null
-            : DateTime.parse(json["updated_at"]),
+        alasanPenolakan: json["alasan_penolakan"],
+        tanggalPenjadwalan: json["tanggal_penjadwalan"] != null
+            ? DateTime.parse(json["tanggal_penjadwalan"])
+            : null,
+        tanggalPenyaluran: json["tanggal_penyaluran"] != null
+            ? DateTime.parse(json["tanggal_penyaluran"])
+            : null,
+        createdAt: json["created_at"] != null
+            ? DateTime.parse(json["created_at"])
+            : null,
+        updatedAt: json["updated_at"] != null
+            ? DateTime.parse(json["updated_at"])
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "penitipan_bantuan_id": penitipanBantuanId,
-        "lokasi_penyaluran_id": lokasiPenyaluranId,
-        "petugas_desa_id": petugasDesaId,
-        "jumlah": jumlah,
-        "satuan": satuan,
+        "judul": judul,
         "deskripsi": deskripsi,
+        "lokasi_penyaluran_id": lokasiPenyaluranId,
+        "petugas_id": petugasId,
         "status": status,
-        "gambar_urls": gambarUrls == null
-            ? null
-            : List<dynamic>.from(gambarUrls!.map((x) => x)),
-        "tanggal_penyaluran": tanggalPenyaluran.toIso8601String(),
-        "created_at": createdAt.toIso8601String(),
+        "alasan_penolakan": alasanPenolakan,
+        "tanggal_penjadwalan": tanggalPenjadwalan?.toIso8601String(),
+        "tanggal_penyaluran": tanggalPenyaluran?.toIso8601String(),
+        "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
 }

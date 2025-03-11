@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
+import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
-class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
+class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
   const PermintaanPenjadwalanView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     // Pastikan controller sudah diinisialisasi
-    if (!Get.isRegistered<PetugasDesaController>()) {
-      Get.put(PetugasDesaController());
+    if (!Get.isRegistered<JadwalPenyaluranController>()) {
+      Get.put(JadwalPenyaluranController());
     }
 
     return Scaffold(
@@ -236,7 +237,7 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
     );
   }
 
-  Widget _buildPermintaanItem(BuildContext context, Map<String, dynamic> item) {
+  Widget _buildPermintaanItem(BuildContext context, PenyaluranBantuanModel item) {
     Color statusColor = Colors.orange;
     IconData statusIcon = Icons.pending_actions;
 
@@ -265,7 +266,7 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
               children: [
                 Expanded(
                   child: Text(
-                    item['nama'] ?? '',
+                    item.judul ?? '',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -307,8 +308,8 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
                   child: _buildItemDetail(
                     context,
                     icon: Icons.person,
-                    label: 'NIK',
-                    value: item['nik'] ?? '',
+                    label: 'ID',
+                    value: item.id ?? '',
                   ),
                 ),
                 Expanded(
@@ -316,7 +317,7 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
                     context,
                     icon: Icons.category,
                     label: 'Jenis Bantuan',
-                    value: item['jenis_bantuan'] ?? '',
+                    value: item.judul ?? '',
                   ),
                 ),
               ],
@@ -329,15 +330,15 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
                     context,
                     icon: Icons.calendar_today,
                     label: 'Tanggal Permintaan',
-                    value: item['tanggal_permintaan'] ?? '',
+                    value: item.createdAt?.toString().substring(0, 10) ?? '',
                   ),
                 ),
                 Expanded(
                   child: _buildItemDetail(
                     context,
                     icon: Icons.location_on,
-                    label: 'Alamat',
-                    value: item['alamat'] ?? '',
+                    label: 'Deskripsi',
+                    value: item.deskripsi ?? '',
                   ),
                 ),
               ],
@@ -420,15 +421,15 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
   }
 
   // Dialog untuk konfirmasi permintaan
-  void _showKonfirmasiDialog(Map<String, dynamic> permintaan) {
+  void _showKonfirmasiDialog(PenyaluranBantuanModel permintaan) {
     String? selectedJadwalId;
 
     // Data jadwal yang tersedia dari controller
     final jadwalOptions = controller.jadwalMendatang.map((jadwal) {
       return DropdownMenuItem<String>(
-        value: jadwal['id'],
+        value: jadwal.id,
         child: Text(
-            '${jadwal['tanggal'] ?? ''} - ${jadwal['lokasi'] ?? ''} (${jadwal['jenis_bantuan'] ?? ''})'),
+            '${jadwal.tanggalPenjadwalan?.toString().substring(0, 10) ?? ''} - ${jadwal.lokasiPenyaluranId ?? ''} (${jadwal.judul ?? ''})'),
       );
     }).toList();
 
@@ -448,7 +449,7 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Anda akan mengkonfirmasi permintaan penjadwalan dari ${permintaan['nama'] ?? 'Penerima'}.'),
+                'Anda akan mengkonfirmasi permintaan penjadwalan dari ${permintaan.judul ?? 'Penerima'}.'),
             const SizedBox(height: 16),
             const Text('Pilih jadwal penyaluran:'),
             const SizedBox(height: 8),
@@ -474,9 +475,8 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
             onPressed: () {
               if (selectedJadwalId != null) {
                 // Panggil metode konfirmasi di controller
-                controller.konfirmasiPermintaanPenjadwalan(
-                  permintaan['id'] ?? '',
-                  selectedJadwalId ?? '',
+                controller.approveJadwal(
+                  permintaan.id ?? '',
                 );
 
                 Get.back();
@@ -508,7 +508,7 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
   }
 
   // Dialog untuk menolak permintaan
-  void _showTolakDialog(Map<String, dynamic> permintaan) {
+  void _showTolakDialog(PenyaluranBantuanModel permintaan) {
     final TextEditingController alasanController = TextEditingController();
 
     Get.dialog(
@@ -519,7 +519,7 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Anda akan menolak permintaan penjadwalan dari ${permintaan['nama'] ?? 'Penerima'}.'),
+                'Anda akan menolak permintaan penjadwalan dari ${permintaan.judul ?? 'Penerima'}.'),
             const SizedBox(height: 16),
             const Text('Alasan penolakan:'),
             const SizedBox(height: 8),
@@ -542,8 +542,8 @@ class PermintaanPenjadwalanView extends GetView<PetugasDesaController> {
             onPressed: () {
               if (alasanController.text.trim().isNotEmpty) {
                 // Panggil metode tolak di controller
-                controller.tolakPermintaanPenjadwalan(
-                  permintaan['id'] ?? '',
+                controller.rejectJadwal(
+                  permintaan.id ?? '',
                   alasanController.text.trim(),
                 );
 

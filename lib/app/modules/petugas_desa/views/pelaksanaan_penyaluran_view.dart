@@ -237,8 +237,7 @@ class PelaksanaanPenyaluranView extends GetView<PetugasDesaController> {
 
           // Daftar penerima
           ...daftarPenerima
-              .map((penerima) => _buildPenerimaItem(context, penerima))
-              .toList(),
+              .map((penerima) => _buildPenerimaItem(context, penerima)),
         ],
       ),
     );

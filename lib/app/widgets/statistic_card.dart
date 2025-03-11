@@ -8,12 +8,12 @@ class StatisticCard extends StatelessWidget {
   final double height;
 
   const StatisticCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.count,
     required this.subtitle,
     required this.height,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

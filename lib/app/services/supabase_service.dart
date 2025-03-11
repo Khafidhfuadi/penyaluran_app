@@ -6,6 +6,9 @@ class SupabaseService extends GetxService {
 
   late final SupabaseClient client;
 
+  // Cache untuk profil pengguna
+  Map<String, dynamic>? _cachedUserProfile;
+
   // Ganti dengan URL dan API key Supabase Anda
   static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL',
       defaultValue: 'http://labulabs.net:8000');
@@ -42,6 +45,7 @@ class SupabaseService extends GetxService {
 
   // Metode untuk logout
   Future<void> signOut() async {
+    _cachedUserProfile = null; // Hapus cache saat logout
     await client.auth.signOut();
   }
 
@@ -53,15 +57,37 @@ class SupabaseService extends GetxService {
 
   // Metode untuk mendapatkan profil pengguna
   Future<Map<String, dynamic>?> getUserProfile() async {
-    if (currentUser == null) return null;
+    final user = currentUser;
+    if (user == null) return null;
 
-    final response = await client
-        .from('user_profile')
-        .select()
-        .eq('id', currentUser!.id)
-        .maybeSingle();
+    try {
+      // Gunakan cache jika tersedia
+      if (_cachedUserProfile != null && _cachedUserProfile!['id'] == user.id) {
+        print('Menggunakan data profil dari cache');
+        return _cachedUserProfile;
+      }
 
-    return response;
+      final response = await client
+          .from('user_profile')
+          .select('*, desa:desa_id(id, nama, kecamatan, kabupaten, provinsi)')
+          .eq('id', user.id)
+          .maybeSingle();
+      print('response: $response');
+
+      // Simpan ke cache
+      _cachedUserProfile = response;
+
+      // Log untuk debugging
+      if (response != null && response['desa'] != null) {
+        print('Desa data: ${response['desa']}');
+        print('Desa type: ${response['desa'].runtimeType}');
+      }
+
+      return response;
+    } catch (e) {
+      print('Error pada getUserProfile: $e');
+      return null;
+    }
   }
 
   // Metode untuk mendapatkan role pengguna
@@ -70,64 +96,491 @@ class SupabaseService extends GetxService {
     return profile?['role'];
   }
 
-  // Metode untuk mendapatkan data berdasarkan peran
-  Future<Map<String, dynamic>?> getRoleSpecificData(String role) async {
-    if (currentUser == null) return null;
+  // ==================== PETUGAS DESA METHODS ====================
 
-    switch (role) {
-      case 'WARGA':
-        return await getWargaByUserId();
-      case 'PETUGASVERIFIKASI':
-        return await getPetugasVerifikasiData();
-      case 'PETUGASDESA':
-        return await getPetugasDesaData();
-      case 'DONATUR':
-        return await getDonaturData();
-      default:
-        return null;
+  // Dashboard methods
+  Future<int?> getTotalPenerima() async {
+    try {
+      final response =
+          await client.from('warga').select('id').eq('status', 'AKTIF');
+
+      return response.length;
+    } catch (e) {
+      print('Error getting total penerima: $e');
+      return null;
     }
   }
 
-  // Metode untuk mendapatkan data petugas verifikasi
-  Future<Map<String, dynamic>?> getPetugasVerifikasiData() async {
-    if (currentUser == null) return null;
+  Future<int?> getTotalBantuan() async {
+    try {
+      final response = await client.from('stok_bantuan').select('jumlah');
 
-    final response = await client
-        .from('xx02_PetugasVerifikasi')
-        .select()
-        .eq('userId', currentUser!.id)
-        .maybeSingle();
+      double total = 0;
+      for (var item in response) {
+        total += (item['jumlah'] ?? 0);
+      }
 
-    return response;
+      return total.toInt();
+    } catch (e) {
+      print('Error getting total bantuan: $e');
+      return null;
+    }
   }
 
-  // Metode untuk mendapatkan data petugas desa
-  Future<Map<String, dynamic>?> getPetugasDesaData() async {
-    if (currentUser == null) return null;
+  Future<int?> getTotalPenyaluran() async {
+    try {
+      final response = await client
+          .from('penyaluran_bantuan')
+          .select('id')
+          .eq('status', 'SELESAI');
 
-    final response = await client
-        .from('xx01_PetugasDesa')
-        .select()
-        .eq('userId', currentUser!.id)
-        .maybeSingle();
-
-    return response;
+      return response.length;
+    } catch (e) {
+      print('Error getting total penyaluran: $e');
+      return null;
+    }
   }
 
-  // Metode untuk mendapatkan data donatur
-  Future<Map<String, dynamic>?> getDonaturData() async {
-    if (currentUser == null) return null;
+  Future<List<Map<String, dynamic>>?> getNotifikasiBelumDibaca(
+      String userId) async {
+    try {
+      final response = await client
+          .from('notifikasi')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('dibaca', false)
+          .order('created_at', ascending: false);
 
-    final response = await client
-        .from('xx01_Donatur')
-        .select()
-        .eq('userId', currentUser!.id)
-        .maybeSingle();
-
-    return response;
+      return response;
+    } catch (e) {
+      print('Error getting notifikasi belum dibaca: $e');
+      return null;
+    }
   }
 
-  // Metode untuk membuat data warga
+  // Jadwal penyaluran methods
+  Future<List<Map<String, dynamic>>?> getJadwalHariIni() async {
+    try {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final tomorrow = today.add(const Duration(days: 1));
+
+      final response = await client
+          .from('penyaluran_bantuan')
+          .select('*')
+          .gte('tanggal_penyaluran', today.toIso8601String())
+          .lt('tanggal_penyaluran', tomorrow.toIso8601String())
+          .inFilter('status', ['DISETUJUI', 'BERLANGSUNG']);
+
+      return response;
+    } catch (e) {
+      print('Error getting jadwal hari ini: $e');
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> getJadwalMendatang() async {
+    try {
+      final now = DateTime.now();
+      final tomorrow =
+          DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+
+      final response = await client
+          .from('penyaluran_bantuan')
+          .select('*')
+          .gte('tanggal_penyaluran', tomorrow.toIso8601String())
+          .inFilter('status', ['DISETUJUI', 'DIJADWALKAN']);
+
+      return response;
+    } catch (e) {
+      print('Error getting jadwal mendatang: $e');
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> getJadwalSelesai() async {
+    try {
+      final response = await client
+          .from('penyaluran_bantuan')
+          .select('*')
+          .eq('status', 'SELESAI')
+          .order('tanggal_penyaluran', ascending: false)
+          .limit(10);
+
+      return response;
+    } catch (e) {
+      print('Error getting jadwal selesai: $e');
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> getPermintaanPenjadwalan() async {
+    try {
+      final response = await client
+          .from('penyaluran_bantuan')
+          .select('*')
+          .eq('status', 'MENUNGGU');
+
+      return response;
+    } catch (e) {
+      print('Error getting permintaan penjadwalan: $e');
+      return null;
+    }
+  }
+
+  Future<void> approveJadwal(String jadwalId) async {
+    try {
+      await client.from('penyaluran_bantuan').update({
+        'status': 'DISETUJUI',
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', jadwalId);
+    } catch (e) {
+      print('Error approving jadwal: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<void> rejectJadwal(String jadwalId, String alasan) async {
+    try {
+      await client.from('penyaluran_bantuan').update({
+        'status': 'DITOLAK',
+        'alasan_penolakan': alasan,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', jadwalId);
+    } catch (e) {
+      print('Error rejecting jadwal: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<void> completeJadwal(String jadwalId) async {
+    try {
+      await client.from('penyaluran_bantuan').update({
+        'status': 'SELESAI',
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', jadwalId);
+    } catch (e) {
+      print('Error completing jadwal: $e');
+      throw e.toString();
+    }
+  }
+
+  // Stok bantuan methods
+  Future<List<Map<String, dynamic>>?> getStokBantuan() async {
+    try {
+      final response = await client.from('stok_bantuan').select('*');
+
+      return response;
+    } catch (e) {
+      print('Error getting stok bantuan: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getStokStatistics() async {
+    try {
+      // Get stok masuk
+      final masukResponse = await client.from('stok_bantuan').select('jumlah');
+
+      double masuk = 0;
+      for (var item in masukResponse) {
+        masuk += (item['jumlah'] ?? 0);
+      }
+
+      // Get stok keluar
+      final keluarResponse =
+          await client.from('detail_penyaluran').select('jumlah');
+
+      double keluar = 0;
+      for (var item in keluarResponse) {
+        keluar += (item['jumlah'] ?? 0);
+      }
+
+      return {
+        'masuk': masuk,
+        'keluar': keluar,
+      };
+    } catch (e) {
+      print('Error getting stok statistics: $e');
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> getBentukBantuan() async {
+    try {
+      final response = await client.from('bentuk_bantuan').select('*');
+
+      return response;
+    } catch (e) {
+      print('Error getting bentuk bantuan: $e');
+      return null;
+    }
+  }
+
+  Future<void> addStok(Map<String, dynamic> stok) async {
+    try {
+      await client.from('stok_bantuan').insert(stok);
+    } catch (e) {
+      print('Error adding stok: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<void> updateStok(String stokId, Map<String, dynamic> stok) async {
+    try {
+      await client.from('stok_bantuan').update(stok).eq('id', stokId);
+    } catch (e) {
+      print('Error updating stok: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<void> deleteStok(String stokId) async {
+    try {
+      await client.from('stok_bantuan').delete().eq('id', stokId);
+    } catch (e) {
+      print('Error deleting stok: $e');
+      throw e.toString();
+    }
+  }
+
+  // Penitipan bantuan methods
+  Future<List<Map<String, dynamic>>?> getPenitipanBantuan() async {
+    try {
+      final response = await client.from('penitipan_bantuan').select('*');
+
+      return response;
+    } catch (e) {
+      print('Error getting penitipan bantuan: $e');
+      return null;
+    }
+  }
+
+  Future<void> verifikasiPenitipan(String penitipanId) async {
+    try {
+      await client.from('penitipan_bantuan').update({
+        'status': 'TERVERIFIKASI',
+        'tanggal_verifikasi': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', penitipanId);
+    } catch (e) {
+      print('Error verifying penitipan: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<void> tolakPenitipan(String penitipanId, String alasan) async {
+    try {
+      await client.from('penitipan_bantuan').update({
+        'status': 'DITOLAK',
+        'alasan_penolakan': alasan,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', penitipanId);
+    } catch (e) {
+      print('Error rejecting penitipan: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<Map<String, dynamic>?> getDonaturById(String donaturId) async {
+    try {
+      final response =
+          await client.from('donatur').select('*').eq('id', donaturId).single();
+
+      return response;
+    } catch (e) {
+      print('Error getting donatur by id: $e');
+      return null;
+    }
+  }
+
+  // Pengaduan methods
+  Future<List<Map<String, dynamic>>?> getPengaduan() async {
+    try {
+      final response = await client.from('pengaduan').select('*');
+
+      return response;
+    } catch (e) {
+      print('Error getting pengaduan: $e');
+      return null;
+    }
+  }
+
+  Future<void> prosesPengaduan(String pengaduanId) async {
+    try {
+      await client.from('pengaduan').update({
+        'status': 'DIPROSES',
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', pengaduanId);
+    } catch (e) {
+      print('Error processing pengaduan: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<void> tambahTindakanPengaduan(Map<String, dynamic> tindakan) async {
+    try {
+      await client.from('tindakan_pengaduan').insert(tindakan);
+    } catch (e) {
+      print('Error adding tindakan pengaduan: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<void> updateStatusPengaduan(String pengaduanId, String status) async {
+    try {
+      await client.from('pengaduan').update({
+        'status': status,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', pengaduanId);
+    } catch (e) {
+      print('Error updating status pengaduan: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> getTindakanPengaduan(
+      String pengaduanId) async {
+    try {
+      final response = await client
+          .from('tindakan_pengaduan')
+          .select('*')
+          .eq('pengaduan_id', pengaduanId)
+          .order('created_at', ascending: false);
+
+      return response;
+    } catch (e) {
+      print('Error getting tindakan pengaduan: $e');
+      return null;
+    }
+  }
+
+  // Penerima bantuan methods
+  Future<List<Map<String, dynamic>>?> getPenerimaBantuan() async {
+    try {
+      final response = await client.from('warga').select('*');
+
+      return response;
+    } catch (e) {
+      print('Error getting penerima bantuan: $e');
+      return null;
+    }
+  }
+
+  Future<void> tambahPenerima(Map<String, dynamic> penerima) async {
+    try {
+      await client.from('warga').insert(penerima);
+    } catch (e) {
+      print('Error adding penerima: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<void> updatePenerima(
+      String penerimaId, Map<String, dynamic> penerima) async {
+    try {
+      await client.from('warga').update(penerima).eq('id', penerimaId);
+    } catch (e) {
+      print('Error updating penerima: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<void> updateStatusPenerima(String penerimaId, String status) async {
+    try {
+      await client.from('warga').update({
+        'status': status,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', penerimaId);
+    } catch (e) {
+      print('Error updating status penerima: $e');
+      throw e.toString();
+    }
+  }
+
+  // Laporan methods
+  Future<List<Map<String, dynamic>>?> getLaporan(
+      DateTime? tanggalMulai, DateTime? tanggalSelesai) async {
+    try {
+      var query = client.from('laporan').select('*');
+
+      if (tanggalMulai != null) {
+        query = query.gte('created_at', tanggalMulai.toIso8601String());
+      }
+
+      if (tanggalSelesai != null) {
+        query = query.lte('created_at', tanggalSelesai.toIso8601String());
+      }
+
+      final response = await query.order('created_at', ascending: false);
+
+      return response;
+    } catch (e) {
+      print('Error getting laporan: $e');
+      return null;
+    }
+  }
+
+  Future<String?> generateLaporan(Map<String, dynamic> laporan) async {
+    try {
+      final response = await client.from('laporan').insert(laporan);
+
+      return response[0]['id'];
+    } catch (e) {
+      print('Error generating laporan: $e');
+      throw e.toString();
+    }
+  }
+
+  Future<String?> downloadLaporan(String laporanId) async {
+    try {
+      final response = await client
+          .from('laporan')
+          .select('file_urls')
+          .eq('id', laporanId)
+          .single();
+
+      final fileUrls = response['file_urls'];
+      if (fileUrls != null && fileUrls.isNotEmpty) {
+        return fileUrls[0];
+      }
+
+      return null;
+    } catch (e) {
+      print('Error downloading laporan: $e');
+      return null;
+    }
+  }
+
+  Future<void> deleteLaporan(String laporanId) async {
+    try {
+      await client.from('laporan').delete().eq('id', laporanId);
+    } catch (e) {
+      print('Error deleting laporan: $e');
+      throw e.toString();
+    }
+  }
+
+  // Metode untuk mendapatkan data warga berdasarkan user ID
+  Future<Map<String, dynamic>?> getWargaByUserId() async {
+    try {
+      final user = currentUser;
+      if (user == null) return null;
+
+      final response = await client
+          .from('warga')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      return response;
+    } catch (e) {
+      print('Error getting warga data: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk membuat profil warga
   Future<void> createWargaProfile({
     required String nik,
     required String namaLengkap,
@@ -138,131 +591,75 @@ class SupabaseService extends GetxService {
     DateTime? tanggalLahir,
     String? agama,
   }) async {
-    if (currentUser == null) return;
+    try {
+      final user = currentUser;
+      if (user == null) throw 'User tidak ditemukan';
 
-    await client.from('xx02_Warga').insert({
-      'NIK': nik,
-      'namaLengkap': namaLengkap,
-      'jenisKelamin': jenisKelamin,
-      'noHp': noHp,
-      'alamat': alamat,
-      'tempatLahir': tempatLahir,
-      'tanggalLahir': tanggalLahir?.toIso8601String(),
-      'agama': agama,
-      'userId': currentUser!.id,
-      'email': currentUser!.email,
-    });
-  }
+      await client.from('warga').insert({
+        'user_id': user.id,
+        'nik': nik,
+        'nama_lengkap': namaLengkap,
+        'jenis_kelamin': jenisKelamin,
+        'no_hp': noHp,
+        'alamat': alamat,
+        'tempat_lahir': tempatLahir,
+        'tanggal_lahir': tanggalLahir?.toIso8601String(),
+        'agama': agama,
+        'status': 'MENUNGGU_VERIFIKASI',
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      });
 
-  // Metode untuk mendapatkan data warga berdasarkan userId
-  Future<Map<String, dynamic>?> getWargaByUserId() async {
-    if (currentUser == null) return null;
-
-    final response = await client
-        .from('xx02_Warga')
-        .select()
-        .eq('userId', currentUser!.id)
-        .maybeSingle();
-
-    return response;
+      // Update user profile role
+      await client.from('user_profile').upsert({
+        'id': user.id,
+        'role': 'WARGA',
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      print('Error creating warga profile: $e');
+      throw e.toString();
+    }
   }
 
   // Metode untuk mendapatkan notifikasi pengguna
   Future<List<Map<String, dynamic>>> getUserNotifications(
       {bool unreadOnly = false}) async {
-    if (currentUser == null) return [];
+    try {
+      final user = currentUser;
+      if (user == null) return [];
 
-    final query = client.from('Notification').select();
+      final query = unreadOnly
+          ? client
+              .from('notifikasi')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('dibaca', false)
+              .order('created_at', ascending: false)
+          : client
+              .from('notifikasi')
+              .select('*')
+              .eq('user_id', user.id)
+              .order('created_at', ascending: false);
 
-    // Tambahkan filter untuk user ID
-    final filteredQuery = query.eq('userId', currentUser!.id);
-
-    // Tambahkan filter untuk notifikasi yang belum dibaca jika diperlukan
-    final finalQuery =
-        unreadOnly ? filteredQuery.eq('isRead', false) : filteredQuery;
-
-    // Tambahkan pengurutan
-    final response = await finalQuery.order('CREATED_AT', ascending: false);
-
-    return List<Map<String, dynamic>>.from(response);
+      final response = await query;
+      return response;
+    } catch (e) {
+      print('Error getting user notifications: $e');
+      return [];
+    }
   }
 
   // Metode untuk menandai notifikasi sebagai telah dibaca
   Future<void> markNotificationAsRead(int notificationId) async {
-    await client
-        .from('Notification')
-        .update({'isRead': true}).eq('notificationId', notificationId);
-  }
-
-  // Metode untuk mendapatkan data verifikasi warga
-  Future<List<Map<String, dynamic>>> getVerifikasiDataWarga() async {
-    if (currentUser == null) return [];
-
-    final response = await client
-        .from('xx02_VerifikasiDataWarga')
-        .select()
-        .order('CREATED_AT', ascending: false);
-
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  // Metode untuk mendapatkan data pengajuan bantuan
-  Future<List<Map<String, dynamic>>> getPengajuanBantuan() async {
-    if (currentUser == null) return [];
-
-    final response = await client
-        .from('xx02_PengajuanKelayakanBantuan')
-        .select()
-        .order('CREATED_AT', ascending: false);
-
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  // Metode untuk mendapatkan data skema bantuan
-  Future<List<Map<String, dynamic>>> getSkemaBantuan() async {
-    if (currentUser == null) return [];
-
-    final response = await client
-        .from('xx02_SkemaBantuan')
-        .select()
-        .order('CREATED_AT', ascending: false);
-
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  // Metode untuk mendapatkan data penyaluran bantuan
-  Future<List<Map<String, dynamic>>> getPenyaluranBantuan() async {
-    if (currentUser == null) return [];
-
-    final response = await client
-        .from('xx01_PenyaluranBantuan')
-        .select()
-        .order('CREATED_AT', ascending: false);
-
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  // Metode untuk mendapatkan data penitipan bantuan
-  Future<List<Map<String, dynamic>>> getPenitipanBantuan() async {
-    if (currentUser == null) return [];
-
-    final response = await client
-        .from('xx01_PenitipanBantuan')
-        .select()
-        .order('CREATED_AT', ascending: false);
-
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  // Metode untuk mendapatkan data pengaduan
-  Future<List<Map<String, dynamic>>> getPengaduan() async {
-    if (currentUser == null) return [];
-
-    final response = await client
-        .from('xx01_Pengaduan')
-        .select()
-        .order('CREATED_AT', ascending: false);
-
-    return List<Map<String, dynamic>>.from(response);
+    try {
+      await client.from('notifikasi').update({
+        'dibaca': true,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', notificationId);
+    } catch (e) {
+      print('Error marking notification as read: $e');
+      throw e.toString();
+    }
   }
 }

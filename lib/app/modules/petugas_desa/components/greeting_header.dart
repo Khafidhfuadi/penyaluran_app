@@ -43,7 +43,9 @@ class GreetingHeader extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            'Kamu Login Sebagai $role${desa != null ? ' $desa' : ''}.',
+            desa != null && desa!.isNotEmpty
+                ? 'Kamu Login Sebagai $role $desa.'
+                : 'Kamu Login Sebagai $role.',
             style: textTheme.bodyMedium?.copyWith(
               fontSize: 14,
               color: Colors.grey[600],

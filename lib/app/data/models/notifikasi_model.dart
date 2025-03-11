@@ -1,25 +1,27 @@
 import 'dart:convert';
 
 class NotifikasiModel {
-  final String id;
-  final String judul;
-  final String pesan;
-  final String? jenis; // Contoh: 'penyaluran', 'penitipan', 'pengaduan'
-  final String? referensiId; // ID dari entitas yang terkait notifikasi
-  final String? userId; // Pengguna yang menerima notifikasi
-  final bool dibaca;
-  final DateTime createdAt;
+  final String? id;
+  final String? userId;
+  final String? judul;
+  final String? pesan;
+  final String? jenis;
+  final String? referensiId;
+  final bool? dibaca;
+  final DateTime? tanggalNotifikasi;
+  final DateTime? createdAt;
   final DateTime? updatedAt;
 
   NotifikasiModel({
-    required this.id,
-    required this.judul,
-    required this.pesan,
+    this.id,
+    this.userId,
+    this.judul,
+    this.pesan,
     this.jenis,
     this.referensiId,
-    this.userId,
-    this.dibaca = false,
-    required this.createdAt,
+    this.dibaca,
+    this.tanggalNotifikasi,
+    this.createdAt,
     this.updatedAt,
   });
 
@@ -31,27 +33,33 @@ class NotifikasiModel {
   factory NotifikasiModel.fromJson(Map<String, dynamic> json) =>
       NotifikasiModel(
         id: json["id"],
+        userId: json["user_id"],
         judul: json["judul"],
         pesan: json["pesan"],
         jenis: json["jenis"],
         referensiId: json["referensi_id"],
-        userId: json["user_id"],
-        dibaca: json["dibaca"] ?? false,
-        createdAt: DateTime.parse(json["created_at"]),
-        updatedAt: json["updated_at"] == null
-            ? null
-            : DateTime.parse(json["updated_at"]),
+        dibaca: json["dibaca"],
+        tanggalNotifikasi: json["tanggal_notifikasi"] != null
+            ? DateTime.parse(json["tanggal_notifikasi"])
+            : null,
+        createdAt: json["created_at"] != null
+            ? DateTime.parse(json["created_at"])
+            : null,
+        updatedAt: json["updated_at"] != null
+            ? DateTime.parse(json["updated_at"])
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
+        "user_id": userId,
         "judul": judul,
         "pesan": pesan,
         "jenis": jenis,
         "referensi_id": referensiId,
-        "user_id": userId,
         "dibaca": dibaca,
-        "created_at": createdAt.toIso8601String(),
+        "tanggal_notifikasi": tanggalNotifikasi?.toIso8601String(),
+        "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
 }

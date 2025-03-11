@@ -4,65 +4,43 @@ import 'package:penyaluran_app/app/data/models/user_model.dart';
 class AuthProvider {
   final SupabaseService _supabaseService = SupabaseService.to;
 
-  // Metode untuk mendaftar pengguna baru
-  Future<UserModel?> signUp(String email, String password) async {
-    try {
-      final response = await _supabaseService.signUp(email, password);
-
-      if (response.user != null) {
-        // Tunggu beberapa saat agar trigger di database berjalan
-        await Future.delayed(const Duration(seconds: 1));
-
-        // Ambil profil pengguna dari database
-        final profileData = await _supabaseService.getUserProfile();
-
-        if (profileData != null) {
-          return UserModel.fromJson({
-            ...profileData,
-            'id': response.user!.id,
-            'email': response.user!.email!,
-          });
-        }
-
-        // Jika profil belum tersedia, gunakan data default
-        return UserModel(
-          id: response.user!.id,
-          email: response.user!.email!,
-          role: 'WARGA', // Default role
-        );
-      }
-      return null;
-    } catch (e) {
-      rethrow;
-    }
-  }
+  // Cache untuk menyimpan data profil pengguna
+  UserModel? _cachedUser;
 
   // Metode untuk login
   Future<UserModel?> signIn(String email, String password) async {
     try {
       final response = await _supabaseService.signIn(email, password);
 
-      if (response.user != null) {
+      if (response.user != null && response.user?.email != null) {
         // Ambil profil pengguna dari database
         final profileData = await _supabaseService.getUserProfile();
+        print('DEBUG: Profile data dari signIn: $profileData');
 
         if (profileData != null) {
-          return UserModel.fromJson({
+          // Buat UserModel dengan data yang ada
+          _cachedUser = UserModel.fromJson({
             ...profileData,
             'id': response.user!.id,
             'email': response.user!.email!,
           });
+          print(
+              'DEBUG: User model dibuat: ${_cachedUser?.name}, desa: ${_cachedUser?.desa?.nama}');
+          return _cachedUser;
         }
 
         // Jika profil belum tersedia, gunakan data default
-        return UserModel(
+        _cachedUser = UserModel(
           id: response.user!.id,
           email: response.user!.email!,
           role: 'WARGA', // Default role
         );
+        print('DEBUG: User model default dibuat: ${_cachedUser?.email}');
+        return _cachedUser;
       }
       return null;
     } catch (e) {
+      print('Error pada signIn: $e');
       rethrow;
     }
   }
@@ -71,6 +49,7 @@ class AuthProvider {
   Future<void> signOut() async {
     try {
       await _supabaseService.signOut();
+      _cachedUser = null; // Hapus cache saat logout
     } catch (e) {
       rethrow;
     }
@@ -78,25 +57,50 @@ class AuthProvider {
 
   // Metode untuk mendapatkan user saat ini
   Future<UserModel?> getCurrentUser() async {
+    // Jika ada cache dan user masih terautentikasi, gunakan cache
+    if (_cachedUser != null && _supabaseService.isAuthenticated) {
+      print(
+          'DEBUG: Menggunakan data user dari cache: ${_cachedUser?.name}, desa: ${_cachedUser?.desa?.nama}');
+      return _cachedUser;
+    }
+
     final user = _supabaseService.currentUser;
     if (user != null) {
-      // Ambil profil pengguna dari database
-      final profileData = await _supabaseService.getUserProfile();
+      try {
+        // Ambil profil pengguna dari database
+        final profileData = await _supabaseService.getUserProfile();
+        print('DEBUG: Profile data dari getCurrentUser: $profileData');
 
-      if (profileData != null) {
-        return UserModel.fromJson({
-          ...profileData,
-          'id': user.id,
-          'email': user.email!,
-        });
+        if (profileData != null) {
+          // Buat UserModel dengan data yang ada
+          _cachedUser = UserModel.fromJson({
+            ...profileData,
+            'id': user.id,
+            'email': user.email!,
+          });
+          print(
+              'DEBUG: User model dibuat: ${_cachedUser?.name}, desa: ${_cachedUser?.desa?.nama}');
+          return _cachedUser;
+        }
+
+        // Jika profil belum tersedia, gunakan data default
+        _cachedUser = UserModel(
+          id: user.id,
+          email: user.email!,
+          role: 'WARGA', // Default role
+        );
+        print('DEBUG: User model default dibuat: ${_cachedUser?.email}');
+        return _cachedUser;
+      } catch (e) {
+        print('Error pada getCurrentUser: $e');
+        // Jika terjadi error, kembalikan model dengan data minimal
+        _cachedUser = UserModel(
+          id: user.id,
+          email: user.email!,
+          role: 'WARGA', // Default role
+        );
+        return _cachedUser;
       }
-
-      // Jika profil belum tersedia, gunakan data default
-      return UserModel(
-        id: user.id,
-        email: user.email!,
-        role: 'WARGA', // Default role
-      );
     }
     return null;
   }
@@ -132,6 +136,9 @@ class AuthProvider {
       tanggalLahir: tanggalLahir,
       agama: agama,
     );
+
+    // Invalidasi cache setelah membuat profil baru
+    _cachedUser = null;
   }
 
   // Metode untuk mendapatkan notifikasi pengguna

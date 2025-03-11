@@ -22,9 +22,9 @@ class DashboardView extends GetView<PetugasDesaController> {
           children: [
             // Header dengan greeting
             GreetingHeader(
-              name: controller.roleData.value?['namaLengkap'] ?? 'Ahmad',
+              name: controller.namaLengkap,
               role: 'Petugas Desa',
-              desa: controller.roleData.value?['Desa'] ?? 'Jatihurip',
+              desa: controller.desa,
             ),
             const SizedBox(height: 20),
 

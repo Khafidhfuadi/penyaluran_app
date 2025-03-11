@@ -118,8 +118,8 @@ class NotifikasiView extends GetView<PetugasDesaController> {
           );
         },
         backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.done_all),
         tooltip: 'Tandai Semua Dibaca',
+        child: const Icon(Icons.done_all),
       ),
     );
   }

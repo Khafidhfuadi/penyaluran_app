@@ -8,14 +8,13 @@ class NavigationButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   const NavigationButton({
-    Key? key,
+    super.key,
     required this.label,
     this.icon,
     this.iconWidget,
     required this.onPressed,
-  })  : assert(icon != null || iconWidget != null,
-            'Either icon or iconWidget must be provided'),
-        super(key: key);
+  }) : assert(icon != null || iconWidget != null,
+            'Either icon or iconWidget must be provided');
 
   @override
   Widget build(BuildContext context) {

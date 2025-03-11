@@ -1,36 +1,35 @@
 import 'dart:convert';
 
-class BentukBantuanModel {
-  final String? id;
-  final String? nama;
-  final String? deskripsi;
-  final String? kategori;
-  final String? satuan;
+class DesaModel {
+  final String id;
+  final String nama;
+  final String? kecamatan;
+  final String? kabupaten;
+  final String? provinsi;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  BentukBantuanModel({
-    this.id,
-    this.nama,
-    this.deskripsi,
-    this.kategori,
-    this.satuan,
+  DesaModel({
+    required this.id,
+    required this.nama,
+    this.kecamatan,
+    this.kabupaten,
+    this.provinsi,
     this.createdAt,
     this.updatedAt,
   });
 
-  factory BentukBantuanModel.fromRawJson(String str) =>
-      BentukBantuanModel.fromJson(json.decode(str));
+  factory DesaModel.fromRawJson(String str) =>
+      DesaModel.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory BentukBantuanModel.fromJson(Map<String, dynamic> json) =>
-      BentukBantuanModel(
+  factory DesaModel.fromJson(Map<String, dynamic> json) => DesaModel(
         id: json["id"],
         nama: json["nama"],
-        deskripsi: json["deskripsi"],
-        kategori: json["kategori"],
-        satuan: json["satuan"],
+        kecamatan: json["kecamatan"],
+        kabupaten: json["kabupaten"],
+        provinsi: json["provinsi"],
         createdAt: json["created_at"] != null
             ? DateTime.parse(json["created_at"])
             : null,
@@ -42,9 +41,9 @@ class BentukBantuanModel {
   Map<String, dynamic> toJson() => {
         "id": id,
         "nama": nama,
-        "deskripsi": deskripsi,
-        "kategori": kategori,
-        "satuan": satuan,
+        "kecamatan": kecamatan,
+        "kabupaten": kabupaten,
+        "provinsi": provinsi,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };

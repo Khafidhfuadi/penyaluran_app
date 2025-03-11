@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
+import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class PermintaanPenjadwalanWidget extends StatelessWidget {
-  final PetugasDesaController controller;
+  final JadwalPenyaluranController controller;
 
   const PermintaanPenjadwalanWidget({
-    Key? key,
+    super.key,
     required this.controller,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +91,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
 
   // Widget untuk menampilkan item permintaan penjadwalan
   Widget _buildPermintaanItem(
-      TextTheme textTheme, Map<String, dynamic> permintaan) {
+      TextTheme textTheme, PenyaluranBantuanModel permintaan) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 10),
@@ -119,7 +120,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  permintaan['nama'] ?? '',
+                  permintaan.judul ?? '',
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -143,22 +144,22 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'NIK: ${permintaan['nik'] ?? ''}',
+              'ID: ${permintaan.id ?? ''}',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 4),
             Text(
-              'Jenis Bantuan: ${permintaan['jenis_bantuan'] ?? ''}',
+              'Jenis Bantuan: ${permintaan.judul ?? ''}',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 4),
             Text(
-              'Tanggal Permintaan: ${permintaan['tanggal_permintaan'] ?? ''}',
+              'Tanggal Permintaan: ${permintaan.createdAt?.toString().substring(0, 10) ?? ''}',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 4),
             Text(
-              'Alamat: ${permintaan['alamat'] ?? ''}',
+              'Deskripsi: ${permintaan.deskripsi ?? ''}',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
@@ -191,15 +192,15 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
   }
 
   // Dialog untuk konfirmasi permintaan
-  void _showKonfirmasiDialog(Map<String, dynamic> permintaan) {
+  void _showKonfirmasiDialog(PenyaluranBantuanModel permintaan) {
     String? selectedJadwalId;
 
     // Data jadwal yang tersedia dari controller
     final jadwalOptions = controller.jadwalMendatang.map((jadwal) {
       return DropdownMenuItem<String>(
-        value: jadwal['id'],
+        value: jadwal.id,
         child: Text(
-            '${jadwal['tanggal']} - ${jadwal['lokasi']} (${jadwal['jenis_bantuan']})'),
+            '${jadwal.tanggalPenjadwalan?.toString().substring(0, 10) ?? ''} - ${jadwal.lokasiPenyaluranId ?? ''} (${jadwal.judul ?? ''})'),
       );
     }).toList();
 
@@ -219,7 +220,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Anda akan mengkonfirmasi permintaan penjadwalan dari ${permintaan['nama']}.'),
+                'Anda akan mengkonfirmasi permintaan penjadwalan dari ${permintaan.judul}.'),
             const SizedBox(height: 16),
             const Text('Pilih jadwal penyaluran:'),
             const SizedBox(height: 8),
@@ -245,9 +246,8 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
             onPressed: () {
               if (selectedJadwalId != null) {
                 // Panggil metode konfirmasi di controller
-                controller.konfirmasiPermintaanPenjadwalan(
-                  permintaan['id'],
-                  selectedJadwalId!,
+                controller.approveJadwal(
+                  permintaan.id ?? '',
                 );
 
                 Get.back();
@@ -279,7 +279,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
   }
 
   // Dialog untuk menolak permintaan
-  void _showTolakDialog(Map<String, dynamic> permintaan) {
+  void _showTolakDialog(PenyaluranBantuanModel permintaan) {
     final TextEditingController alasanController = TextEditingController();
 
     Get.dialog(
@@ -290,7 +290,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Anda akan menolak permintaan penjadwalan dari ${permintaan['nama']}.'),
+                'Anda akan menolak permintaan penjadwalan dari ${permintaan.judul}.'),
             const SizedBox(height: 16),
             const Text('Alasan penolakan:'),
             const SizedBox(height: 8),
@@ -313,8 +313,8 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
             onPressed: () {
               if (alasanController.text.trim().isNotEmpty) {
                 // Panggil metode tolak di controller
-                controller.tolakPermintaanPenjadwalan(
-                  permintaan['id'],
+                controller.rejectJadwal(
+                  permintaan.id ?? '',
                   alasanController.text.trim(),
                 );
 

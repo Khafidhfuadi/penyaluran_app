@@ -15,6 +15,9 @@ class AuthController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isWargaProfileComplete = false.obs;
 
+  // Flag untuk menandai apakah sudah melakukan pengambilan data profil
+  final RxBool _hasLoadedProfile = false.obs;
+
   // Form controllers
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -61,41 +64,76 @@ class AuthController extends GetxController {
 
   // Memeriksa status autentikasi
   Future<void> checkAuthStatus() async {
+    if (isLoading.value) {
+      return; // Hindari pemanggilan berulang jika sedang loading
+    }
+
     isLoading.value = true;
     try {
+      print('Memeriksa status autentikasi...');
+
+      // Jika user sudah ada di memori dan profil sudah diambil, gunakan data yang ada
+      if (_user.value != null && _hasLoadedProfile.value) {
+        print('Menggunakan data user yang sudah ada di memori');
+        _handleAuthenticatedUser(_user.value!);
+        return;
+      }
+
+      // Jika belum ada data user, ambil dari provider
       final currentUser = await _authProvider.getCurrentUser();
+
       if (currentUser != null) {
+        print(
+            'User terautentikasi: ${currentUser.email}, role: ${currentUser.role}');
         _user.value = currentUser;
-
-        // Periksa apakah profil warga sudah lengkap
-        await checkWargaProfileStatus();
-
-        // Hindari navigasi jika sudah berada di halaman yang sesuai
-        final currentRoute = Get.currentRoute;
-
-        // Untuk semua role, arahkan ke dashboard masing-masing
-        final targetRoute = _getTargetRouteForRole(currentUser.role);
-        if (currentRoute != targetRoute) {
-          navigateBasedOnRole(currentUser.role);
-        }
+        _hasLoadedProfile.value = true;
+        _handleAuthenticatedUser(currentUser);
       } else {
-        // Jika tidak ada user yang login, arahkan ke halaman login
-        if (Get.currentRoute != Routes.login) {
-          // Bersihkan dependensi form sebelum navigasi
-          clearFormDependencies();
-          Get.offAllNamed(Routes.login);
-        }
+        print('Tidak ada user yang terautentikasi');
+        _handleUnauthenticatedUser();
       }
     } catch (e) {
       print('Error checking auth status: $e');
-      // Jika terjadi error, arahkan ke halaman login
-      if (Get.currentRoute != Routes.login) {
-        // Bersihkan dependensi form sebelum navigasi
-        clearFormDependencies();
-        Get.offAllNamed(Routes.login);
-      }
+      print('Stack trace: ${StackTrace.current}');
+      _handleUnauthenticatedUser();
     } finally {
       isLoading.value = false;
+      print('Pemeriksaan status autentikasi selesai');
+    }
+  }
+
+  // Metode untuk menangani user yang terautentikasi
+  void _handleAuthenticatedUser(UserModel user) {
+    // Hindari navigasi jika sudah berada di halaman yang sesuai
+    final currentRoute = Get.currentRoute;
+    print('Rute saat ini: $currentRoute');
+
+    // Pastikan role tidak null, gunakan default jika null
+    final role = user.role.isNotEmpty ? user.role : 'WARGA';
+    print('Role yang digunakan: $role');
+
+    // Untuk semua role, arahkan ke dashboard masing-masing
+    final targetRoute = _getTargetRouteForRole(role);
+    print('Target rute: $targetRoute');
+
+    if (currentRoute != targetRoute) {
+      print('Navigasi ke rute target berdasarkan role');
+      navigateBasedOnRole(role);
+    } else {
+      print('Sudah berada di rute yang sesuai, tidak perlu navigasi');
+    }
+  }
+
+  // Metode untuk menangani user yang tidak terautentikasi
+  void _handleUnauthenticatedUser() {
+    // Jika tidak ada user yang login, arahkan ke halaman login
+    if (Get.currentRoute != Routes.login) {
+      print('Navigasi ke halaman login');
+      // Bersihkan dependensi form sebelum navigasi
+      clearFormDependencies();
+      Get.offAllNamed(Routes.login);
+    } else {
+      print('Sudah berada di halaman login');
     }
   }
 
@@ -154,28 +192,58 @@ class AuthController extends GetxController {
 
   // Metode untuk login
   Future<void> login() async {
-    if (!loginFormKey.currentState!.validate()) return;
+    print('DEBUG: Memulai proses login');
+
+    if (loginFormKey.currentState == null) {
+      print('Error: loginFormKey.currentState adalah null');
+      print('DEBUG: Form key: $loginFormKey');
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan pada form login. Silakan coba lagi.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    print('DEBUG: Form state ditemukan, melakukan validasi');
+    if (!loginFormKey.currentState!.validate()) {
+      print('DEBUG: Validasi form gagal');
+      return;
+    }
 
     // Simpan nilai dari controller sebelum melakukan operasi asinkron
     final email = emailController.text.trim();
     final password = passwordController.text;
+    print('DEBUG: Email: $email, Password length: ${password.length}');
 
     try {
+      print('DEBUG: Mengatur isLoading ke true');
       isLoading.value = true;
+
+      print('DEBUG: Memanggil _authProvider.signIn');
       final user = await _authProvider.signIn(
         email,
         password,
       );
 
+      print('DEBUG: Hasil signIn: ${user != null ? 'Berhasil' : 'Gagal'}');
       if (user != null) {
+        print('DEBUG: User ditemukan, role: ${user.role}');
         _user.value = user;
+        _hasLoadedProfile.value = true; // Tandai bahwa profil sudah diambil
         clearControllers();
 
         // Arahkan ke dashboard sesuai peran
+        print('DEBUG: Navigasi berdasarkan peran: ${user.role}');
         navigateBasedOnRole(user.role);
+      } else {
+        print('DEBUG: User null setelah login berhasil');
       }
     } catch (e) {
-      print('Error login: $e');
+      print('DEBUG: Error detail pada login: $e');
+      print('DEBUG: Stack trace: ${StackTrace.current}');
       Get.snackbar(
         'Error',
         'Login gagal: ${e.toString()}',
@@ -184,6 +252,7 @@ class AuthController extends GetxController {
         colorText: Colors.white,
       );
     } finally {
+      print('DEBUG: Mengatur isLoading ke false');
       isLoading.value = false;
     }
   }
@@ -193,6 +262,7 @@ class AuthController extends GetxController {
     try {
       await _authProvider.signOut();
       _user.value = null;
+      _hasLoadedProfile.value = false; // Reset flag saat logout
       isWargaProfileComplete.value = false;
 
       // Bersihkan dependensi form sebelum navigasi

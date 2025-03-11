@@ -10,15 +10,24 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerim
 import 'package:penyaluran_app/app/modules/petugas_desa/views/pelaksanaan_penyaluran_view.dart';
 
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/penerima_binding.dart';
+import 'package:penyaluran_app/app/modules/profile/bindings/profile_binding.dart';
+import 'package:penyaluran_app/app/modules/profile/views/profile_view.dart';
+import 'package:penyaluran_app/app/modules/splash/bindings/splash_binding.dart';
+import 'package:penyaluran_app/app/modules/splash/views/splash_view.dart';
 
 part 'app_routes.dart';
 
 class AppPages {
   AppPages._();
 
-  static const initial = Routes.login;
+  static const initial = Routes.splash;
 
   static final routes = [
+    GetPage(
+      name: _Paths.splash,
+      page: () => const SplashView(),
+      binding: SplashBinding(),
+    ),
     GetPage(
       name: _Paths.login,
       page: () => const LoginView(),
@@ -53,6 +62,11 @@ class AppPages {
       name: _Paths.pelaksanaanPenyaluran,
       page: () => const PelaksanaanPenyaluranView(),
       binding: PetugasDesaBinding(),
+    ),
+    GetPage(
+      name: _Paths.profile,
+      page: () => const ProfileView(),
+      binding: ProfileBinding(),
     ),
   ];
 }

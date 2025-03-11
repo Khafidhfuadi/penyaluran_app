@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/jadwal_section_widget.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/permintaan_penjadwalan_summary_widget.dart';
 
-class PenyaluranView extends GetView<PetugasDesaController> {
+class PenyaluranView extends GetView<JadwalPenyaluranController> {
   const PenyaluranView({super.key});
 
   @override

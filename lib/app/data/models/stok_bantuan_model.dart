@@ -1,27 +1,31 @@
 import 'dart:convert';
 
 class StokBantuanModel {
-  final String id;
-  final String bentukBantuanId; // Referensi ke BentukBantuan
-  final double jumlahMasuk;
-  final double jumlahKeluar;
-  final double stokSisa;
+  final String? id;
+  final String? nama;
+  final String? bentukBantuanId;
+  final String? sumberBantuanId;
+  final double? jumlah;
   final String? satuan;
-  final String? catatan;
-  final DateTime tanggalUpdate;
-  final DateTime createdAt;
+  final String? deskripsi;
+  final String? status;
+  final DateTime? tanggalMasuk;
+  final DateTime? tanggalKadaluarsa;
+  final DateTime? createdAt;
   final DateTime? updatedAt;
 
   StokBantuanModel({
-    required this.id,
-    required this.bentukBantuanId,
-    required this.jumlahMasuk,
-    required this.jumlahKeluar,
-    required this.stokSisa,
+    this.id,
+    this.nama,
+    this.bentukBantuanId,
+    this.sumberBantuanId,
+    this.jumlah,
     this.satuan,
-    this.catatan,
-    required this.tanggalUpdate,
-    required this.createdAt,
+    this.deskripsi,
+    this.status,
+    this.tanggalMasuk,
+    this.tanggalKadaluarsa,
+    this.createdAt,
     this.updatedAt,
   });
 
@@ -33,29 +37,39 @@ class StokBantuanModel {
   factory StokBantuanModel.fromJson(Map<String, dynamic> json) =>
       StokBantuanModel(
         id: json["id"],
+        nama: json["nama"],
         bentukBantuanId: json["bentuk_bantuan_id"],
-        jumlahMasuk: json["jumlah_masuk"].toDouble(),
-        jumlahKeluar: json["jumlah_keluar"].toDouble(),
-        stokSisa: json["stok_sisa"].toDouble(),
+        sumberBantuanId: json["sumber_bantuan_id"],
+        jumlah: json["jumlah"] != null ? json["jumlah"].toDouble() : 0.0,
         satuan: json["satuan"],
-        catatan: json["catatan"],
-        tanggalUpdate: DateTime.parse(json["tanggal_update"]),
-        createdAt: DateTime.parse(json["created_at"]),
-        updatedAt: json["updated_at"] == null
-            ? null
-            : DateTime.parse(json["updated_at"]),
+        deskripsi: json["deskripsi"],
+        status: json["status"],
+        tanggalMasuk: json["tanggal_masuk"] != null
+            ? DateTime.parse(json["tanggal_masuk"])
+            : null,
+        tanggalKadaluarsa: json["tanggal_kadaluarsa"] != null
+            ? DateTime.parse(json["tanggal_kadaluarsa"])
+            : null,
+        createdAt: json["created_at"] != null
+            ? DateTime.parse(json["created_at"])
+            : null,
+        updatedAt: json["updated_at"] != null
+            ? DateTime.parse(json["updated_at"])
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
+        "nama": nama,
         "bentuk_bantuan_id": bentukBantuanId,
-        "jumlah_masuk": jumlahMasuk,
-        "jumlah_keluar": jumlahKeluar,
-        "stok_sisa": stokSisa,
+        "sumber_bantuan_id": sumberBantuanId,
+        "jumlah": jumlah,
         "satuan": satuan,
-        "catatan": catatan,
-        "tanggal_update": tanggalUpdate.toIso8601String(),
-        "created_at": createdAt.toIso8601String(),
+        "deskripsi": deskripsi,
+        "status": status,
+        "tanggal_masuk": tanggalMasuk?.toIso8601String(),
+        "tanggal_kadaluarsa": tanggalKadaluarsa?.toIso8601String(),
+        "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
 }

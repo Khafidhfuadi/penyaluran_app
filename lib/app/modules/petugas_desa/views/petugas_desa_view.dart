@@ -4,7 +4,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa
 import 'package:penyaluran_app/app/modules/petugas_desa/views/dashboard_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/notifikasi_view.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/views/inventaris_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/stok_bantuan_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/penitipan_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/pengaduan_view.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
@@ -35,7 +35,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
             case 3:
               return const Text('Pengaduan');
             case 4:
-              return const Text('Inventaris');
+              return const Text('Stok Bantuan');
             default:
               return const Text('Petugas Desa');
           }
@@ -94,7 +94,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               ],
             );
 
-            // Tombol tambah untuk jadwal dan inventaris
+            // Tombol tambah untuk jadwal dan stok bantuan
             if (activeTab == 1) {
               return Row(
                 mainAxisSize: MainAxisSize.min,
@@ -115,9 +115,9 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.add),
-                    tooltip: 'Tambah Inventaris',
+                    tooltip: 'Tambah Stok Bantuan',
                     onPressed: () {
-                      // Implementasi untuk menambah inventaris baru
+                      // Implementasi untuk menambah stok bantuan baru
                     },
                   ),
                   notificationButton,
@@ -171,7 +171,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
           case 3:
             return const PengaduanView();
           case 4:
-            return const InventarisView();
+            return const StokBantuanView();
           default:
             return const DashboardView();
         }
@@ -325,7 +325,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
           }),
           Obx(() => ListTile(
                 leading: const Icon(Icons.inventory_2_outlined),
-                title: const Text('Inventaris'),
+                title: const Text('Stok Bantuan'),
                 selected: controller.activeTabIndex.value == 4,
                 selectedColor: AppTheme.primaryColor,
                 onTap: () {
@@ -390,6 +390,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
             onTap: () {
               // Navigasi ke halaman profil
               Navigator.pop(context);
+              Get.toNamed('/profile');
             },
           ),
           ListTile(
@@ -623,7 +624,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
           const BottomNavigationBarItem(
             icon: Icon(Icons.inventory_2_outlined),
             activeIcon: Icon(Icons.inventory_2),
-            label: 'Inventaris',
+            label: 'Stok Bantuan',
           ),
         ],
       );

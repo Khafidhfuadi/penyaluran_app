@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
 
 class JadwalSectionWidget extends StatelessWidget {
-  final PetugasDesaController controller;
+  final JadwalPenyaluranController controller;
   final String title;
-  final List<Map<String, dynamic>> jadwalList;
+  final List<dynamic> jadwalList;
   final String status;
 
   const JadwalSectionWidget({
-    Key? key,
+    super.key,
     required this.controller,
     required this.title,
     required this.jadwalList,
     required this.status,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -62,20 +62,24 @@ class JadwalSectionWidget extends StatelessWidget {
     );
   }
 
-  List<Map<String, dynamic>> _getCurrentJadwalList() {
+  List<dynamic> _getCurrentJadwalList() {
     switch (title) {
       case 'Hari Ini':
-        return controller.jadwalHariIni;
+        return controller.jadwalHariIni.toList();
       case 'Mendatang':
-        return controller.jadwalMendatang;
+        return controller.jadwalMendatang.toList();
       case 'Selesai':
-        return controller.jadwalSelesai;
+        return controller.jadwalSelesai.toList();
       default:
         return jadwalList;
     }
   }
 
-  Widget _buildJadwalItem(TextTheme textTheme, Map<String, dynamic> jadwal) {
+  Widget _buildJadwalItem(TextTheme textTheme, dynamic jadwal) {
+    // Konversi jadwal ke Map jika itu adalah PenyaluranBantuanModel
+    final Map<String, dynamic> jadwalData =
+        jadwal is Map<String, dynamic> ? jadwal : jadwal.toJson();
+
     Color statusColor;
     switch (status) {
       case 'Aktif':
@@ -94,7 +98,7 @@ class JadwalSectionWidget extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         // Navigasi ke halaman pelaksanaan penyaluran dengan data jadwal
-        Get.toNamed(Routes.pelaksanaanPenyaluran, arguments: jadwal);
+        Get.toNamed(Routes.pelaksanaanPenyaluran, arguments: jadwalData);
       },
       child: Container(
         width: double.infinity,
@@ -120,7 +124,7 @@ class JadwalSectionWidget extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    jadwal['lokasi'] ?? '',
+                    jadwalData['lokasi'] ?? '',
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -144,23 +148,23 @@ class JadwalSectionWidget extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Jenis Bantuan: ${jadwal['jenis_bantuan'] ?? ''}',
+                'Jenis Bantuan: ${jadwalData['jenis_bantuan'] ?? ''}',
                 style: textTheme.bodyMedium,
               ),
               const SizedBox(height: 4),
               Text(
-                'Tanggal: ${jadwal['tanggal'] ?? ''}',
+                'Tanggal: ${jadwalData['tanggal'] ?? ''}',
                 style: textTheme.bodyMedium,
               ),
               const SizedBox(height: 4),
               Text(
-                'Waktu: ${jadwal['waktu'] ?? ''}',
+                'Waktu: ${jadwalData['waktu'] ?? ''}',
                 style: textTheme.bodyMedium,
               ),
-              if (jadwal['jumlah_penerima'] != null) ...[
+              if (jadwalData['jumlah_penerima'] != null) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Jumlah Penerima: ${jadwal['jumlah_penerima']}',
+                  'Jumlah Penerima: ${jadwalData['jumlah_penerima']}',
                   style: textTheme.bodyMedium,
                 ),
               ],

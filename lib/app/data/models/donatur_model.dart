@@ -1,23 +1,27 @@
 import 'dart:convert';
 
 class DonaturModel {
-  final String id;
-  final String nama;
+  final String? id;
+  final String? nama;
   final String? alamat;
-  final String? noTelp;
+  final String? telepon;
   final String? email;
-  final String? jenisDonatur; // Individu, Organisasi, Perusahaan, dll
-  final DateTime createdAt;
+  final String? jenis;
+  final String? deskripsi;
+  final String? status;
+  final DateTime? createdAt;
   final DateTime? updatedAt;
 
   DonaturModel({
-    required this.id,
-    required this.nama,
+    this.id,
+    this.nama,
     this.alamat,
-    this.noTelp,
+    this.telepon,
     this.email,
-    this.jenisDonatur,
-    required this.createdAt,
+    this.jenis,
+    this.deskripsi,
+    this.status,
+    this.createdAt,
     this.updatedAt,
   });
 
@@ -30,23 +34,29 @@ class DonaturModel {
         id: json["id"],
         nama: json["nama"],
         alamat: json["alamat"],
-        noTelp: json["no_telp"],
+        telepon: json["telepon"],
         email: json["email"],
-        jenisDonatur: json["jenis_donatur"],
-        createdAt: DateTime.parse(json["created_at"]),
-        updatedAt: json["updated_at"] == null
-            ? null
-            : DateTime.parse(json["updated_at"]),
+        jenis: json["jenis"],
+        deskripsi: json["deskripsi"],
+        status: json["status"],
+        createdAt: json["created_at"] != null
+            ? DateTime.parse(json["created_at"])
+            : null,
+        updatedAt: json["updated_at"] != null
+            ? DateTime.parse(json["updated_at"])
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
         "nama": nama,
         "alamat": alamat,
-        "no_telp": noTelp,
+        "telepon": telepon,
         "email": email,
-        "jenis_donatur": jenisDonatur,
-        "created_at": createdAt.toIso8601String(),
+        "jenis": jenis,
+        "deskripsi": deskripsi,
+        "status": status,
+        "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
 }

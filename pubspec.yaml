@@ -55,6 +55,12 @@ dependencies:
   # Untuk format tanggal dalam bahasa Indonesia
   intl: ^0.19.0
 
+  # HTTP client
+  dio: ^5.4.1
+
+  # Secure storage
+  flutter_secure_storage: ^9.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
