@@ -124,34 +124,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                 ],
               );
             } else if (activeTab == 4) {
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    tooltip: 'Tambah Pengaduan',
-                    onPressed: () {
-                      // Implementasi untuk menambah pengaduan baru
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.filter_list),
-                    tooltip: 'Filter Pengaduan',
-                    onPressed: () {
-                      // Implementasi untuk filter pengaduan
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    tooltip: 'Perbarui Counter',
-                    onPressed: () {
-                      // Perbarui counter pengaduan secara manual
-                      controller.updatePengaduanCounter();
-                    },
-                  ),
-                  notificationButton,
-                ],
-              );
+              return notificationButton;
             } else {
               return notificationButton;
             }

@@ -17,6 +17,10 @@ class StokBantuanController extends GetxController {
   final RxDouble stokMasuk = 0.0.obs;
   final RxDouble stokKeluar = 0.0.obs;
 
+  // Data untuk jenis bantuan
+  final RxList<Map<String, dynamic>> daftarJenisBantuan =
+      <Map<String, dynamic>>[].obs;
+
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
@@ -27,6 +31,7 @@ class StokBantuanController extends GetxController {
   void onInit() {
     super.onInit();
     loadStokBantuanData();
+    loadJenisBantuanData();
 
     // Listener untuk pencarian
     searchController.addListener(() {
@@ -66,6 +71,17 @@ class StokBantuanController extends GetxController {
       print('Error loading stok bantuan data: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> loadJenisBantuanData() async {
+    try {
+      final jenisBantuanData = await _supabaseService.getJenisBantuan();
+      if (jenisBantuanData != null) {
+        daftarJenisBantuan.value = jenisBantuanData;
+      }
+    } catch (e) {
+      print('Error loading jenis bantuan data: $e');
     }
   }
 
@@ -151,6 +167,7 @@ class StokBantuanController extends GetxController {
     isLoading.value = true;
     try {
       await loadStokBantuanData();
+      await loadJenisBantuanData();
     } finally {
       isLoading.value = false;
     }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/data/models/stok_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/stok_bantuan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
@@ -277,7 +276,9 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    item.status ?? 'TERSEDIA',
+                    item.jenisBantuan != null
+                        ? (item.jenisBantuan!['nama'] ?? 'Tidak Ada Jenis')
+                        : 'Tidak Ada Jenis',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppTheme.primaryColor,
                           fontWeight: FontWeight.bold,
@@ -417,6 +418,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
     final jumlahController = TextEditingController();
     final satuanController = TextEditingController();
     final deskripsiController = TextEditingController();
+    String? selectedJenisBantuanId;
     DateTime? tanggalMasuk = DateTime.now();
     DateTime? tanggalKadaluarsa;
 
@@ -439,6 +441,30 @@ class StokBantuanView extends GetView<StokBantuanController> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Nama bantuan tidak boleh kosong';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    labelText: 'Jenis Bantuan',
+                    border: OutlineInputBorder(),
+                  ),
+                  value: selectedJenisBantuanId,
+                  hint: const Text('Pilih Jenis Bantuan'),
+                  items: controller.daftarJenisBantuan
+                      .map((jenis) => DropdownMenuItem<String>(
+                            value: jenis['id'],
+                            child: Text(jenis['nama'] ?? ''),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    selectedJenisBantuanId = value;
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Jenis bantuan harus dipilih';
                     }
                     return null;
                   },
@@ -558,6 +584,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                   jumlah: double.parse(jumlahController.text),
                   satuan: satuanController.text,
                   deskripsi: deskripsiController.text,
+                  jenisBantuanId: selectedJenisBantuanId,
                   tanggalMasuk: tanggalMasuk,
                   tanggalKadaluarsa: tanggalKadaluarsa,
                   status: 'TERSEDIA',
@@ -582,6 +609,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
         TextEditingController(text: stok.jumlah?.toString());
     final satuanController = TextEditingController(text: stok.satuan);
     final deskripsiController = TextEditingController(text: stok.deskripsi);
+    String? selectedJenisBantuanId = stok.jenisBantuanId;
     DateTime? tanggalMasuk = stok.tanggalMasuk;
     DateTime? tanggalKadaluarsa = stok.tanggalKadaluarsa;
 
@@ -604,6 +632,30 @@ class StokBantuanView extends GetView<StokBantuanController> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Nama bantuan tidak boleh kosong';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    labelText: 'Jenis Bantuan',
+                    border: OutlineInputBorder(),
+                  ),
+                  value: selectedJenisBantuanId,
+                  hint: const Text('Pilih Jenis Bantuan'),
+                  items: controller.daftarJenisBantuan
+                      .map((jenis) => DropdownMenuItem<String>(
+                            value: jenis['id'],
+                            child: Text(jenis['nama'] ?? ''),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    selectedJenisBantuanId = value;
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Jenis bantuan harus dipilih';
                     }
                     return null;
                   },
@@ -724,6 +776,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                   jumlah: double.parse(jumlahController.text),
                   satuan: satuanController.text,
                   deskripsi: deskripsiController.text,
+                  jenisBantuanId: selectedJenisBantuanId,
                   tanggalMasuk: tanggalMasuk,
                   tanggalKadaluarsa: tanggalKadaluarsa,
                   status: stok.status,

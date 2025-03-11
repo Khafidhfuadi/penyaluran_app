@@ -268,7 +268,9 @@ class SupabaseService extends GetxService {
   // Stok bantuan methods
   Future<List<Map<String, dynamic>>?> getStokBantuan() async {
     try {
-      final response = await client.from('stok_bantuan').select('*');
+      final response = await client
+          .from('stok_bantuan')
+          .select('*, jenis_bantuan:jenis_bantuan_id(id, nama)');
 
       return response;
     } catch (e) {
@@ -309,7 +311,6 @@ class SupabaseService extends GetxService {
   Future<List<Map<String, dynamic>>?> getBentukBantuan() async {
     try {
       final response = await client.from('bentuk_bantuan').select('*');
-
       return response;
     } catch (e) {
       print('Error getting bentuk bantuan: $e');
@@ -317,9 +318,19 @@ class SupabaseService extends GetxService {
     }
   }
 
-  Future<void> addStok(Map<String, dynamic> stok) async {
+  Future<List<Map<String, dynamic>>?> getJenisBantuan() async {
     try {
-      await client.from('stok_bantuan').insert(stok);
+      final response = await client.from('jenis_bantuan').select('*');
+      return response;
+    } catch (e) {
+      print('Error getting jenis bantuan: $e');
+      return null;
+    }
+  }
+
+  Future<void> addStok(Map<String, dynamic> stokData) async {
+    try {
+      await client.from('stok_bantuan').insert(stokData);
     } catch (e) {
       print('Error adding stok: $e');
       throw e.toString();

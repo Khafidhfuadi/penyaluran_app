@@ -5,6 +5,8 @@ class StokBantuanModel {
   final String? nama;
   final String? bentukBantuanId;
   final String? sumberBantuanId;
+  final String? jenisBantuanId;
+  final Map<String, dynamic>? jenisBantuan;
   final double? jumlah;
   final String? satuan;
   final String? deskripsi;
@@ -19,6 +21,8 @@ class StokBantuanModel {
     this.nama,
     this.bentukBantuanId,
     this.sumberBantuanId,
+    this.jenisBantuanId,
+    this.jenisBantuan,
     this.jumlah,
     this.satuan,
     this.deskripsi,
@@ -40,6 +44,8 @@ class StokBantuanModel {
         nama: json["nama"],
         bentukBantuanId: json["bentuk_bantuan_id"],
         sumberBantuanId: json["sumber_bantuan_id"],
+        jenisBantuanId: json["jenis_bantuan_id"],
+        jenisBantuan: json["jenis_bantuan"],
         jumlah: json["jumlah"] != null ? json["jumlah"].toDouble() : 0.0,
         satuan: json["satuan"],
         deskripsi: json["deskripsi"],
@@ -63,6 +69,7 @@ class StokBantuanModel {
         "nama": nama,
         "bentuk_bantuan_id": bentukBantuanId,
         "sumber_bantuan_id": sumberBantuanId,
+        "jenis_bantuan_id": jenisBantuanId,
         "jumlah": jumlah,
         "satuan": satuan,
         "deskripsi": deskripsi,

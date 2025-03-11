@@ -5,7 +5,6 @@ import 'package:penyaluran_app/app/services/auth_service.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
-import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
