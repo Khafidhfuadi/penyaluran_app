@@ -51,7 +51,7 @@ class PenitipanBantuanController extends GetxController {
   final TextEditingController searchController = TextEditingController();
 
   // Tambahkan properti untuk waktu terakhir update
-  Rx<DateTime> lastUpdateTime = DateTime.now().obs;
+  final Rx<DateTime> lastUpdateTime = DateTime.now().obs;
 
   UserModel? get user => _authController.user;
 
@@ -75,6 +75,15 @@ class PenitipanBantuanController extends GetxController {
     // Tambahkan delay untuk memastikan data petugas desa dimuat setelah penitipan
     Future.delayed(const Duration(seconds: 1), () {
       loadAllPetugasDesaData();
+    });
+
+    // Listener untuk pencarian donatur
+    donaturSearchController.addListener(() {
+      if (donaturSearchController.text.length >= 3) {
+        searchDonatur(donaturSearchController.text);
+      } else {
+        hasilPencarianDonatur.clear();
+      }
     });
   }
 
@@ -132,7 +141,7 @@ class PenitipanBantuanController extends GetxController {
         // Debug: print semua data petugas desa yang sudah dimuat
         print('Data petugas desa yang sudah dimuat:');
         petugasDesaCache.forEach((key, value) {
-          print('ID: $key, Nama: ${value['name']}');
+          print('ID: $key, Nama: $value');
         });
 
         // Update waktu terakhir refresh
@@ -588,7 +597,7 @@ class PenitipanBantuanController extends GetxController {
       // Debug: print semua data petugas desa yang sudah dimuat
       print('Data petugas desa yang sudah dimuat setelah reload:');
       petugasDesaCache.forEach((key, value) {
-        print('ID: $key, Nama: ${value['name']}');
+        print('ID: $key, Nama: $value');
       });
     } catch (e) {
       print('Error saat memuat ulang data petugas desa: $e');
@@ -688,6 +697,11 @@ class PenitipanBantuanController extends GetxController {
       terverifikasi: terverifikasi,
       ditolak: ditolak,
     );
+
+    // Update counter lokal
+    jumlahMenunggu.value = menunggu;
+    jumlahTerverifikasi.value = terverifikasi;
+    jumlahDitolak.value = ditolak;
 
     // Debug counter values
     print(

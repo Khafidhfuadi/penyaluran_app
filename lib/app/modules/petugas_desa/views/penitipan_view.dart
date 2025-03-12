@@ -209,7 +209,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
   }
 
   Widget _buildPenitipanList(BuildContext context) {
-    final filteredList = controller.getFilteredPenitipan();
+    final filteredList = getFilteredPenitipan();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +218,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Daftar Penitipan',
+              'Perlu Diverifikasi',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -385,7 +385,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                     label: 'Jumlah',
                     value: isUang
                         ? 'Rp ${DateFormatter.formatNumber(item.jumlah)}'
-                        : '${DateFormatter.formatNumber(item.jumlah)} ${kategoriSatuan}',
+                        : '${DateFormatter.formatNumber(item.jumlah)} $kategoriSatuan',
                   ),
                 ),
               ],
@@ -712,7 +712,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   'Jumlah',
                   isUang
                       ? 'Rp ${DateFormatter.formatNumber(item.jumlah)}'
-                      : '${DateFormatter.formatNumber(item.jumlah)} ${kategoriSatuan}'),
+                      : '${DateFormatter.formatNumber(item.jumlah)} $kategoriSatuan'),
               if (isUang) _buildDetailItem('Jenis Bantuan', 'Uang (Rupiah)'),
               _buildDetailItem(
                   'Deskripsi', item.deskripsi ?? 'Tidak ada deskripsi'),
@@ -1798,5 +1798,28 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
         ),
       );
     });
+  }
+
+  List<PenitipanBantuanModel> getFilteredPenitipan() {
+    final searchText = controller.searchController.text.toLowerCase();
+    // Hanya tampilkan penitipan dengan status MENUNGGU
+    var filteredList = controller.daftarPenitipan
+        .where((item) => item.status == 'MENUNGGU')
+        .toList();
+
+    // Filter berdasarkan pencarian jika ada teks pencarian
+    if (searchText.isNotEmpty) {
+      filteredList = filteredList.where((item) {
+        final donaturNama = item.donatur?.nama?.toLowerCase() ?? '';
+        final kategoriNama = item.kategoriBantuan?.nama?.toLowerCase() ?? '';
+        final deskripsi = item.deskripsi?.toLowerCase() ?? '';
+
+        return donaturNama.contains(searchText) ||
+            kategoriNama.contains(searchText) ||
+            deskripsi.contains(searchText);
+      }).toList();
+    }
+
+    return filteredList;
   }
 }

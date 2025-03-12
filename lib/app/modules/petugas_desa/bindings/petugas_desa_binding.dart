@@ -13,64 +13,55 @@ import 'package:penyaluran_app/app/modules/petugas_desa/controllers/counter_serv
 class PetugasDesaBinding extends Bindings {
   @override
   void dependencies() {
-    // Pastikan AuthController tersedia
+    // Pastikan AuthController sudah terdaftar
     if (!Get.isRegistered<AuthController>()) {
       Get.put(AuthController(), permanent: true);
     }
 
-    // Daftarkan CounterService terlebih dahulu
+    // Daftarkan CounterService jika belum terdaftar
     if (!Get.isRegistered<CounterService>()) {
       Get.put(CounterService(), permanent: true);
     }
 
-    // Main controller - gunakan put dengan permanent untuk controller utama
-    if (!Get.isRegistered<PetugasDesaController>()) {
-      Get.put(PetugasDesaController(), permanent: true);
-    } else {
-      // Jika sudah terdaftar, gunakan find untuk mendapatkan instance yang ada
-      Get.find<PetugasDesaController>();
-    }
+    // Daftarkan controller utama
+    Get.lazyPut<PetugasDesaController>(
+      () => PetugasDesaController(),
+    );
 
-    // Dashboard controller
+    // Daftarkan controller dashboard
     Get.lazyPut<PetugasDesaDashboardController>(
       () => PetugasDesaDashboardController(),
-      fenix: true,
     );
 
-    // Jadwal penyaluran controller
+    // Daftarkan controller jadwal penyaluran
     Get.lazyPut<JadwalPenyaluranController>(
       () => JadwalPenyaluranController(),
-      fenix: true,
     );
 
-    // Stok bantuan controller
+    // Daftarkan controller stok bantuan
     Get.lazyPut<StokBantuanController>(
       () => StokBantuanController(),
-      fenix: true,
     );
 
-    // Penitipan bantuan controller
+    // Daftarkan controller penitipan bantuan
     Get.lazyPut<PenitipanBantuanController>(
       () => PenitipanBantuanController(),
-      fenix: true,
+      fenix: true, // Agar controller tetap hidup saat berpindah halaman
     );
 
-    // Pengaduan controller
+    // Daftarkan controller pengaduan
     Get.lazyPut<PengaduanController>(
       () => PengaduanController(),
-      fenix: true,
     );
 
-    // Penerima bantuan controller
+    // Daftarkan controller penerima bantuan
     Get.lazyPut<PenerimaBantuanController>(
       () => PenerimaBantuanController(),
-      fenix: true,
     );
 
-    // Laporan controller
+    // Daftarkan controller laporan
     Get.lazyPut<LaporanController>(
       () => LaporanController(),
-      fenix: true,
     );
   }
 }

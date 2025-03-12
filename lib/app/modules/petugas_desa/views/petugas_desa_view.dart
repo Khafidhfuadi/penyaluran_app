@@ -93,6 +93,21 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                   ),
               ],
             );
+            // Tampilkan tombol riwayat hanya jika tab Penitipan aktif
+            if (activeTab == 2) {
+              return Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      Get.toNamed('/petugas-desa/riwayat-penitipan');
+                    },
+                    icon: const Icon(Icons.history),
+                    tooltip: 'Riwayat Penitipan',
+                  ),
+                  notificationButton,
+                ],
+              );
+            }
 
             return notificationButton;
           }),
