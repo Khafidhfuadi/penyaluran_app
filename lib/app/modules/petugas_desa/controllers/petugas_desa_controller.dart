@@ -3,11 +3,13 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/desa_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/counter_service.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 
 class PetugasDesaController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   final SupabaseService _supabaseService = SupabaseService.to;
+  late final CounterService _counterService;
 
   // Indeks tab yang aktif di bottom navigation bar
   final RxInt activeTabIndex = 0.obs;
@@ -21,21 +23,18 @@ class PetugasDesaController extends GetxController {
   // Model desa dari cache
   final Rx<DesaModel?> desaModel = Rx<DesaModel?>(null);
 
-  // Counter untuk notifikasi
-  final RxInt jumlahNotifikasiBelumDibaca = 0.obs;
-
-  // Counter untuk permintaan menunggu
-  final RxInt jumlahMenunggu = 0.obs;
-
-  // Counter untuk pengaduan yang diproses
-  final RxInt jumlahDiproses = 0.obs;
-
   // Data jadwal hari ini
   final RxList<dynamic> jadwalHariIni = <dynamic>[].obs;
 
   UserModel? get user => _authController.user;
   String get role => user?.role ?? 'PETUGASDESA';
   String get nama => user?.name ?? 'Petugas Desa';
+
+  // Getter untuk counter dari CounterService
+  RxInt get jumlahNotifikasiBelumDibaca =>
+      _counterService.jumlahNotifikasiBelumDibaca;
+  RxInt get jumlahMenunggu => _counterService.jumlahMenunggu;
+  RxInt get jumlahDiproses => _counterService.jumlahDiproses;
 
   // Getter untuk nama lengkap dari profil pengguna
   String get namaLengkap => userProfile['name'] ?? user?.name ?? 'Petugas Desa';
@@ -63,6 +62,13 @@ class PetugasDesaController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    // Inisialisasi CounterService jika belum ada
+    if (!Get.isRegistered<CounterService>()) {
+      Get.put(CounterService(), permanent: true);
+    }
+    _counterService = Get.find<CounterService>();
+
     loadUserProfile();
     loadNotifikasiData();
     loadJadwalData();
@@ -120,7 +126,7 @@ class PetugasDesaController extends GetxController {
         final notifikasiData =
             await _supabaseService.getNotifikasiBelumDibaca(user!.id);
         if (notifikasiData != null) {
-          jumlahNotifikasiBelumDibaca.value = notifikasiData.length;
+          _counterService.updateNotifikasiCounter(notifikasiData.length);
         }
       }
     } catch (e) {
@@ -134,6 +140,7 @@ class PetugasDesaController extends GetxController {
       final jadwalHariIniData = await _supabaseService.getJadwalHariIni();
       if (jadwalHariIniData != null) {
         jadwalHariIni.value = jadwalHariIniData;
+        _counterService.updateJadwalCounter(jadwalHariIniData.length);
       }
     } catch (e) {
       print('Error loading jadwal data: $e');
@@ -144,7 +151,27 @@ class PetugasDesaController extends GetxController {
   Future<void> loadPenitipanData() async {
     try {
       // Simulasi data untuk contoh
-      jumlahMenunggu.value = 3;
+      // Dalam implementasi nyata, Anda akan mengambil data dari API
+      final penitipanData = await _supabaseService.getPenitipanBantuan();
+      if (penitipanData != null) {
+        int menunggu = 0;
+
+        // Hitung jumlah penitipan dengan status MENUNGGU
+        for (var item in penitipanData) {
+          if (item['status'] == 'MENUNGGU') {
+            menunggu++;
+          }
+        }
+
+        // Update counter
+        _counterService.updatePenitipanCounters(
+          menunggu: menunggu,
+          terverifikasi: 0, // Tidak digunakan di UI utama
+          ditolak: 0, // Tidak digunakan di UI utama
+        );
+
+        print('Jumlah penitipan menunggu: $menunggu');
+      }
     } catch (e) {
       print('Error loading penitipan data: $e');
     }
@@ -154,7 +181,25 @@ class PetugasDesaController extends GetxController {
   Future<void> loadPengaduanData() async {
     try {
       // Simulasi data untuk contoh
-      jumlahDiproses.value = 2;
+      // Dalam implementasi nyata, Anda akan mengambil data dari API
+      final pengaduanData = await _supabaseService.getPengaduan();
+      if (pengaduanData != null) {
+        int diproses = 0;
+
+        // Hitung jumlah pengaduan dengan status DIPROSES
+        for (var item in pengaduanData) {
+          if (item['status'] == 'DIPROSES') {
+            diproses++;
+          }
+        }
+
+        // Update counter
+        _counterService.updatePengaduanCounter(diproses);
+
+        print('Jumlah pengaduan diproses: $diproses');
+      } else {
+        _counterService.updatePengaduanCounter(0);
+      }
     } catch (e) {
       print('Error loading pengaduan data: $e');
     }
@@ -172,6 +217,14 @@ class PetugasDesaController extends GetxController {
   // Metode untuk mengubah tab aktif
   void changeTab(int index) {
     activeTabIndex.value = index;
+
+    // Jika tab penitipan dipilih, muat ulang data penitipan
+    if (index == 2) {
+      loadPenitipanData();
+    } else if (index == 3) {
+      // Jika tab pengaduan dipilih, muat ulang data pengaduan
+      loadPengaduanData();
+    }
   }
 
   // Metode untuk logout

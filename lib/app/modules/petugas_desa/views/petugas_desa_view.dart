@@ -94,40 +94,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               ],
             );
 
-            // Tombol tambah untuk jadwal dan stok bantuan
-            if (activeTab == 1) {
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    tooltip: 'Tambah Jadwal',
-                    onPressed: () {
-                      // Implementasi untuk menambah jadwal baru
-                    },
-                  ),
-                  notificationButton,
-                ],
-              );
-            } else if (activeTab == 2) {
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    tooltip: 'Tambah Stok Bantuan',
-                    onPressed: () {
-                      // Implementasi untuk menambah stok bantuan baru
-                    },
-                  ),
-                  notificationButton,
-                ],
-              );
-            } else if (activeTab == 4) {
-              return notificationButton;
-            } else {
-              return notificationButton;
-            }
+            return notificationButton;
           }),
         ],
       ),

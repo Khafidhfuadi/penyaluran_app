@@ -3,16 +3,17 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/donatur_model.dart';
-import 'package:penyaluran_app/app/data/models/kategori_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/stok_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/counter_service.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 
 class PenitipanBantuanController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   final SupabaseService _supabaseService = SupabaseService.to;
   final ImagePicker _imagePicker = ImagePicker();
+  late final CounterService _counterService;
 
   final RxBool isLoading = false.obs;
   final RxBool isUploading = false.obs;
@@ -26,9 +27,6 @@ class PenitipanBantuanController extends GetxController {
   // Data untuk penitipan
   final RxList<PenitipanBantuanModel> daftarPenitipan =
       <PenitipanBantuanModel>[].obs;
-  final RxInt jumlahMenunggu = 0.obs;
-  final RxInt jumlahTerverifikasi = 0.obs;
-  final RxInt jumlahDitolak = 0.obs;
 
   // Data untuk kategori bantuan
   final RxMap<String, StokBantuanModel> stokBantuanMap =
@@ -46,9 +44,21 @@ class PenitipanBantuanController extends GetxController {
 
   UserModel? get user => _authController.user;
 
+  // Getter untuk counter dari CounterService
+  RxInt get jumlahMenunggu => _counterService.jumlahMenunggu;
+  RxInt get jumlahTerverifikasi => _counterService.jumlahTerverifikasi;
+  RxInt get jumlahDitolak => _counterService.jumlahDitolak;
+
   @override
   void onInit() {
     super.onInit();
+
+    // Inisialisasi CounterService jika belum ada
+    if (!Get.isRegistered<CounterService>()) {
+      Get.put(CounterService(), permanent: true);
+    }
+    _counterService = Get.find<CounterService>();
+
     loadPenitipanData();
     loadKategoriBantuanData();
     // Tambahkan delay untuk memastikan data petugas desa dimuat setelah penitipan
@@ -73,13 +83,20 @@ class PenitipanBantuanController extends GetxController {
             .toList();
 
         // Hitung jumlah berdasarkan status
-        jumlahMenunggu.value =
+        int menunggu =
             daftarPenitipan.where((item) => item.status == 'MENUNGGU').length;
-        jumlahTerverifikasi.value = daftarPenitipan
+        int terverifikasi = daftarPenitipan
             .where((item) => item.status == 'TERVERIFIKASI')
             .length;
-        jumlahDitolak.value =
+        int ditolak =
             daftarPenitipan.where((item) => item.status == 'DITOLAK').length;
+
+        // Update counter di CounterService
+        _counterService.updatePenitipanCounters(
+          menunggu: menunggu,
+          terverifikasi: terverifikasi,
+          ditolak: ditolak,
+        );
 
         // Muat informasi petugas desa untuk item yang terverifikasi
         print(
@@ -351,9 +368,31 @@ class PenitipanBantuanController extends GetxController {
         final stokBantuan = getKategoriNama(item.stokBantuanId).toLowerCase();
         final stokBantuanMatch = stokBantuan.contains(searchText);
 
-        return deskripsiMatch || stokBantuanMatch;
+        // Cari berdasarkan nama donatur
+        final donaturId = item.donaturId;
+        String donaturNama = '';
+        if (donaturId != null && donaturCache.containsKey(donaturId)) {
+          donaturNama = donaturCache[donaturId]?.nama?.toLowerCase() ?? '';
+        }
+        final donaturMatch = donaturNama.contains(searchText);
+
+        // Cari berdasarkan tanggal penitipan
+        final tanggalMatch = item.tanggalPenitipan != null &&
+            item.tanggalPenitipan.toString().toLowerCase().contains(searchText);
+
+        return deskripsiMatch ||
+            stokBantuanMatch ||
+            donaturMatch ||
+            tanggalMatch;
       }).toList();
     }
+
+    // Urutkan berdasarkan tanggal terbaru
+    filteredList.sort((a, b) {
+      if (a.tanggalPenitipan == null) return 1;
+      if (b.tanggalPenitipan == null) return -1;
+      return b.tanggalPenitipan!.compareTo(a.tanggalPenitipan!);
+    });
 
     return filteredList;
   }

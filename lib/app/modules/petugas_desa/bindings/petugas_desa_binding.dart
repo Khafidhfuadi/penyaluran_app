@@ -8,6 +8,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/controllers/pengaduan_co
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penerima_bantuan_controller.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/laporan_controller.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/counter_service.dart';
 
 class PetugasDesaBinding extends Bindings {
   @override
@@ -15,6 +16,11 @@ class PetugasDesaBinding extends Bindings {
     // Pastikan AuthController tersedia
     if (!Get.isRegistered<AuthController>()) {
       Get.put(AuthController(), permanent: true);
+    }
+
+    // Daftarkan CounterService terlebih dahulu
+    if (!Get.isRegistered<CounterService>()) {
+      Get.put(CounterService(), permanent: true);
     }
 
     // Main controller - gunakan put dengan permanent untuk controller utama
