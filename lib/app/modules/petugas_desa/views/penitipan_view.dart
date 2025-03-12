@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:penyaluran_app/app/data/models/donatur_model.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penitipan_bantuan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
@@ -39,6 +40,11 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                     ),
                   ),
           )),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showTambahPenitipanDialog(context),
+        backgroundColor: AppTheme.primaryColor,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
@@ -981,6 +987,725 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showTambahPenitipanDialog(BuildContext context) {
+    final formKey = GlobalKey<FormState>();
+    final TextEditingController jumlahController = TextEditingController();
+    final TextEditingController deskripsiController = TextEditingController();
+
+    // Variabel untuk menyimpan nilai yang dipilih
+    final Rx<String?> selectedStokBantuanId = Rx<String?>(null);
+    final Rx<String?> selectedDonaturId = Rx<String?>(null);
+    final Rx<DonaturModel?> selectedDonatur = Rx<DonaturModel?>(null);
+
+    // Reset foto bantuan paths
+    controller.fotoBantuanPaths.clear();
+    controller.donaturSearchController.clear();
+    controller.hasilPencarianDonatur.clear();
+
+    Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Obx(() {
+            // Dapatkan informasi apakah stok bantuan berupa uang
+            bool isUang = false;
+            String satuan = '';
+            if (selectedStokBantuanId.value != null) {
+              isUang =
+                  controller.isStokBantuanUang(selectedStokBantuanId.value!);
+              satuan =
+                  controller.getKategoriSatuan(selectedStokBantuanId.value);
+            }
+
+            return Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tambah Penitipan Bantuan',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Pilih kategori bantuan
+                    Text(
+                      'Kategori Bantuan',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      hint: const Text('Pilih kategori bantuan'),
+                      value: selectedStokBantuanId.value,
+                      items: controller.stokBantuanMap.entries.map((entry) {
+                        return DropdownMenuItem<String>(
+                          value: entry.key,
+                          child: Text(entry.value.nama ?? 'Tidak ada nama'),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        selectedStokBantuanId.value = value;
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Kategori bantuan harus dipilih';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Jumlah bantuan
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isUang ? 'Jumlah Uang (Rp)' : 'Jumlah Bantuan',
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: jumlahController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  hintText:
+                                      isUang ? 'Contoh: 100000' : 'Contoh: 10',
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Jumlah harus diisi';
+                                  }
+                                  if (double.tryParse(value) == null) {
+                                    return 'Jumlah harus berupa angka';
+                                  }
+                                  if (double.parse(value) <= 0) {
+                                    return 'Jumlah harus lebih dari 0';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (satuan.isNotEmpty && !isUang) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            margin: const EdgeInsets.only(top: 32),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey.shade400),
+                            ),
+                            child: Text(
+                              satuan,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Donatur (wajib)
+                    Text(
+                      'Donatur',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (selectedDonatur.value != null) ...[
+                          // Tampilkan donatur yang dipilih
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        selectedDonatur.value!.nama ??
+                                            'Tidak ada nama',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      if (selectedDonatur.value!.noHp != null)
+                                        Text(selectedDonatur.value!.noHp!),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    selectedDonatur.value = null;
+                                    selectedDonaturId.value = null;
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else ...[
+                          // Tampilkan pencarian donatur
+                          TextFormField(
+                            controller: controller.donaturSearchController,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              hintText: 'Cari donatur (min. 3 karakter)',
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              suffixIcon: controller.isSearchingDonatur.value
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.search),
+                            ),
+                            onChanged: (value) {
+                              controller.searchDonatur(value);
+                            },
+                            validator: (value) {
+                              if (selectedDonaturId.value == null) {
+                                return 'Donatur harus dipilih';
+                              }
+                              return null;
+                            },
+                          ),
+
+                          // Hasil pencarian donatur
+                          if (controller.hasilPencarianDonatur.isNotEmpty)
+                            Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              constraints: const BoxConstraints(maxHeight: 150),
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount:
+                                    controller.hasilPencarianDonatur.length,
+                                itemBuilder: (context, index) {
+                                  final donatur =
+                                      controller.hasilPencarianDonatur[index];
+                                  return ListTile(
+                                    title:
+                                        Text(donatur.nama ?? 'Tidak ada nama'),
+                                    subtitle: donatur.noHp != null
+                                        ? Text(donatur.noHp!)
+                                        : null,
+                                    dense: true,
+                                    onTap: () {
+                                      selectedDonatur.value = donatur;
+                                      selectedDonaturId.value = donatur.id;
+                                      controller.donaturSearchController
+                                          .clear();
+                                      controller.hasilPencarianDonatur.clear();
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+
+                          // Tombol tambah donatur baru
+                          if (controller.donaturSearchController.text.length >=
+                                  3 &&
+                              controller.hasilPencarianDonatur.isEmpty &&
+                              !controller.isSearchingDonatur.value)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  _showTambahDonaturDialog(context,
+                                      (donaturId) {
+                                    // Callback ketika donatur berhasil ditambahkan
+                                    controller
+                                        .getDonaturInfo(donaturId)
+                                        .then((donatur) {
+                                      if (donatur != null) {
+                                        selectedDonatur.value = donatur;
+                                        selectedDonaturId.value = donatur.id;
+                                      }
+                                    });
+                                  });
+                                },
+                                icon: const Icon(Icons.add),
+                                label: const Text('Tambah Donatur Baru'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppTheme.primaryColor,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Deskripsi
+                    Text(
+                      'Deskripsi',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: deskripsiController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        hintText: 'Deskripsi bantuan',
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Deskripsi harus diisi';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Upload foto bantuan
+                    Text(
+                      'Foto Bantuan',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    if (controller.fotoBantuanPaths.isEmpty)
+                      InkWell(
+                        onTap: () => _showPilihSumberFoto(context),
+                        child: Container(
+                          height: 150,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade400),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.camera_alt,
+                                size: 48,
+                                color: Colors.grey.shade600,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Tambah Foto',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: 100,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: controller.fotoBantuanPaths.length +
+                                  1, // +1 untuk tombol tambah
+                              itemBuilder: (context, index) {
+                                if (index ==
+                                    controller.fotoBantuanPaths.length) {
+                                  // Tombol tambah foto
+                                  return InkWell(
+                                    onTap: () => _showPilihSumberFoto(context),
+                                    child: Container(
+                                      width: 100,
+                                      margin: const EdgeInsets.only(right: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: Colors.grey.shade400),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.add_photo_alternate,
+                                            size: 32,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Tambah',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                // Tampilkan foto yang sudah diambil
+                                return Stack(
+                                  children: [
+                                    Container(
+                                      width: 100,
+                                      height: 100,
+                                      margin: const EdgeInsets.only(right: 8),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(8),
+                                        image: DecorationImage(
+                                          image: FileImage(File(controller
+                                              .fotoBantuanPaths[index])),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 4,
+                                      right: 12,
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            controller.removeFotoBantuan(index),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.black.withOpacity(0.5),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    const SizedBox(height: 24),
+
+                    // Tombol aksi
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Get.back(),
+                          child: const Text('Batal'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: controller.isUploading.value
+                              ? null
+                              : () {
+                                  if (formKey.currentState!.validate()) {
+                                    if (controller.fotoBantuanPaths.isEmpty) {
+                                      Get.snackbar(
+                                        'Error',
+                                        'Foto bantuan harus diupload',
+                                        snackPosition: SnackPosition.BOTTOM,
+                                        backgroundColor: Colors.red,
+                                        colorText: Colors.white,
+                                      );
+                                      return;
+                                    }
+
+                                    controller.tambahPenitipanBantuan(
+                                      stokBantuanId:
+                                          selectedStokBantuanId.value!,
+                                      jumlah:
+                                          double.parse(jumlahController.text),
+                                      deskripsi: deskripsiController.text,
+                                      donaturId: selectedDonaturId.value,
+                                      isUang: isUang,
+                                    );
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                          ),
+                          child: controller.isUploading.value
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Simpan'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  void _showPilihSumberFoto(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Pilih Sumber Foto',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Kamera'),
+              onTap: () {
+                Get.back();
+                controller.pickFotoBantuan(fromCamera: true);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galeri'),
+              onTap: () {
+                Get.back();
+                controller.pickFotoBantuan(fromCamera: false);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showTambahDonaturDialog(
+      BuildContext context, Function(String) onDonaturAdded) {
+    final formKey = GlobalKey<FormState>();
+    final TextEditingController namaController = TextEditingController();
+    final TextEditingController noHpController = TextEditingController();
+    final TextEditingController alamatController = TextEditingController();
+    final TextEditingController emailController = TextEditingController();
+
+    Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tambah Donatur Baru',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Nama donatur
+                  Text(
+                    'Nama Donatur',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: namaController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      hintText: 'Masukkan nama donatur',
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Nama donatur harus diisi';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // No HP
+                  Text(
+                    'Nomor HP',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: noHpController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      hintText: 'Masukkan nomor HP',
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Nomor HP harus diisi';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Alamat (opsional)
+                  Text(
+                    'Alamat (Opsional)',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: alamatController,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      hintText: 'Masukkan alamat',
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Email (opsional)
+                  Text(
+                    'Email (Opsional)',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      hintText: 'Masukkan email',
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Tombol aksi
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Get.back(),
+                        child: const Text('Batal'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            final donaturId = await controller.tambahDonatur(
+                              nama: namaController.text,
+                              noHp: noHpController.text,
+                              alamat: alamatController.text.isEmpty
+                                  ? null
+                                  : alamatController.text,
+                              email: emailController.text.isEmpty
+                                  ? null
+                                  : emailController.text,
+                            );
+
+                            if (donaturId != null) {
+                              Get.back();
+                              onDonaturAdded(donaturId);
+                              Get.snackbar(
+                                'Sukses',
+                                'Donatur berhasil ditambahkan',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.green,
+                                colorText: Colors.white,
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                        ),
+                        child: const Text('Simpan'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

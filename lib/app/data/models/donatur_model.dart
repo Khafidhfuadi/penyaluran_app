@@ -5,6 +5,7 @@ class DonaturModel {
   final String? nama;
   final String? alamat;
   final String? telepon;
+  final String? noHp;
   final String? email;
   final String? jenis;
   final String? deskripsi;
@@ -17,6 +18,7 @@ class DonaturModel {
     this.nama,
     this.alamat,
     this.telepon,
+    this.noHp,
     this.email,
     this.jenis,
     this.deskripsi,
@@ -35,6 +37,7 @@ class DonaturModel {
         nama: json["nama"],
         alamat: json["alamat"],
         telepon: json["telepon"],
+        noHp: json["no_hp"] ?? json["telepon"],
         email: json["email"],
         jenis: json["jenis"],
         deskripsi: json["deskripsi"],
@@ -52,6 +55,7 @@ class DonaturModel {
         "nama": nama,
         "alamat": alamat,
         "telepon": telepon,
+        "no_hp": noHp ?? telepon,
         "email": email,
         "jenis": jenis,
         "deskripsi": deskripsi,

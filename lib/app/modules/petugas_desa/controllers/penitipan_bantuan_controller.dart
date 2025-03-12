@@ -21,6 +21,14 @@ class PenitipanBantuanController extends GetxController {
   // Path untuk bukti serah terima
   final Rx<String?> fotoBuktiSerahTerimaPath = Rx<String?>(null);
 
+  // Path untuk foto bantuan
+  final RxList<String> fotoBantuanPaths = <String>[].obs;
+
+  // Untuk pencarian donatur
+  final RxList<DonaturModel> hasilPencarianDonatur = <DonaturModel>[].obs;
+  final RxBool isSearchingDonatur = false.obs;
+  final TextEditingController donaturSearchController = TextEditingController();
+
   // Indeks kategori yang dipilih untuk filter
   final RxInt selectedCategoryIndex = 0.obs;
 
@@ -70,6 +78,7 @@ class PenitipanBantuanController extends GetxController {
   @override
   void onClose() {
     searchController.dispose();
+    donaturSearchController.dispose();
     super.onClose();
   }
 
@@ -196,6 +205,92 @@ class PenitipanBantuanController extends GetxController {
     }
   }
 
+  Future<void> pickFotoBantuan({bool fromCamera = true}) async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+        imageQuality: 70,
+        maxWidth: 1000,
+      );
+
+      if (pickedFile != null) {
+        fotoBantuanPaths.add(pickedFile.path);
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal mengambil gambar: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  void removeFotoBantuan(int index) {
+    if (index >= 0 && index < fotoBantuanPaths.length) {
+      fotoBantuanPaths.removeAt(index);
+    }
+  }
+
+  Future<void> tambahPenitipanBantuan({
+    required String stokBantuanId,
+    required double jumlah,
+    required String deskripsi,
+    String? donaturId,
+    bool isUang = false,
+  }) async {
+    if (fotoBantuanPaths.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Foto bantuan harus diupload',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    isLoading.value = true;
+    isUploading.value = true;
+    try {
+      await _supabaseService.tambahPenitipanBantuan(
+        stokBantuanId: stokBantuanId,
+        jumlah: jumlah,
+        deskripsi: deskripsi,
+        fotoBantuanPaths: fotoBantuanPaths,
+        donaturId: donaturId,
+        isUang: isUang,
+      );
+
+      // Reset paths setelah berhasil
+      fotoBantuanPaths.clear();
+
+      await loadPenitipanData();
+      Get.back(); // Tutup dialog
+      Get.snackbar(
+        'Sukses',
+        'Penitipan bantuan berhasil ditambahkan',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      print('Error adding penitipan: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal menambahkan penitipan: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+      isUploading.value = false;
+    }
+  }
+
   Future<void> verifikasiPenitipan(String penitipanId) async {
     if (fotoBuktiSerahTerimaPath.value == null) {
       Get.snackbar(
@@ -318,13 +413,8 @@ class PenitipanBantuanController extends GetxController {
   }
 
   Future<void> refreshData() async {
-    isLoading.value = true;
-    try {
-      await loadPenitipanData();
-      await loadKategoriBantuanData();
-    } finally {
-      isLoading.value = false;
-    }
+    await loadPenitipanData();
+    await loadKategoriBantuanData();
   }
 
   void changeCategory(int index) {
@@ -484,5 +574,80 @@ class PenitipanBantuanController extends GetxController {
     } catch (e) {
       print('Error saat memuat ulang data petugas desa: $e');
     }
+  }
+
+  Future<void> searchDonatur(String keyword) async {
+    if (keyword.length < 3) {
+      hasilPencarianDonatur.clear();
+      return;
+    }
+
+    isSearchingDonatur.value = true;
+    try {
+      final result = await _supabaseService.searchDonatur(keyword);
+      if (result != null) {
+        hasilPencarianDonatur.value =
+            result.map((data) => DonaturModel.fromJson(data)).toList();
+      } else {
+        hasilPencarianDonatur.clear();
+      }
+    } catch (e) {
+      print('Error searching donatur: $e');
+      hasilPencarianDonatur.clear();
+    } finally {
+      isSearchingDonatur.value = false;
+    }
+  }
+
+  // Metode untuk mendapatkan daftar donatur
+  Future<List<DonaturModel>> getDaftarDonatur() async {
+    try {
+      final result = await _supabaseService.getDaftarDonatur();
+      if (result != null) {
+        return result.map((data) => DonaturModel.fromJson(data)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error getting daftar donatur: $e');
+      return [];
+    }
+  }
+
+  Future<String?> tambahDonatur({
+    required String nama,
+    required String noHp,
+    String? alamat,
+    String? email,
+  }) async {
+    try {
+      final donaturData = {
+        'nama': nama,
+        'no_hp': noHp,
+        'alamat': alamat,
+        'email': email,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      return await _supabaseService.tambahDonatur(donaturData);
+    } catch (e) {
+      print('Error adding donatur: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal menambahkan donatur: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return null;
+    }
+  }
+
+  // Mendapatkan informasi apakah stok bantuan berupa uang
+  bool isStokBantuanUang(String stokBantuanId) {
+    if (!stokBantuanMap.containsKey(stokBantuanId)) {
+      return false;
+    }
+    return stokBantuanMap[stokBantuanId]?.isUang ?? false;
   }
 }

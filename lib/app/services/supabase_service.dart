@@ -551,6 +551,57 @@ class SupabaseService extends GetxService {
     }
   }
 
+  // Metode untuk menambahkan penitipan bantuan baru
+  Future<void> tambahPenitipanBantuan({
+    required String stokBantuanId,
+    required double jumlah,
+    required String deskripsi,
+    required List<String> fotoBantuanPaths,
+    String? donaturId,
+    bool isUang = false,
+  }) async {
+    try {
+      final petugasDesaId = client.auth.currentUser?.id;
+      if (petugasDesaId == null) {
+        throw 'User tidak ditemukan';
+      }
+
+      // Upload foto bantuan
+      final fotoBantuanUrls = await uploadMultipleFiles(
+          fotoBantuanPaths, 'bantuan', 'foto_bantuan');
+
+      if (fotoBantuanUrls == null || fotoBantuanUrls.isEmpty) {
+        throw 'Gagal mengupload foto bantuan';
+      }
+
+      // Data penitipan
+      final penitipanData = {
+        'stok_bantuan_id': stokBantuanId,
+        'jumlah': jumlah,
+        'deskripsi': deskripsi,
+        'status':
+            'TERVERIFIKASI', // Langsung terverifikasi karena diinput oleh petugas desa
+        'foto_bantuan': fotoBantuanUrls,
+        'tanggal_penitipan': DateTime.now().toIso8601String(),
+        'tanggal_verifikasi': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+        'petugas_desa_id': petugasDesaId,
+        'is_uang': isUang,
+      };
+
+      // Tambahkan donatur_id jika ada
+      if (donaturId != null && donaturId.isNotEmpty) {
+        penitipanData['donatur_id'] = donaturId;
+      }
+
+      await client.from('penitipan_bantuan').insert(penitipanData);
+    } catch (e) {
+      print('Error adding penitipan bantuan: $e');
+      throw e.toString();
+    }
+  }
+
   Future<Map<String, dynamic>?> getDonaturById(String donaturId) async {
     try {
       final response =
@@ -560,6 +611,56 @@ class SupabaseService extends GetxService {
     } catch (e) {
       print('Error getting donatur by id: $e');
       return null;
+    }
+  }
+
+  // Metode untuk mencari donatur berdasarkan keyword
+  Future<List<Map<String, dynamic>>?> searchDonatur(String keyword) async {
+    try {
+      if (keyword.length < 3) {
+        return [];
+      }
+
+      final response = await client
+          .from('donatur')
+          .select('*')
+          .ilike('nama', '%$keyword%')
+          .limit(10);
+
+      return response;
+    } catch (e) {
+      print('Error searching donatur: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan daftar donatur
+  Future<List<Map<String, dynamic>>?> getDaftarDonatur() async {
+    try {
+      final response = await client
+          .from('donatur')
+          .select('*')
+          .order('nama', ascending: true);
+
+      return response;
+    } catch (e) {
+      print('Error getting daftar donatur: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk menambahkan donatur baru
+  Future<String?> tambahDonatur(Map<String, dynamic> donaturData) async {
+    try {
+      final response =
+          await client.from('donatur').insert(donaturData).select('id');
+      if (response.isNotEmpty) {
+        return response[0]['id'];
+      }
+      return null;
+    } catch (e) {
+      print('Error adding donatur: $e');
+      throw e.toString();
     }
   }
 
