@@ -10,6 +10,7 @@ class StokBantuanController extends GetxController {
   final SupabaseService _supabaseService = SupabaseService.to;
 
   final RxBool isLoading = false.obs;
+  final RxBool showInfoBanner = true.obs;
 
   // Data untuk stok bantuan
   final RxList<StokBantuanModel> daftarStokBantuan = <StokBantuanModel>[].obs;
@@ -25,6 +26,9 @@ class StokBantuanController extends GetxController {
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
+
+  // Filter untuk stok bantuan
+  final RxString filterValue = 'semua'.obs;
 
   // Tambahkan properti untuk total dana bantuan
   RxDouble totalDanaBantuan = 0.0.obs;
@@ -241,10 +245,30 @@ class StokBantuanController extends GetxController {
   }
 
   List<StokBantuanModel> getFilteredStokBantuan() {
-    if (searchQuery.isEmpty) {
-      return daftarStokBantuan;
-    } else {
-      return daftarStokBantuan
+    var filteredList = <StokBantuanModel>[];
+
+    // Filter berdasarkan jenis (uang/barang/hampir habis)
+    switch (filterValue.value) {
+      case 'uang':
+        filteredList =
+            daftarStokBantuan.where((item) => item.isUang == true).toList();
+        break;
+      case 'barang':
+        filteredList =
+            daftarStokBantuan.where((item) => item.isUang != true).toList();
+        break;
+      case 'hampir_habis':
+        filteredList = daftarStokBantuan
+            .where((item) => (item.totalStok ?? 0) <= 10)
+            .toList();
+        break;
+      default: // 'semua'
+        filteredList = daftarStokBantuan.toList();
+    }
+
+    // Filter berdasarkan pencarian jika ada
+    if (searchQuery.isNotEmpty) {
+      return filteredList
           .where((item) =>
               (item.nama
                       ?.toLowerCase()
@@ -260,6 +284,8 @@ class StokBantuanController extends GetxController {
                   false))
           .toList();
     }
+
+    return filteredList;
   }
 
   // Metode untuk mendapatkan jumlah stok yang hampir habis (stok <= 10)
@@ -286,5 +312,10 @@ class StokBantuanController extends GetxController {
 
   Future<void> _filterStokBantuan() async {
     // Implementasi metode _filterStokBantuan
+  }
+
+  // Metode untuk mengatur filter
+  void setFilter(String value) {
+    filterValue.value = value;
   }
 }

@@ -235,11 +235,38 @@ class StokBantuanView extends GetView<StokBantuanController> {
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300, width: 1),
           ),
-          child: IconButton(
-            onPressed: controller.refreshData,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: controller.filterValue.value,
+              icon: const Icon(Icons.filter_list),
+              hint: const Text('Filter'),
+              items: [
+                DropdownMenuItem(
+                  value: 'semua',
+                  child: Text('Semua'),
+                ),
+                DropdownMenuItem(
+                  value: 'uang',
+                  child: Text('Uang'),
+                ),
+                DropdownMenuItem(
+                  value: 'barang',
+                  child: Text('Barang'),
+                ),
+                DropdownMenuItem(
+                  value: 'hampir_habis',
+                  child: Text('Hampir Habis'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  controller.setFilter(value);
+                }
+              },
+            ),
           ),
         ),
       ],
@@ -261,7 +288,9 @@ class StokBantuanView extends GetView<StokBantuanController> {
                 const SizedBox(height: 16),
                 Text(
                   controller.searchQuery.isEmpty
-                      ? 'Belum ada data stok bantuan'
+                      ? controller.filterValue.value == 'semua'
+                          ? 'Belum ada data stok bantuan'
+                          : 'Tidak ada stok bantuan yang sesuai dengan filter'
                       : 'Tidak ada stok bantuan yang sesuai dengan pencarian',
                   style: const TextStyle(color: Colors.grey),
                   textAlign: TextAlign.center,
