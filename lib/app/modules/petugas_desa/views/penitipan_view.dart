@@ -31,6 +31,9 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                           // Filter dan pencarian
                           _buildFilterSearch(context),
 
+                          // Informasi terakhir update
+                          _buildLastUpdateInfo(context),
+
                           const SizedBox(height: 20),
 
                           // Daftar penitipan
@@ -43,7 +46,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showTambahPenitipanDialog(context),
         backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -388,25 +391,32 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
               ],
             ),
             const SizedBox(height: 8),
-            _buildItemDetail(
-              context,
-              icon: Icons.calendar_today,
-              label: 'Tanggal Penitipan',
-              value: DateFormatter.formatDateTime(item.tanggalPenitipan,
-                  defaultValue: 'Tidak ada tanggal'),
-            ),
 
-            // Tampilkan informasi petugas desa jika status terverifikasi
-            if (item.status == 'TERVERIFIKASI' &&
-                item.petugasDesaId != null) ...[
-              const SizedBox(height: 8),
-              _buildItemDetail(
-                context,
-                icon: Icons.person,
-                label: 'Diverifikasi Oleh',
-                value: controller.getPetugasDesaNama(item.petugasDesaId),
-              ),
-            ],
+            Row(
+              children: [
+                Expanded(
+                  child: _buildItemDetail(
+                    context,
+                    icon: Icons.calendar_today,
+                    label: 'Tanggal Dibuat',
+                    value: DateFormatter.formatDateTime(item.createdAt,
+                        defaultValue: 'Tidak ada tanggal'),
+                  ),
+                ),
+                Expanded(
+                  child: item.status == 'TERVERIFIKASI' &&
+                          item.petugasDesaId != null
+                      ? _buildItemDetail(
+                          context,
+                          icon: Icons.person,
+                          label: 'Diverifikasi Oleh',
+                          value:
+                              controller.getPetugasDesaNama(item.petugasDesaId),
+                        )
+                      : const SizedBox(),
+                ),
+              ],
+            ),
 
             // Tampilkan thumbnail foto bantuan jika ada
             if (item.fotoBantuan != null && item.fotoBantuan!.isNotEmpty)
@@ -721,8 +731,8 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   'Diverifikasi Oleh',
                   controller.getPetugasDesaNama(item.petugasDesaId),
                 ),
-              _buildDetailItem('Tanggal Masuk',
-                  DateFormatter.formatDateTime(item.tanggalPenitipan)),
+              _buildDetailItem('Tanggal Dibuat',
+                  DateFormatter.formatDateTime(item.createdAt)),
               if (item.alasanPenolakan != null &&
                   item.alasanPenolakan!.isNotEmpty)
                 _buildDetailItem('Alasan Penolakan', item.alasanPenolakan!),
@@ -1029,7 +1039,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tambah Penitipan Bantuan',
+                      'Tambah Manual Penitipan Bantuan',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -1163,8 +1173,9 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                                         style: const TextStyle(
                                             fontWeight: FontWeight.bold),
                                       ),
-                                      if (selectedDonatur.value!.noHp != null)
-                                        Text(selectedDonatur.value!.noHp!),
+                                      if (selectedDonatur.value!.telepon !=
+                                          null)
+                                        Text(selectedDonatur.value!.telepon!),
                                     ],
                                   ),
                                 ),
@@ -1228,8 +1239,8 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                                   return ListTile(
                                     title:
                                         Text(donatur.nama ?? 'Tidak ada nama'),
-                                    subtitle: donatur.noHp != null
-                                        ? Text(donatur.noHp!)
+                                    subtitle: donatur.telepon != null
+                                        ? Text(donatur.telepon!)
                                         : null,
                                     dense: true,
                                     onTap: () {
@@ -1269,6 +1280,8 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                                 icon: const Icon(Icons.add),
                                 label: const Text('Tambah Donatur Baru'),
                                 style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
                                   foregroundColor: AppTheme.primaryColor,
                                 ),
                               ),
@@ -1542,9 +1555,10 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
       BuildContext context, Function(String) onDonaturAdded) {
     final formKey = GlobalKey<FormState>();
     final TextEditingController namaController = TextEditingController();
-    final TextEditingController noHpController = TextEditingController();
+    final TextEditingController teleponController = TextEditingController();
     final TextEditingController alamatController = TextEditingController();
     final TextEditingController emailController = TextEditingController();
+    final TextEditingController jenisController = TextEditingController();
 
     Get.dialog(
       Dialog(
@@ -1591,28 +1605,76 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   ),
                   const SizedBox(height: 16),
 
-                  // No HP
+                  // Telepon
                   Text(
-                    'Nomor HP',
+                    'Nomor Telepon',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
                   TextFormField(
-                    controller: noHpController,
+                    controller: teleponController,
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      hintText: 'Masukkan nomor HP',
+                      hintText: 'Masukkan nomor telepon',
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Nomor HP harus diisi';
+                        return 'Nomor telepon harus diisi';
                       }
                       return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Jenis (opsional)
+                  Text(
+                    'Jenis Donatur (Opsional)',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                    ),
+                    hint: const Text('Pilih jenis donatur'),
+                    value: jenisController.text.isEmpty
+                        ? null
+                        : jenisController.text,
+                    items: const [
+                      DropdownMenuItem<String>(
+                        value: 'Perorangan',
+                        child: Text('Perorangan'),
+                      ),
+                      DropdownMenuItem<String>(
+                        value: 'Perusahaan',
+                        child: Text('Perusahaan'),
+                      ),
+                      DropdownMenuItem<String>(
+                        value: 'Lembaga',
+                        child: Text('Lembaga'),
+                      ),
+                      DropdownMenuItem<String>(
+                        value: 'Komunitas',
+                        child: Text('Komunitas'),
+                      ),
+                      DropdownMenuItem<String>(
+                        value: 'Lainnya',
+                        child: Text('Lainnya'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        jenisController.text = value;
+                      }
                     },
                   ),
                   const SizedBox(height: 16),
@@ -1671,13 +1733,16 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                           if (formKey.currentState!.validate()) {
                             final donaturId = await controller.tambahDonatur(
                               nama: namaController.text,
-                              noHp: noHpController.text,
+                              telepon: teleponController.text,
                               alamat: alamatController.text.isEmpty
                                   ? null
                                   : alamatController.text,
                               email: emailController.text.isEmpty
                                   ? null
                                   : emailController.text,
+                              jenis: jenisController.text.isEmpty
+                                  ? null
+                                  : jenisController.text,
                             );
 
                             if (donaturId != null) {
@@ -1707,5 +1772,31 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
         ),
       ),
     );
+  }
+
+  // Tambahkan widget untuk menampilkan waktu terakhir update
+  Widget _buildLastUpdateInfo(BuildContext context) {
+    return Obx(() {
+      final lastUpdate = controller.lastUpdateTime.value;
+      final formattedDate = DateFormatter.formatDateTimeWithHour(lastUpdate);
+
+      return Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Row(
+          children: [
+            Icon(Icons.update, size: 16, color: Colors.grey[600]),
+            const SizedBox(width: 4),
+            Text(
+              'Data terupdate: $formattedDate',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

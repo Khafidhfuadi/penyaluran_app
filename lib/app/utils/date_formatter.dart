@@ -53,4 +53,8 @@ class DateFormatter {
       return number.toString(); // Fallback to basic format
     }
   }
+
+  static String formatDateTimeWithHour(DateTime dateTime) {
+    return DateFormat('dd MMMM yyyy HH:mm', 'id_ID').format(dateTime);
+  }
 }

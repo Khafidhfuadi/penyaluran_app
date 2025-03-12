@@ -44,6 +44,9 @@ class StokBantuanView extends GetView<StokBantuanController> {
             // Filter dan pencarian
             _buildFilterSearch(context),
 
+            // Informasi terakhir update
+            _buildLastUpdateInfo(context),
+
             const SizedBox(height: 20),
 
             // Daftar stok bantuan
@@ -74,7 +77,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Data stok diambil dari penitipan bantuan terverifikasi',
+            'Total stok diperbarui otomatis saat ada penitipan bantuan terverifikasi',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.white.withOpacity(0.8),
                 ),
@@ -508,164 +511,229 @@ class StokBantuanView extends GetView<StokBantuanController> {
     String? selectedJenisBantuanId;
     bool isUang = false;
 
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Tambah Stok Bantuan'),
-          content: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: namaController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nama Bantuan',
-                      border: OutlineInputBorder(),
+    Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: StatefulBuilder(
+            builder: (context, setState) => Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tambah Stok Bantuan',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Nama bantuan tidak boleh kosong';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(
-                      labelText: 'Kategori Bantuan',
-                      border: OutlineInputBorder(),
-                    ),
-                    value: selectedJenisBantuanId,
-                    hint: const Text('Pilih Kategori Bantuan'),
-                    items: controller.daftarKategoriBantuan
-                        .map((kategori) => DropdownMenuItem<String>(
-                              value: kategori['id'],
-                              child: Text(kategori['nama'] ?? ''),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      selectedJenisBantuanId = value;
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Kategori bantuan harus dipilih';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // Tambahkan checkbox untuk menandai sebagai uang
-                  CheckboxListTile(
-                    title: const Text('Bantuan Berbentuk Uang (Rupiah)'),
-                    value: isUang,
-                    onChanged: (value) {
-                      setState(() {
-                        isUang = value ?? false;
-                        if (isUang) {
-                          satuanController.text = 'Rp';
-                        } else {
-                          satuanController.text = '';
+                    // Nama Bantuan
+                    Text(
+                      'Nama Bantuan',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: namaController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        hintText: 'Masukkan nama bantuan',
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Nama bantuan tidak boleh kosong';
                         }
-                      });
-                    },
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                  const SizedBox(height: 16),
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-                  // Hapus input jumlah/stok dan hanya tampilkan input satuan
-                  TextFormField(
-                    controller: satuanController,
-                    decoration: const InputDecoration(
-                      labelText: 'Satuan',
-                      border: OutlineInputBorder(),
+                    // Kategori Bantuan
+                    Text(
+                      'Kategori Bantuan',
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
-                    enabled: !isUang, // Disable jika berbentuk uang
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Satuan tidak boleh kosong';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: deskripsiController,
-                    decoration: const InputDecoration(
-                      labelText: 'Deskripsi',
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      hint: const Text('Pilih kategori bantuan'),
+                      value: selectedJenisBantuanId,
+                      items: controller.daftarKategoriBantuan
+                          .map((kategori) => DropdownMenuItem<String>(
+                                value: kategori['id'],
+                                child: Text(kategori['nama'] ?? ''),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        selectedJenisBantuanId = value;
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Kategori bantuan harus dipilih';
+                        }
+                        return null;
+                      },
                     ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 16),
-                  // Tambahkan informasi tentang total stok
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                    const SizedBox(height: 16),
+
+                    // Checkbox untuk bantuan berbentuk uang
+                    CheckboxListTile(
+                      title: const Text('Bantuan Berbentuk Uang (Rupiah)'),
+                      value: isUang,
+                      onChanged: (value) {
+                        setState(() {
+                          isUang = value ?? false;
+                          if (isUang) {
+                            satuanController.text = 'Rp';
+                          } else {
+                            satuanController.text = '';
+                          }
+                        });
+                      },
+                      controlAffinity: ListTileControlAffinity.leading,
+                      activeColor: AppTheme.primaryColor,
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.info_outline,
-                                color: Colors.blue, size: 18),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Informasi',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
+                    const SizedBox(height: 16),
+
+                    // Satuan
+                    Text(
+                      'Satuan',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: satuanController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        hintText: 'Contoh: Kg, Liter, Paket',
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      enabled: !isUang, // Disable jika berbentuk uang
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Satuan tidak boleh kosong';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Deskripsi
+                    Text(
+                      'Deskripsi',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: deskripsiController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        hintText: 'Masukkan deskripsi bantuan',
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Informasi
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline,
+                                  color: Colors.blue, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Informasi',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Total stok dihitung otomatis dari jumlah penitipan bantuan yang telah terverifikasi dan tidak dapat diubah secara manual.',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Tombol aksi
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Get.back(),
+                          child: const Text('Batal'),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Total stok akan dihitung otomatis dari jumlah penitipan bantuan yang telah terverifikasi.',
-                          style: TextStyle(fontSize: 12),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (formKey.currentState!.validate()) {
+                              final stok = StokBantuanModel(
+                                nama: namaController.text,
+                                satuan: satuanController.text,
+                                deskripsi: deskripsiController.text,
+                                kategoriBantuanId: selectedJenisBantuanId,
+                                isUang: isUang,
+                                createdAt: DateTime.now(),
+                                updatedAt: DateTime.now(),
+                              );
+                              controller.addStok(stok);
+                              Get.back();
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                          ),
+                          child: const Text('Simpan'),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  final stok = StokBantuanModel(
-                    nama: namaController.text,
-                    satuan: satuanController.text,
-                    deskripsi: deskripsiController.text,
-                    kategoriBantuanId: selectedJenisBantuanId,
-                    isUang: isUang,
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  );
-                  controller.addStok(stok);
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Simpan'),
-            ),
-          ],
         ),
       ),
+      barrierDismissible: false,
     );
   }
 
@@ -677,211 +745,409 @@ class StokBantuanView extends GetView<StokBantuanController> {
     String? selectedJenisBantuanId = stok.kategoriBantuanId;
     bool isUang = stok.isUang ?? false;
 
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Edit Stok Bantuan'),
-          content: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: namaController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nama Bantuan',
-                      border: OutlineInputBorder(),
+    Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: StatefulBuilder(
+            builder: (context, setState) => Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Edit Stok Bantuan',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Nama bantuan tidak boleh kosong';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(
-                      labelText: 'Kategori Bantuan',
-                      border: OutlineInputBorder(),
-                    ),
-                    value: selectedJenisBantuanId,
-                    hint: const Text('Pilih Kategori Bantuan'),
-                    isExpanded: true,
-                    items: controller.daftarKategoriBantuan
-                        .map((kategori) => DropdownMenuItem<String>(
-                              value: kategori['id'],
-                              child: Text(
-                                kategori['nama'] ?? '',
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      selectedJenisBantuanId = value;
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Kategori bantuan harus dipilih';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // Tambahkan checkbox untuk menandai sebagai uang
-                  CheckboxListTile(
-                    title: const Text('Bantuan Berbentuk Uang (Rupiah)'),
-                    value: isUang,
-                    onChanged: (value) {
-                      setState(() {
-                        isUang = value ?? false;
-                        if (isUang) {
-                          satuanController.text = 'Rp';
+                    // Nama Bantuan
+                    Text(
+                      'Nama Bantuan',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: namaController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        hintText: 'Masukkan nama bantuan',
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Nama bantuan tidak boleh kosong';
                         }
-                      });
-                    },
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                  const SizedBox(height: 16),
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-                  // Tampilkan total stok saat ini (read-only)
-                  InputDecorator(
-                    decoration: InputDecoration(
-                      labelText: isUang
-                          ? 'Total Dana Saat Ini'
-                          : 'Total Stok Saat Ini',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.all(10),
+                    // Kategori Bantuan
+                    Text(
+                      'Kategori Bantuan',
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
-                    child: Text(
-                      isUang
-                          ? 'Rp ${DateFormatter.formatNumber(stok.totalStok)}'
-                          : '${DateFormatter.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      hint: const Text('Pilih kategori bantuan'),
+                      value: selectedJenisBantuanId,
+                      isExpanded: true,
+                      items: controller.daftarKategoriBantuan
+                          .map((kategori) => DropdownMenuItem<String>(
+                                value: kategori['id'],
+                                child: Text(
+                                  kategori['nama'] ?? '',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        selectedJenisBantuanId = value;
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Kategori bantuan harus dipilih';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // Hanya tampilkan input satuan
-                  TextFormField(
-                    controller: satuanController,
-                    decoration: const InputDecoration(
-                      labelText: 'Satuan',
-                      border: OutlineInputBorder(),
+                    // Checkbox untuk bantuan berbentuk uang
+                    CheckboxListTile(
+                      title: const Text('Bantuan Berbentuk Uang (Rupiah)'),
+                      value: isUang,
+                      onChanged: (value) {
+                        setState(() {
+                          isUang = value ?? false;
+                          if (isUang) {
+                            satuanController.text = 'Rp';
+                          }
+                        });
+                      },
+                      controlAffinity: ListTileControlAffinity.leading,
+                      activeColor: AppTheme.primaryColor,
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    enabled: !isUang, // Disable jika berbentuk uang
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Satuan tidak boleh kosong';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: deskripsiController,
-                    decoration: const InputDecoration(
-                      labelText: 'Deskripsi',
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 16),
+
+                    // Total Stok Saat Ini
+                    Text(
+                      isUang ? 'Total Dana Saat Ini' : 'Total Stok Saat Ini',
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 16),
-                  // Tambahkan informasi tentang total stok
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isUang ? Icons.monetization_on : Icons.inventory_2,
+                            color: AppTheme.primaryColor,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isUang
+                                ? 'Rp ${DateFormatter.formatNumber(stok.totalStok)}'
+                                : '${DateFormatter.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.info_outline,
-                                color: Colors.blue, size: 18),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Informasi',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
+                    const SizedBox(height: 16),
+
+                    // Satuan
+                    Text(
+                      'Satuan',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: satuanController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        hintText: 'Contoh: Kg, Liter, Paket',
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      enabled: !isUang, // Disable jika berbentuk uang
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Satuan tidak boleh kosong';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Deskripsi
+                    Text(
+                      'Deskripsi',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: deskripsiController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        hintText: 'Masukkan deskripsi bantuan',
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Informasi
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline,
+                                  color: Colors.blue, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Informasi',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Total stok dihitung otomatis dari jumlah penitipan bantuan yang telah terverifikasi dan tidak dapat diubah secara manual.',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Tombol aksi
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Get.back(),
+                          child: const Text('Batal'),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Total stok dihitung otomatis dari jumlah penitipan bantuan yang telah terverifikasi dan tidak dapat diubah secara manual.',
-                          style: TextStyle(fontSize: 12),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (formKey.currentState!.validate()) {
+                              final updatedStok = StokBantuanModel(
+                                id: stok.id,
+                                nama: namaController.text,
+                                satuan: satuanController.text,
+                                deskripsi: deskripsiController.text,
+                                kategoriBantuanId: selectedJenisBantuanId,
+                                isUang: isUang,
+                                createdAt: stok.createdAt,
+                                updatedAt: DateTime.now(),
+                              );
+                              controller.updateStok(updatedStok);
+                              Get.back();
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                          ),
+                          child: const Text('Simpan'),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  final updatedStok = StokBantuanModel(
-                    id: stok.id,
-                    nama: namaController.text,
-                    satuan: satuanController.text,
-                    deskripsi: deskripsiController.text,
-                    kategoriBantuanId: selectedJenisBantuanId,
-                    isUang: isUang,
-                    createdAt: stok.createdAt,
-                    updatedAt: DateTime.now(),
-                  );
-                  controller.updateStok(updatedStok);
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Simpan'),
-            ),
-          ],
         ),
       ),
+      barrierDismissible: false,
     );
   }
 
   void _showDeleteConfirmation(BuildContext context, StokBantuanModel stok) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Hapus'),
-        content: Text(
-            'Apakah Anda yakin ingin menghapus stok bantuan "${stok.nama}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
+    Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Konfirmasi Hapus',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              Text('Apakah Anda yakin ingin menghapus stok bantuan berikut?'),
+              const SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      stok.nama ?? 'Tanpa Nama',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    if (stok.deskripsi != null &&
+                        stok.deskripsi!.isNotEmpty) ...[
+                      SizedBox(height: 4),
+                      Text(
+                        stok.deskripsi!,
+                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                      ),
+                    ],
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          stok.isUang == true
+                              ? Icons.monetization_on
+                              : Icons.inventory,
+                          size: 16,
+                          color: Colors.grey[600],
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          stok.isUang == true
+                              ? 'Rp ${DateFormatter.formatNumber(stok.totalStok)}'
+                              : '${DateFormatter.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded,
+                        color: Colors.red, size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Perhatian: Tindakan ini tidak dapat dibatalkan!',
+                        style: TextStyle(
+                            color: Colors.red, fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Get.back(),
+                    child: const Text('Batal'),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      controller.deleteStok(stok.id ?? '');
+                      Get.back();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    child: const Text('Hapus'),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              controller.deleteStok(stok.id ?? '');
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Hapus'),
-          ),
-        ],
+        ),
       ),
+      barrierDismissible: false,
     );
+  }
+
+  // Tambahkan widget untuk menampilkan waktu terakhir update
+  Widget _buildLastUpdateInfo(BuildContext context) {
+    return Obx(() {
+      final lastUpdate = controller.lastUpdateTime.value;
+      final formattedDate = DateFormatter.formatDateTimeWithHour(lastUpdate);
+
+      return Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Row(
+          children: [
+            Icon(Icons.update, size: 16, color: Colors.grey[600]),
+            const SizedBox(width: 4),
+            Text(
+              'Data terupdate: $formattedDate',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

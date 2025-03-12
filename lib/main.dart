@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
 import 'package:penyaluran_app/app/services/auth_service.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
@@ -9,6 +10,9 @@ import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi GetStorage
+  await GetStorage.init();
 
   // Inisialisasi data locale untuk format tanggal
   await initializeDateFormatting('id_ID', null);

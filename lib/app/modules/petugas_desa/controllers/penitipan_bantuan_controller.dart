@@ -50,6 +50,9 @@ class PenitipanBantuanController extends GetxController {
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
 
+  // Tambahkan properti untuk waktu terakhir update
+  Rx<DateTime> lastUpdateTime = DateTime.now().obs;
+
   UserModel? get user => _authController.user;
 
   // Getter untuk counter dari CounterService
@@ -76,10 +79,24 @@ class PenitipanBantuanController extends GetxController {
   }
 
   @override
+  void onReady() {
+    super.onReady();
+    // Pastikan counter diperbarui saat tab diakses kembali
+    updateCounters();
+  }
+
+  @override
   void onClose() {
     searchController.dispose();
     donaturSearchController.dispose();
     super.onClose();
+  }
+
+  // Metode untuk memperbarui data saat tab diakses kembali
+  void onTabReactivated() {
+    print('Penitipan tab reactivated - refreshing data');
+    // Selalu muat ulang data dari server saat tab diaktifkan kembali
+    refreshData();
   }
 
   Future<void> loadPenitipanData() async {
@@ -92,20 +109,7 @@ class PenitipanBantuanController extends GetxController {
             .toList();
 
         // Hitung jumlah berdasarkan status
-        int menunggu =
-            daftarPenitipan.where((item) => item.status == 'MENUNGGU').length;
-        int terverifikasi = daftarPenitipan
-            .where((item) => item.status == 'TERVERIFIKASI')
-            .length;
-        int ditolak =
-            daftarPenitipan.where((item) => item.status == 'DITOLAK').length;
-
-        // Update counter di CounterService
-        _counterService.updatePenitipanCounters(
-          menunggu: menunggu,
-          terverifikasi: terverifikasi,
-          ditolak: ditolak,
-        );
+        updateCounters();
 
         // Muat informasi petugas desa untuk item yang terverifikasi
         print(
@@ -130,6 +134,9 @@ class PenitipanBantuanController extends GetxController {
         petugasDesaCache.forEach((key, value) {
           print('ID: $key, Nama: ${value['name']}');
         });
+
+        // Update waktu terakhir refresh
+        lastUpdateTime.value = DateTime.now();
       }
     } catch (e) {
       print('Error loading penitipan data: $e');
@@ -268,6 +275,9 @@ class PenitipanBantuanController extends GetxController {
       fotoBantuanPaths.clear();
 
       await loadPenitipanData();
+      // Pastikan counter diperbarui setelah penambahan
+      updateCounters();
+
       Get.back(); // Tutup dialog
       Get.snackbar(
         'Sukses',
@@ -313,6 +323,9 @@ class PenitipanBantuanController extends GetxController {
       fotoBuktiSerahTerimaPath.value = null;
 
       await loadPenitipanData();
+      // Pastikan counter diperbarui setelah verifikasi
+      updateCounters();
+
       Get.back(); // Tutup dialog
       Get.snackbar(
         'Sukses',
@@ -341,6 +354,9 @@ class PenitipanBantuanController extends GetxController {
     try {
       await _supabaseService.tolakPenitipan(penitipanId, alasan);
       await loadPenitipanData();
+      // Pastikan counter diperbarui setelah penolakan
+      updateCounters();
+
       Get.snackbar(
         'Sukses',
         'Penitipan berhasil ditolak',
@@ -414,7 +430,10 @@ class PenitipanBantuanController extends GetxController {
 
   Future<void> refreshData() async {
     await loadPenitipanData();
-    await loadKategoriBantuanData();
+    await loadStokBantuanData();
+
+    // Update waktu terakhir refresh
+    lastUpdateTime.value = DateTime.now();
   }
 
   void changeCategory(int index) {
@@ -615,16 +634,19 @@ class PenitipanBantuanController extends GetxController {
 
   Future<String?> tambahDonatur({
     required String nama,
-    required String noHp,
+    required String telepon,
     String? alamat,
     String? email,
+    String? jenis,
   }) async {
     try {
       final donaturData = {
         'nama': nama,
-        'no_hp': noHp,
+        'telepon': telepon,
         'alamat': alamat,
         'email': email,
+        'jenis': jenis,
+        'status': 'AKTIF',
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       };
@@ -649,5 +671,26 @@ class PenitipanBantuanController extends GetxController {
       return false;
     }
     return stokBantuanMap[stokBantuanId]?.isUang ?? false;
+  }
+
+  // Metode baru untuk memperbarui counter
+  void updateCounters() {
+    int menunggu =
+        daftarPenitipan.where((item) => item.status == 'MENUNGGU').length;
+    int terverifikasi =
+        daftarPenitipan.where((item) => item.status == 'TERVERIFIKASI').length;
+    int ditolak =
+        daftarPenitipan.where((item) => item.status == 'DITOLAK').length;
+
+    // Update counter di CounterService
+    _counterService.updatePenitipanCounters(
+      menunggu: menunggu,
+      terverifikasi: terverifikasi,
+      ditolak: ditolak,
+    );
+
+    // Debug counter values
+    print(
+        'Counter updated - Menunggu: $menunggu, Terverifikasi: $terverifikasi, Ditolak: $ditolak');
   }
 }

@@ -36,7 +36,11 @@ class StokBantuanModel {
         nama: json["nama"],
         kategoriBantuanId: json["kategori_bantuan_id"],
         kategoriBantuan: json["kategori_bantuan"],
-        totalStok: 0.0,
+        totalStok: json["total_stok"] != null
+            ? (json["total_stok"] is int
+                ? json["total_stok"].toDouble()
+                : json["total_stok"])
+            : 0.0,
         satuan: json["satuan"],
         deskripsi: json["deskripsi"],
         createdAt: json["created_at"] != null
@@ -62,6 +66,11 @@ class StokBantuanModel {
     // Tambahkan id hanya jika tidak null
     if (id != null) {
       data["id"] = id;
+    }
+
+    // Tambahkan total_stok hanya jika tidak null
+    if (totalStok != null) {
+      data["total_stok"] = totalStok;
     }
 
     return data;

@@ -33,6 +33,9 @@ class StokBantuanController extends GetxController {
   // Tambahkan properti untuk total dana bantuan
   RxDouble totalDanaBantuan = 0.0.obs;
 
+  // Tambahkan properti untuk waktu terakhir update
+  Rx<DateTime> lastUpdateTime = DateTime.now().obs;
+
   UserModel? get user => _authController.user;
 
   @override
@@ -54,6 +57,12 @@ class StokBantuanController extends GetxController {
     super.onClose();
   }
 
+  // Metode untuk memperbarui data saat tab diaktifkan kembali
+  void onTabReactivated() {
+    print('Stok Bantuan tab reactivated - refreshing data');
+    refreshData();
+  }
+
   Future<void> loadStokBantuanData() async {
     isLoading.value = true;
     try {
@@ -65,6 +74,9 @@ class StokBantuanController extends GetxController {
 
         // Hitung total dana bantuan
         _hitungTotalDanaBantuan();
+
+        // Update waktu terakhir refresh
+        lastUpdateTime.value = DateTime.now();
       }
     } catch (e) {
       print('Error loading stok bantuan data: $e');
@@ -79,63 +91,12 @@ class StokBantuanController extends GetxController {
           await _supabaseService.getPenitipanBantuanTerverifikasi();
       if (penitipanData != null) {
         daftarPenitipanTerverifikasi.value = penitipanData;
-        // Update total stok berdasarkan penitipan terverifikasi
-        _hitungTotalStokDariPenitipan();
+        // Tidak perlu lagi menghitung total stok dari penitipan
+        // karena total_stok sudah dikelola oleh trigger database
       }
     } catch (e) {
       print('Error loading penitipan terverifikasi: $e');
     }
-  }
-
-  // Metode untuk menghitung total stok dari penitipan terverifikasi
-  void _hitungTotalStokDariPenitipan() {
-    // Buat map untuk menyimpan total stok per stok_bantuan_id
-    Map<String, double> totalStokMap = {};
-
-    // Hitung total stok dari penitipan terverifikasi
-    for (var penitipan in daftarPenitipanTerverifikasi) {
-      String? stokBantuanId = penitipan['stok_bantuan_id'];
-      double jumlah = penitipan['jumlah'] != null
-          ? (penitipan['jumlah'] is int
-              ? penitipan['jumlah'].toDouble()
-              : penitipan['jumlah'])
-          : 0.0;
-
-      if (stokBantuanId != null) {
-        if (totalStokMap.containsKey(stokBantuanId)) {
-          totalStokMap[stokBantuanId] =
-              (totalStokMap[stokBantuanId] ?? 0) + jumlah;
-        } else {
-          totalStokMap[stokBantuanId] = jumlah;
-        }
-      }
-    }
-
-    // Update total stok di daftarStokBantuan
-    for (var i = 0; i < daftarStokBantuan.length; i++) {
-      var stok = daftarStokBantuan[i];
-      if (stok.id != null) {
-        // Buat stok baru dengan total stok yang diperbarui
-        double newTotalStok = totalStokMap[stok.id] ?? 0.0;
-
-        daftarStokBantuan[i] = StokBantuanModel(
-          id: stok.id,
-          nama: stok.nama,
-          kategoriBantuanId: stok.kategoriBantuanId,
-          kategoriBantuan: stok.kategoriBantuan,
-          totalStok:
-              newTotalStok, // Gunakan nilai dari penitipan atau 0 jika tidak ada
-          satuan: stok.satuan,
-          deskripsi: stok.deskripsi,
-          createdAt: stok.createdAt,
-          updatedAt: stok.updatedAt,
-          isUang: stok.isUang,
-        );
-      }
-    }
-
-    // Hitung ulang total dana bantuan
-    _hitungTotalDanaBantuan();
   }
 
   Future<void> loadKategoriBantuanData() async {
@@ -151,17 +112,14 @@ class StokBantuanController extends GetxController {
 
   Future<void> addStok(StokBantuanModel stok) async {
     try {
-      // Buat data stok baru tanpa field total_stok
+      // Buat data stok baru
       final stokData = stok.toJson();
 
-      // Hapus field total_stok dari data yang akan dikirim ke database
-      if (stokData.containsKey('total_stok')) {
-        stokData.remove('total_stok');
-      }
+      // Tambahkan total_stok = 0 untuk stok baru
+      stokData['total_stok'] = 0.0;
 
       await _supabaseService.addStok(stokData);
       await loadStokBantuanData();
-      await loadPenitipanTerverifikasi();
       Get.snackbar(
         'Sukses',
         'Stok bantuan berhasil ditambahkan',
@@ -187,13 +145,13 @@ class StokBantuanController extends GetxController {
       final stokData = stok.toJson();
 
       // Hapus field total_stok dari data yang akan dikirim ke database
+      // karena total_stok dikelola oleh trigger database
       if (stokData.containsKey('total_stok')) {
         stokData.remove('total_stok');
       }
 
       await _supabaseService.updateStok(stok.id ?? '', stokData);
       await loadStokBantuanData();
-      await loadPenitipanTerverifikasi();
       Get.snackbar(
         'Sukses',
         'Stok bantuan berhasil diperbarui',
@@ -217,7 +175,6 @@ class StokBantuanController extends GetxController {
     try {
       await _supabaseService.deleteStok(id);
       await loadStokBantuanData(); // Ini akan memanggil _hitungTotalDanaBantuan()
-      await loadPenitipanTerverifikasi(); // Perbarui data penitipan terverifikasi
       Get.snackbar(
         'Sukses',
         'Stok bantuan berhasil dihapus',
@@ -241,6 +198,10 @@ class StokBantuanController extends GetxController {
     isLoading.value = true;
     await loadStokBantuanData();
     await loadPenitipanTerverifikasi();
+
+    // Update waktu terakhir refresh
+    lastUpdateTime.value = DateTime.now();
+
     isLoading.value = false;
   }
 
@@ -304,14 +265,6 @@ class StokBantuanController extends GetxController {
       }
     }
     totalDanaBantuan.value = total;
-  }
-
-  Future<void> _hitungTotalStok() async {
-    // Implementasi metode _hitungTotalStok
-  }
-
-  Future<void> _filterStokBantuan() async {
-    // Implementasi metode _filterStokBantuan
   }
 
   // Metode untuk mengatur filter

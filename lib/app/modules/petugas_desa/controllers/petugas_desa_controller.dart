@@ -5,6 +5,8 @@ import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/counter_service.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penitipan_bantuan_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/stok_bantuan_controller.dart';
 
 class PetugasDesaController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
@@ -220,10 +222,28 @@ class PetugasDesaController extends GetxController {
 
     // Jika tab penitipan dipilih, muat ulang data penitipan
     if (index == 2) {
-      loadPenitipanData();
+      // Dapatkan instance PenitipanBantuanController dan panggil onTabReactivated
+      try {
+        final penitipanController = Get.find<PenitipanBantuanController>();
+        penitipanController.onTabReactivated();
+        print('Memanggil onTabReactivated pada PenitipanBantuanController');
+      } catch (e) {
+        print('Error saat memanggil onTabReactivated: $e');
+        // Fallback ke metode lama jika controller tidak ditemukan
+        loadPenitipanData();
+      }
     } else if (index == 3) {
       // Jika tab pengaduan dipilih, muat ulang data pengaduan
       loadPengaduanData();
+    } else if (index == 4) {
+      // Jika tab stok bantuan dipilih, muat ulang data stok bantuan
+      try {
+        final stokBantuanController = Get.find<StokBantuanController>();
+        stokBantuanController.onTabReactivated();
+        print('Memanggil onTabReactivated pada StokBantuanController');
+      } catch (e) {
+        print('Error saat memanggil onTabReactivated: $e');
+      }
     }
   }
 
