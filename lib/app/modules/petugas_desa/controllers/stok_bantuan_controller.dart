@@ -57,7 +57,7 @@ class StokBantuanController extends GetxController {
         // Hitung total stok
         totalStok.value = 0;
         for (var item in daftarStokBantuan) {
-          totalStok.value += item.jumlah ?? 0;
+          totalStok.value += item.totalStok ?? 0;
         }
 
         // Ambil data stok masuk dan keluar
@@ -197,7 +197,9 @@ class StokBantuanController extends GetxController {
 
   // Metode untuk mendapatkan jumlah stok yang hampir habis (stok <= 10)
   int getStokHampirHabis() {
-    return daftarStokBantuan.where((stok) => (stok.jumlah ?? 0) <= 10).length;
+    return daftarStokBantuan
+        .where((stok) => (stok.totalStok ?? 0) <= 10)
+        .length;
   }
 
   // Metode untuk mendapatkan jumlah stok yang segera kadaluarsa (dalam 30 hari)

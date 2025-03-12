@@ -5,7 +5,7 @@ class StokBantuanModel {
   final String? nama;
   final String? kategoriBantuanId;
   final Map<String, dynamic>? kategoriBantuan;
-  final double? jumlah;
+  final double? totalStok;
   final String? satuan;
   final String? deskripsi;
   final DateTime? tanggalMasuk;
@@ -18,7 +18,7 @@ class StokBantuanModel {
     this.nama,
     this.kategoriBantuanId,
     this.kategoriBantuan,
-    this.jumlah,
+    this.totalStok,
     this.satuan,
     this.deskripsi,
     this.tanggalMasuk,
@@ -38,7 +38,8 @@ class StokBantuanModel {
         nama: json["nama"],
         kategoriBantuanId: json["kategori_bantuan_id"],
         kategoriBantuan: json["kategori_bantuan"],
-        jumlah: json["jumlah"] != null ? json["jumlah"].toDouble() : 0.0,
+        totalStok:
+            json["total_stok"] != null ? json["total_stok"].toDouble() : 0.0,
         satuan: json["satuan"],
         deskripsi: json["deskripsi"],
         tanggalMasuk: json["tanggal_masuk"] != null
@@ -59,7 +60,7 @@ class StokBantuanModel {
     final Map<String, dynamic> data = {
       "nama": nama,
       "kategori_bantuan_id": kategoriBantuanId,
-      "jumlah": jumlah,
+      "total_stok": totalStok,
       "satuan": satuan,
       "deskripsi": deskripsi,
       "tanggal_masuk": tanggalMasuk?.toIso8601String(),

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:io';
 
 class SupabaseService extends GetxService {
   static SupabaseService get to => Get.find<SupabaseService>();
@@ -336,7 +337,7 @@ class SupabaseService extends GetxService {
     try {
       final response = await client
           .from('stok_bantuan')
-          .select('*, kategori_bantuan:kategori_bantuan_id(id, nama)');
+          .select('*, kategori_bantuan:kategori_bantuan_id(*, nama)');
 
       return response;
     } catch (e) {
@@ -429,7 +430,10 @@ class SupabaseService extends GetxService {
   // Penitipan bantuan methods
   Future<List<Map<String, dynamic>>?> getPenitipanBantuan() async {
     try {
-      final response = await client.from('penitipan_bantuan').select('*');
+      final response = await client
+          .from('penitipan_bantuan')
+          .select('*, donatur:donatur_id(*), stok_bantuan:stok_bantuan_id(*)')
+          .order('tanggal_penitipan', ascending: false);
 
       return response;
     } catch (e) {
@@ -438,13 +442,80 @@ class SupabaseService extends GetxService {
     }
   }
 
-  Future<void> verifikasiPenitipan(String penitipanId) async {
+  // Upload file methods
+  Future<String?> uploadFile(
+      String filePath, String bucket, String folder) async {
     try {
-      await client.from('penitipan_bantuan').update({
+      final fileName = filePath.split('/').last;
+      final fileExt = fileName.split('.').last;
+      final fileKey =
+          '$folder/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+
+      final file = await client.storage.from(bucket).upload(
+            fileKey,
+            File(filePath),
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
+
+      final fileUrl = client.storage.from(bucket).getPublicUrl(fileKey);
+      print('File uploaded: $fileUrl');
+      return fileUrl;
+    } catch (e) {
+      print('Error uploading file: $e');
+      return null;
+    }
+  }
+
+  Future<List<String>?> uploadMultipleFiles(
+      List<String> filePaths, String bucket, String folder) async {
+    try {
+      final List<String> fileUrls = [];
+
+      for (final filePath in filePaths) {
+        final fileUrl = await uploadFile(filePath, bucket, folder);
+        if (fileUrl != null) {
+          fileUrls.add(fileUrl);
+        }
+      }
+
+      return fileUrls;
+    } catch (e) {
+      print('Error uploading multiple files: $e');
+      return null;
+    }
+  }
+
+  Future<void> verifikasiPenitipan(
+      String penitipanId, String fotoBuktiSerahTerimaPath) async {
+    try {
+      // Upload bukti serah terima
+      final fotoBuktiSerahTerimaUrl = await uploadFile(
+          fotoBuktiSerahTerimaPath, 'bantuan', 'foto_bukti_serah_terima');
+
+      if (fotoBuktiSerahTerimaUrl == null) {
+        throw 'Gagal mengupload bukti serah terima';
+      }
+
+      final petugasDesaId = client.auth.currentUser?.id;
+      print(
+          'Verifikasi penitipan dengan ID: $penitipanId oleh petugas desa ID: $petugasDesaId');
+
+      final updateData = {
         'status': 'TERVERIFIKASI',
         'tanggal_verifikasi': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', penitipanId);
+        'foto_bukti_serah_terima': fotoBuktiSerahTerimaUrl,
+        'petugas_desa_id': petugasDesaId,
+      };
+
+      print('Data yang akan diupdate: $updateData');
+
+      await client
+          .from('penitipan_bantuan')
+          .update(updateData)
+          .eq('id', penitipanId);
+
+      print('Penitipan berhasil diverifikasi dan data petugas desa disimpan');
     } catch (e) {
       print('Error verifying penitipan: $e');
       throw e.toString();
@@ -742,6 +813,35 @@ class SupabaseService extends GetxService {
     } catch (e) {
       print('Error marking notification as read: $e');
       throw e.toString();
+    }
+  }
+
+  // Metode untuk mendapatkan informasi petugas desa berdasarkan ID
+  Future<Map<String, dynamic>?> getPetugasDesaById(String petugasDesaId) async {
+    try {
+      print('Mengambil data petugas desa dengan ID: $petugasDesaId');
+
+      // Coba ambil dari tabel user_profile dulu
+      final response = await client
+          .from('user_profile')
+          .select('*')
+          .eq('id', petugasDesaId)
+          .eq('role', 'PETUGASDESA')
+          .maybeSingle();
+
+      print('Response: $response');
+
+      if (response != null) {
+        print(
+            'Berhasil mendapatkan data petugas desa dari user_profile: $response');
+        return response;
+      }
+
+      print('Data petugas desa tidak ditemukan untuk ID: $petugasDesaId');
+      return null;
+    } catch (e) {
+      print('Error getting petugas desa by ID: $e');
+      return null;
     }
   }
 }

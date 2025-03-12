@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/donatur_model.dart';
+import 'package:penyaluran_app/app/data/models/kategori_bantuan_model.dart';
+import 'package:penyaluran_app/app/data/models/stok_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
@@ -9,8 +12,13 @@ import 'package:penyaluran_app/app/services/supabase_service.dart';
 class PenitipanBantuanController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   final SupabaseService _supabaseService = SupabaseService.to;
+  final ImagePicker _imagePicker = ImagePicker();
 
   final RxBool isLoading = false.obs;
+  final RxBool isUploading = false.obs;
+
+  // Path untuk bukti serah terima
+  final Rx<String?> fotoBuktiSerahTerimaPath = Rx<String?>(null);
 
   // Indeks kategori yang dipilih untuk filter
   final RxInt selectedCategoryIndex = 0.obs;
@@ -22,6 +30,17 @@ class PenitipanBantuanController extends GetxController {
   final RxInt jumlahTerverifikasi = 0.obs;
   final RxInt jumlahDitolak = 0.obs;
 
+  // Data untuk kategori bantuan
+  final RxMap<String, StokBantuanModel> stokBantuanMap =
+      <String, StokBantuanModel>{}.obs;
+
+  // Cache untuk donatur
+  final RxMap<String, DonaturModel> donaturCache = <String, DonaturModel>{}.obs;
+
+  // Cache untuk petugas desa
+  final RxMap<String, Map<String, dynamic>> petugasDesaCache =
+      <String, Map<String, dynamic>>{}.obs;
+
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
 
@@ -31,6 +50,11 @@ class PenitipanBantuanController extends GetxController {
   void onInit() {
     super.onInit();
     loadPenitipanData();
+    loadKategoriBantuanData();
+    // Tambahkan delay untuk memastikan data petugas desa dimuat setelah penitipan
+    Future.delayed(const Duration(seconds: 1), () {
+      loadAllPetugasDesaData();
+    });
   }
 
   @override
@@ -56,6 +80,30 @@ class PenitipanBantuanController extends GetxController {
             .length;
         jumlahDitolak.value =
             daftarPenitipan.where((item) => item.status == 'DITOLAK').length;
+
+        // Muat informasi petugas desa untuk item yang terverifikasi
+        print(
+            'Memuat informasi petugas desa untuk ${daftarPenitipan.length} penitipan');
+        for (var item in daftarPenitipan) {
+          if (item.status == 'TERVERIFIKASI' && item.petugasDesaId != null) {
+            print(
+                'Memuat informasi petugas desa untuk penitipan ID: ${item.id}, petugasDesaId: ${item.petugasDesaId}');
+            final petugasData = await getPetugasDesaInfo(item.petugasDesaId);
+            if (petugasData != null) {
+              print(
+                  'Berhasil memuat data petugas desa: ${petugasData['name']} untuk ID: ${item.petugasDesaId}');
+            } else {
+              print(
+                  'Gagal memuat data petugas desa untuk ID: ${item.petugasDesaId}');
+            }
+          }
+        }
+
+        // Debug: print semua data petugas desa yang sudah dimuat
+        print('Data petugas desa yang sudah dimuat:');
+        petugasDesaCache.forEach((key, value) {
+          print('ID: $key, Nama: ${value['name']}');
+        });
       }
     } catch (e) {
       print('Error loading penitipan data: $e');
@@ -64,11 +112,96 @@ class PenitipanBantuanController extends GetxController {
     }
   }
 
-  Future<void> verifikasiPenitipan(String penitipanId) async {
-    isLoading.value = true;
+  Future<void> loadStokBantuanData() async {
     try {
-      await _supabaseService.verifikasiPenitipan(penitipanId);
+      print('Loading stok bantuan data...');
+      final stokBantuanData = await _supabaseService.getStokBantuan();
+      if (stokBantuanData != null) {
+        print(
+            'Received ${stokBantuanData.length} stok bantuan items from service');
+        stokBantuanMap.clear(); // Clear existing data
+
+        for (var data in stokBantuanData) {
+          final stokBantuan = StokBantuanModel.fromJson(data);
+          if (stokBantuan.id != null) {
+            stokBantuanMap[stokBantuan.id!] = stokBantuan;
+            print(
+                'Added stok bantuan: ID=${stokBantuan.id}, Nama=${stokBantuan.nama}, Satuan=${stokBantuan.satuan}');
+          } else {
+            print('Skipped stok bantuan with null ID: $data');
+          }
+        }
+        print('Loaded ${stokBantuanMap.length} stok bantuan items');
+      } else {
+        print('No stok bantuan data received from service');
+      }
+    } catch (e) {
+      print('Error loading stok bantuan data: $e');
+    }
+  }
+
+  Future<void> loadKategoriBantuanData() async {
+    try {
+      await loadStokBantuanData();
+      print(
+          'Loaded kategori bantuan data. stokBantuanMap size: ${stokBantuanMap.length}');
+
+      // Debug: print all stok bantuan items
+      stokBantuanMap.forEach((key, value) {
+        print(
+            'Stok Bantuan - ID: $key, Nama: ${value.nama}, Satuan: ${value.satuan}');
+      });
+    } catch (e) {
+      print('Error loading kategori bantuan data: $e');
+    }
+  }
+
+  Future<void> pickfotoBuktiSerahTerima() async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 70,
+        maxWidth: 1000,
+      );
+
+      if (pickedFile != null) {
+        fotoBuktiSerahTerimaPath.value = pickedFile.path;
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal mengambil gambar: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> verifikasiPenitipan(String penitipanId) async {
+    if (fotoBuktiSerahTerimaPath.value == null) {
+      Get.snackbar(
+        'Error',
+        'Bukti serah terima harus diupload',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    isLoading.value = true;
+    isUploading.value = true;
+    try {
+      await _supabaseService.verifikasiPenitipan(
+          penitipanId, fotoBuktiSerahTerimaPath.value!);
+
+      // Reset path setelah berhasil
+      fotoBuktiSerahTerimaPath.value = null;
+
       await loadPenitipanData();
+      Get.back(); // Tutup dialog
       Get.snackbar(
         'Sukses',
         'Penitipan berhasil diverifikasi',
@@ -87,6 +220,7 @@ class PenitipanBantuanController extends GetxController {
       );
     } finally {
       isLoading.value = false;
+      isUploading.value = false;
     }
   }
 
@@ -118,9 +252,17 @@ class PenitipanBantuanController extends GetxController {
 
   Future<DonaturModel?> getDonaturInfo(String donaturId) async {
     try {
+      // Cek cache terlebih dahulu
+      if (donaturCache.containsKey(donaturId)) {
+        return donaturCache[donaturId];
+      }
+
       final donaturData = await _supabaseService.getDonaturById(donaturId);
       if (donaturData != null) {
-        return DonaturModel.fromJson(donaturData);
+        final donatur = DonaturModel.fromJson(donaturData);
+        // Simpan ke cache
+        donaturCache[donaturId] = donatur;
+        return donatur;
       }
       return null;
     } catch (e) {
@@ -129,10 +271,40 @@ class PenitipanBantuanController extends GetxController {
     }
   }
 
+  String getKategoriNama(String? stokBantuanId) {
+    if (stokBantuanId == null) {
+      print('Stok bantuan ID is null');
+      return 'Tidak ada kategori';
+    }
+
+    if (!stokBantuanMap.containsKey(stokBantuanId)) {
+      print('Stok bantuan not found for ID: $stokBantuanId');
+      print('Available keys: ${stokBantuanMap.keys.join(', ')}');
+      return 'Tidak ada kategori';
+    }
+
+    final nama = stokBantuanMap[stokBantuanId]?.nama ?? 'Tidak ada nama';
+    print('Found stok bantuan name: $nama for ID: $stokBantuanId');
+    return nama;
+  }
+
+  String getKategoriSatuan(String? stokBantuanId) {
+    if (stokBantuanId == null) {
+      return '';
+    }
+
+    if (!stokBantuanMap.containsKey(stokBantuanId)) {
+      return '';
+    }
+
+    return stokBantuanMap[stokBantuanId]?.satuan ?? '';
+  }
+
   Future<void> refreshData() async {
     isLoading.value = true;
     try {
       await loadPenitipanData();
+      await loadKategoriBantuanData();
     } finally {
       isLoading.value = false;
     }
@@ -143,23 +315,135 @@ class PenitipanBantuanController extends GetxController {
   }
 
   List<PenitipanBantuanModel> getFilteredPenitipan() {
+    final searchText = searchController.text.toLowerCase();
+    var filteredList = <PenitipanBantuanModel>[];
+
+    // Filter berdasarkan status
     switch (selectedCategoryIndex.value) {
       case 0:
-        return daftarPenitipan;
+        filteredList = daftarPenitipan.toList();
+        break;
       case 1:
-        return daftarPenitipan
-            .where((item) => item.status == 'MENUNGGU')
-            .toList();
+        filteredList =
+            daftarPenitipan.where((item) => item.status == 'MENUNGGU').toList();
+        break;
       case 2:
-        return daftarPenitipan
+        filteredList = daftarPenitipan
             .where((item) => item.status == 'TERVERIFIKASI')
             .toList();
+        break;
       case 3:
-        return daftarPenitipan
-            .where((item) => item.status == 'DITOLAK')
-            .toList();
+        filteredList =
+            daftarPenitipan.where((item) => item.status == 'DITOLAK').toList();
+        break;
       default:
-        return daftarPenitipan;
+        filteredList = daftarPenitipan.toList();
+    }
+
+    // Filter berdasarkan pencarian jika ada teks pencarian
+    if (searchText.isNotEmpty) {
+      filteredList = filteredList.where((item) {
+        // Cari berdasarkan deskripsi
+        final deskripsiMatch =
+            item.deskripsi?.toLowerCase().contains(searchText) ?? false;
+
+        // Cari berdasarkan kategori
+        final stokBantuan = getKategoriNama(item.stokBantuanId).toLowerCase();
+        final stokBantuanMatch = stokBantuan.contains(searchText);
+
+        return deskripsiMatch || stokBantuanMatch;
+      }).toList();
+    }
+
+    return filteredList;
+  }
+
+  Future<Map<String, dynamic>?> getPetugasDesaInfo(
+      String? petugasDesaId) async {
+    try {
+      if (petugasDesaId == null) {
+        return null;
+      }
+
+      // Cek cache terlebih dahulu
+      if (petugasDesaCache.containsKey(petugasDesaId)) {
+        return petugasDesaCache[petugasDesaId];
+      }
+
+      final petugasDesaData =
+          await _supabaseService.getPetugasDesaById(petugasDesaId);
+      if (petugasDesaData != null) {
+        // Simpan ke cache
+        petugasDesaCache[petugasDesaId] = petugasDesaData;
+        return petugasDesaData;
+      }
+      return null;
+    } catch (e) {
+      print('Error getting petugas desa info: $e');
+      return null;
+    }
+  }
+
+  String getPetugasDesaNama(String? petugasDesaId) {
+    print('Petugas Desa ID: $petugasDesaId');
+    if (petugasDesaId == null) {
+      return 'Tidak diketahui';
+    }
+
+    // Cek apakah data ada di cache
+    if (!petugasDesaCache.containsKey(petugasDesaId)) {
+      print(
+          'Data petugas desa tidak ditemukan di cache untuk ID: $petugasDesaId');
+      // Jadwalkan pengambilan data untuk nanti
+      loadPetugasDesaData(petugasDesaId);
+      return 'Memuat...';
+    }
+
+    // Sekarang data seharusnya ada di cache
+    final nama = petugasDesaCache[petugasDesaId]?['name'];
+    print('Nama petugas desa: $nama untuk ID: $petugasDesaId');
+    return nama ?? 'Tidak diketahui';
+  }
+
+  // Fungsi untuk memuat data petugas desa dan memperbarui UI
+  void loadPetugasDesaData(String petugasDesaId) async {
+    try {
+      final petugasData = await getPetugasDesaInfo(petugasDesaId);
+      if (petugasData != null) {
+        // Data sudah dimasukkan ke cache oleh getPetugasDesaInfo
+        // Refresh UI
+        update();
+      } else {
+        print(
+            'Gagal mengambil data petugas desa dari server untuk ID: $petugasDesaId');
+      }
+    } catch (e) {
+      print('Error saat memuat data petugas desa: $e');
+    }
+  }
+
+  // Fungsi untuk memuat semua data petugas desa yang terkait dengan penitipan
+  void loadAllPetugasDesaData() async {
+    try {
+      print('Memuat ulang semua data petugas desa...');
+      for (var item in daftarPenitipan) {
+        if (item.status == 'TERVERIFIKASI' && item.petugasDesaId != null) {
+          if (!petugasDesaCache.containsKey(item.petugasDesaId)) {
+            print('Memuat data petugas desa untuk ID: ${item.petugasDesaId}');
+            await getPetugasDesaInfo(item.petugasDesaId);
+          }
+        }
+      }
+      // Refresh UI
+      update();
+
+      // Debug: print semua data petugas desa yang sudah dimuat
+      print('Data petugas desa yang sudah dimuat setelah reload:');
+      petugasDesaCache.forEach((key, value) {
+        print('ID: $key, Nama: ${value['name']}');
+      });
+    } catch (e) {
+      print('Error saat memuat ulang data petugas desa: $e');
     }
   }
 }

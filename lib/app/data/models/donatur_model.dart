@@ -38,7 +38,7 @@ class DonaturModel {
         email: json["email"],
         jenis: json["jenis"],
         deskripsi: json["deskripsi"],
-        status: json["status"],
+        status: json["status"] ?? 'AKTIF',
         createdAt: json["created_at"] != null
             ? DateTime.parse(json["created_at"])
             : null,
@@ -55,7 +55,7 @@ class DonaturModel {
         "email": email,
         "jenis": jenis,
         "deskripsi": deskripsi,
-        "status": status,
+        "status": status ?? 'AKTIF',
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };

@@ -1,34 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
+import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penitipan_bantuan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
+import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'dart:io';
 
-class PenitipanView extends GetView<PetugasDesaController> {
+class PenitipanView extends GetView<PenitipanBantuanController> {
   const PenitipanView({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Ringkasan penitipan
-            _buildPenitipanSummary(context),
+    return Scaffold(
+      body: Obx(() => RefreshIndicator(
+            onRefresh: controller.refreshData,
+            child: controller.isLoading.value
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Ringkasan penitipan
+                          _buildPenitipanSummary(context),
 
-            const SizedBox(height: 24),
+                          const SizedBox(height: 24),
 
-            // Filter dan pencarian
-            _buildFilterSearch(context),
+                          // Filter dan pencarian
+                          _buildFilterSearch(context),
 
-            const SizedBox(height: 20),
+                          const SizedBox(height: 20),
 
-            // Daftar penitipan
-            _buildPenitipanList(context),
-          ],
-        ),
-      ),
+                          // Daftar penitipan
+                          _buildPenitipanList(context),
+                        ],
+                      ),
+                    ),
+                  ),
+          )),
     );
   }
 
@@ -58,7 +68,8 @@ class PenitipanView extends GetView<PetugasDesaController> {
                   context,
                   icon: Icons.pending_actions,
                   title: 'Menunggu',
-                  value: '5',
+                  value: DateFormatter.formatNumber(
+                      controller.jumlahMenunggu.value),
                   color: Colors.orange,
                 ),
               ),
@@ -67,7 +78,8 @@ class PenitipanView extends GetView<PetugasDesaController> {
                   context,
                   icon: Icons.check_circle,
                   title: 'Terverifikasi',
-                  value: '12',
+                  value: DateFormatter.formatNumber(
+                      controller.jumlahTerverifikasi.value),
                   color: Colors.green,
                 ),
               ),
@@ -76,7 +88,8 @@ class PenitipanView extends GetView<PetugasDesaController> {
                   context,
                   icon: Icons.cancel,
                   title: 'Ditolak',
-                  value: '2',
+                  value: DateFormatter.formatNumber(
+                      controller.jumlahDitolak.value),
                   color: Colors.red,
                 ),
               ),
@@ -133,6 +146,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
       children: [
         Expanded(
           child: TextField(
+            controller: controller.searchController,
             decoration: InputDecoration(
               hintText: 'Cari penitipan...',
               prefixIcon: const Icon(Icons.search),
@@ -144,6 +158,9 @@ class PenitipanView extends GetView<PetugasDesaController> {
               fillColor: Colors.grey.shade100,
               contentPadding: const EdgeInsets.symmetric(vertical: 0),
             ),
+            onChanged: (value) {
+              // Implementasi pencarian
+            },
           ),
         ),
         const SizedBox(width: 12),
@@ -152,12 +169,30 @@ class PenitipanView extends GetView<PetugasDesaController> {
             color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: IconButton(
-            onPressed: () {
-              // Tampilkan dialog filter
-            },
+          child: PopupMenuButton<int>(
             icon: const Icon(Icons.filter_list),
             tooltip: 'Filter',
+            onSelected: (index) {
+              controller.changeCategory(index);
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 0,
+                child: Text('Semua'),
+              ),
+              const PopupMenuItem(
+                value: 1,
+                child: Text('Menunggu'),
+              ),
+              const PopupMenuItem(
+                value: 2,
+                child: Text('Terverifikasi'),
+              ),
+              const PopupMenuItem(
+                value: 3,
+                child: Text('Ditolak'),
+              ),
+            ],
           ),
         ),
       ],
@@ -165,70 +200,78 @@ class PenitipanView extends GetView<PetugasDesaController> {
   }
 
   Widget _buildPenitipanList(BuildContext context) {
-    final List<Map<String, dynamic>> penitipanList = [
-      {
-        'id': '1',
-        'donatur': 'PT Sejahtera Abadi',
-        'kategori_bantuan': 'Sembako',
-        'jumlah': '500 kg',
-        'tanggal_pengajuan': '15 April 2023',
-        'status': 'Menunggu',
-      },
-      {
-        'id': '2',
-        'donatur': 'Yayasan Peduli Sesama',
-        'kategori_bantuan': 'Pakaian',
-        'jumlah': '200 pcs',
-        'tanggal_pengajuan': '14 April 2023',
-        'status': 'Terverifikasi',
-      },
-      {
-        'id': '3',
-        'donatur': 'Bank BRI',
-        'kategori_bantuan': 'Beras',
-        'jumlah': '300 kg',
-        'tanggal_pengajuan': '13 April 2023',
-        'status': 'Terverifikasi',
-      },
-      {
-        'id': '4',
-        'donatur': 'Komunitas Peduli',
-        'kategori_bantuan': 'Alat Tulis',
-        'jumlah': '100 set',
-        'tanggal_pengajuan': '12 April 2023',
-        'status': 'Ditolak',
-      },
-    ];
+    final filteredList = controller.getFilteredPenitipan();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Daftar Penitipan',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Daftar Penitipan',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            Text(
+              '${DateFormatter.formatNumber(filteredList.length)} item',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey,
+                  ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
-        ...penitipanList.map((item) => _buildPenitipanItem(context, item)),
+        filteredList.isEmpty
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.inbox_outlined,
+                        size: 80,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Tidak ada data penitipan',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Colors.grey.shade600,
+                                ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filteredList.length,
+                itemBuilder: (context, index) {
+                  return _buildPenitipanItem(context, filteredList[index]);
+                },
+              ),
       ],
     );
   }
 
-  Widget _buildPenitipanItem(BuildContext context, Map<String, dynamic> item) {
+  Widget _buildPenitipanItem(BuildContext context, PenitipanBantuanModel item) {
     Color statusColor;
     IconData statusIcon;
 
-    switch (item['status']) {
-      case 'Menunggu':
+    switch (item.status) {
+      case 'MENUNGGU':
         statusColor = Colors.orange;
         statusIcon = Icons.pending_actions;
         break;
-      case 'Terverifikasi':
+      case 'TERVERIFIKASI':
         statusColor = Colors.green;
         statusIcon = Icons.check_circle;
         break;
-      case 'Ditolak':
+      case 'DITOLAK':
         statusColor = Colors.red;
         statusIcon = Icons.cancel;
         break;
@@ -236,6 +279,20 @@ class PenitipanView extends GetView<PetugasDesaController> {
         statusColor = Colors.grey;
         statusIcon = Icons.help_outline;
     }
+
+    // Gunakan data donatur dari relasi jika tersedia
+    final donaturNama = item.donatur?.nama ?? 'Donatur tidak ditemukan';
+
+    // Debug info
+    print('PenitipanItem - stokBantuanId: ${item.stokBantuanId}');
+
+    final kategoriNama = item.kategoriBantuan?.nama ??
+        controller.getKategoriNama(item.stokBantuanId);
+    final kategoriSatuan = item.kategoriBantuan?.satuan ??
+        controller.getKategoriSatuan(item.stokBantuanId);
+
+    print(
+        'PenitipanItem - kategoriNama: $kategoriNama, kategoriSatuan: $kategoriSatuan');
 
     return Container(
       width: double.infinity,
@@ -262,7 +319,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
               children: [
                 Expanded(
                   child: Text(
-                    item['donatur'] ?? '',
+                    donaturNama,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -286,7 +343,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        item['status'] ?? '',
+                        item.status ?? 'Tidak diketahui',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: statusColor,
                               fontWeight: FontWeight.bold,
@@ -305,7 +362,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
                     context,
                     icon: Icons.category,
                     label: 'Kategori Bantuan',
-                    value: item['kategori_bantuan'] ?? '',
+                    value: kategoriNama,
                   ),
                 ),
                 Expanded(
@@ -313,7 +370,8 @@ class PenitipanView extends GetView<PetugasDesaController> {
                     context,
                     icon: Icons.inventory,
                     label: 'Jumlah',
-                    value: item['jumlah'] ?? '',
+                    value:
+                        '${DateFormatter.formatNumber(item.jumlah)} ${kategoriSatuan}',
                   ),
                 ),
               ],
@@ -322,17 +380,64 @@ class PenitipanView extends GetView<PetugasDesaController> {
             _buildItemDetail(
               context,
               icon: Icons.calendar_today,
-              label: 'Tanggal Pengajuan',
-              value: item['tanggal_pengajuan'] ?? '',
+              label: 'Tanggal Penitipan',
+              value: DateFormatter.formatDate(item.tanggalPenitipan,
+                  defaultValue: 'Tidak ada tanggal'),
             ),
+
+            // Tampilkan informasi petugas desa jika status terverifikasi
+            if (item.status == 'TERVERIFIKASI' &&
+                item.petugasDesaId != null) ...[
+              const SizedBox(height: 8),
+              _buildItemDetail(
+                context,
+                icon: Icons.person,
+                label: 'Diverifikasi Oleh',
+                value: controller.getPetugasDesaNama(item.petugasDesaId),
+              ),
+            ],
+
+            // Tampilkan thumbnail foto bantuan jika ada
+            if (item.fotoBantuan != null && item.fotoBantuan!.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.photo_library,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Foto Bantuan',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey,
+                            ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '(${item.fotoBantuan!.length} foto)',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
             const SizedBox(height: 12),
-            if (item['status'] == 'Menunggu')
+            if (item.status == 'MENUNGGU')
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton.icon(
                     onPressed: () {
-                      // Implementasi untuk menerima penitipan
+                      _showVerifikasiDialog(context, item.id ?? '');
                     },
                     icon: const Icon(Icons.check, size: 18),
                     label: const Text('Terima'),
@@ -343,7 +448,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
                   ),
                   TextButton.icon(
                     onPressed: () {
-                      // Implementasi untuk menolak penitipan
+                      _showTolakDialog(context, item.id ?? '');
                     },
                     icon: const Icon(Icons.close, size: 18),
                     label: const Text('Tolak'),
@@ -354,7 +459,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
                   ),
                   TextButton.icon(
                     onPressed: () {
-                      // Implementasi untuk melihat detail penitipan
+                      _showDetailDialog(context, item, donaturNama);
                     },
                     icon: const Icon(Icons.info_outline, size: 18),
                     label: const Text('Detail'),
@@ -371,7 +476,7 @@ class PenitipanView extends GetView<PetugasDesaController> {
                 children: [
                   TextButton.icon(
                     onPressed: () {
-                      // Implementasi untuk melihat detail penitipan
+                      _showDetailDialog(context, item, donaturNama);
                     },
                     icon: const Icon(Icons.info_outline, size: 18),
                     label: const Text('Detail'),
@@ -384,6 +489,399 @@ class PenitipanView extends GetView<PetugasDesaController> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showTolakDialog(BuildContext context, String penitipanId) {
+    final TextEditingController alasanController = TextEditingController();
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Tolak Penitipan'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Masukkan alasan penolakan:'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: alasanController,
+              decoration: const InputDecoration(
+                hintText: 'Alasan penolakan',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (alasanController.text.trim().isEmpty) {
+                Get.snackbar(
+                  'Error',
+                  'Alasan penolakan tidak boleh kosong',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+                return;
+              }
+              controller.tolakPenitipan(penitipanId, alasanController.text);
+              Get.back();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Tolak'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showVerifikasiDialog(BuildContext context, String penitipanId) {
+    // Reset path bukti serah terima
+    controller.fotoBuktiSerahTerimaPath.value = null;
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Verifikasi Penitipan'),
+        content: Obx(() => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Upload bukti serah terima:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                if (controller.fotoBuktiSerahTerimaPath.value != null)
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(controller.fotoBuktiSerahTerimaPath.value!),
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () {
+                            controller.fotoBuktiSerahTerimaPath.value = null;
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  InkWell(
+                    onTap: controller.pickfotoBuktiSerahTerima,
+                    child: Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade400),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.camera_alt,
+                            size: 48,
+                            color: Colors.grey.shade600,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Ambil Foto',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Catatan: Foto bukti serah terima wajib diupload untuk verifikasi penitipan.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            )),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Batal'),
+          ),
+          Obx(() => ElevatedButton(
+                onPressed: controller.isUploading.value
+                    ? null
+                    : () => controller.verifikasiPenitipan(penitipanId),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                ),
+                child: controller.isUploading.value
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Verifikasi'),
+              )),
+        ],
+      ),
+    );
+  }
+
+  void _showDetailDialog(
+      BuildContext context, PenitipanBantuanModel item, String donaturNama) {
+    // Gunakan data kategori dari relasi jika tersedia
+    final kategoriNama = item.kategoriBantuan?.nama ??
+        controller.getKategoriNama(item.stokBantuanId);
+    final kategoriSatuan = item.kategoriBantuan?.satuan ??
+        controller.getKategoriSatuan(item.stokBantuanId);
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Detail Penitipan'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDetailItem('Donatur', donaturNama),
+              _buildDetailItem('Status', item.status ?? 'Tidak diketahui'),
+              _buildDetailItem('Kategori Bantuan', kategoriNama),
+              _buildDetailItem('Jumlah',
+                  '${DateFormatter.formatNumber(item.jumlah)} ${kategoriSatuan}'),
+              _buildDetailItem(
+                  'Deskripsi', item.deskripsi ?? 'Tidak ada deskripsi'),
+              _buildDetailItem(
+                'Tanggal Penitipan',
+                DateFormatter.formatDate(item.tanggalPenitipan,
+                    defaultValue: 'Tidak ada tanggal'),
+              ),
+              if (item.tanggalVerifikasi != null)
+                _buildDetailItem(
+                  'Tanggal Verifikasi',
+                  DateFormatter.formatDate(item.tanggalVerifikasi),
+                ),
+              if (item.status == 'TERVERIFIKASI' && item.petugasDesaId != null)
+                _buildDetailItem(
+                  'Diverifikasi Oleh',
+                  controller.getPetugasDesaNama(item.petugasDesaId),
+                ),
+              if (item.tanggalKadaluarsa != null)
+                _buildDetailItem(
+                  'Tanggal Kadaluarsa',
+                  DateFormatter.formatDate(item.tanggalKadaluarsa),
+                ),
+              if (item.alasanPenolakan != null &&
+                  item.alasanPenolakan!.isNotEmpty)
+                _buildDetailItem('Alasan Penolakan', item.alasanPenolakan!),
+
+              // Foto Bantuan
+              if (item.fotoBantuan != null && item.fotoBantuan!.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Foto Bantuan:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 100,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: item.fotoBantuan!.length,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              _showFullScreenImage(
+                                  context, item.fotoBantuan![index]);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  item.fotoBantuan![index],
+                                  height: 100,
+                                  width: 100,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 100,
+                                      width: 100,
+                                      color: Colors.grey.shade300,
+                                      child: const Icon(Icons.error),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+
+              // Bukti Serah Terima
+              if (item.fotoBuktiSerahTerima != null &&
+                  item.fotoBuktiSerahTerima!.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Bukti Serah Terima:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () {
+                        _showFullScreenImage(
+                            context, item.fotoBuktiSerahTerima!);
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          item.fotoBuktiSerahTerima!,
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 200,
+                              width: double.infinity,
+                              color: Colors.grey.shade300,
+                              child: const Icon(Icons.error),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFullScreenImage(BuildContext context, String imageUrl) {
+    Get.dialog(
+      Dialog(
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey.shade300,
+                    child: const Center(
+                      child: Icon(
+                        Icons.error,
+                        size: 50,
+                        color: Colors.red,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Positioned(
+              top: 20,
+              right: 20,
+              child: GestureDetector(
+                onTap: () => Get.back(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 14),
+          ),
+          const Divider(),
+        ],
       ),
     );
   }

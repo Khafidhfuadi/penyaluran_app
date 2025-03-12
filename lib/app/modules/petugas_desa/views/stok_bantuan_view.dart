@@ -341,9 +341,9 @@ class StokBantuanView extends GetView<StokBantuanController> {
                   child: _buildItemDetail(
                     context,
                     icon: Icons.inventory,
-                    label: 'Jumlah',
+                    label: 'Total Stok',
                     value:
-                        '${DateFormatter.formatNumber(item.jumlah)} ${item.satuan ?? ''}',
+                        '${DateFormatter.formatNumber(item.totalStok)} ${item.satuan ?? ''}',
                   ),
                 ),
                 Expanded(
@@ -452,7 +452,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
   void _showAddStokDialog(BuildContext context) {
     final formKey = GlobalKey<FormState>();
     final namaController = TextEditingController();
-    final jumlahController = TextEditingController();
+    final stokController = TextEditingController();
     final satuanController = TextEditingController();
     final deskripsiController = TextEditingController();
     String? selectedJenisBantuanId;
@@ -515,7 +515,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                       Expanded(
                         flex: 2,
                         child: TextFormField(
-                          controller: jumlahController,
+                          controller: stokController,
                           decoration: const InputDecoration(
                             labelText: 'Jumlah',
                             border: OutlineInputBorder(),
@@ -625,7 +625,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                 if (formKey.currentState!.validate()) {
                   final stok = StokBantuanModel(
                     nama: namaController.text,
-                    jumlah: double.parse(jumlahController.text),
+                    totalStok: double.parse(stokController.text),
                     satuan: satuanController.text,
                     deskripsi: deskripsiController.text,
                     kategoriBantuanId: selectedJenisBantuanId,
@@ -649,8 +649,8 @@ class StokBantuanView extends GetView<StokBantuanController> {
   void _showEditStokDialog(BuildContext context, StokBantuanModel stok) {
     final formKey = GlobalKey<FormState>();
     final namaController = TextEditingController(text: stok.nama);
-    final jumlahController =
-        TextEditingController(text: stok.jumlah?.toString());
+    final stokController =
+        TextEditingController(text: stok.totalStok?.toString());
     final satuanController = TextEditingController(text: stok.satuan);
     final deskripsiController = TextEditingController(text: stok.deskripsi);
     String? selectedJenisBantuanId = stok.kategoriBantuanId;
@@ -718,7 +718,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                       Expanded(
                         flex: 2,
                         child: TextFormField(
-                          controller: jumlahController,
+                          controller: stokController,
                           decoration: const InputDecoration(
                             labelText: 'Jumlah',
                             border: OutlineInputBorder(),
@@ -829,7 +829,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                   final updatedStok = StokBantuanModel(
                     id: stok.id,
                     nama: namaController.text,
-                    jumlah: double.parse(jumlahController.text),
+                    totalStok: double.parse(stokController.text),
                     satuan: satuanController.text,
                     deskripsi: deskripsiController.text,
                     kategoriBantuanId: selectedJenisBantuanId,

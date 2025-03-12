@@ -1,33 +1,25 @@
 import 'dart:convert';
 
 class PetugasDesaModel {
-  final String id;
-  final String nama;
-  final String? alamat;
+  final String? id;
+  final String? nama;
+  final String? alamatLengkap;
   final String? noTelp;
   final String? email;
   final String? jabatan;
-  final String? desa;
-  final String? kecamatan;
-  final String? kabupaten;
-  final String? provinsi;
-  final String? userId; // Referensi ke User jika petugas memiliki akun
-  final DateTime createdAt;
+  final String? userId;
+  final DateTime? createdAt;
   final DateTime? updatedAt;
 
   PetugasDesaModel({
-    required this.id,
-    required this.nama,
-    this.alamat,
+    this.id,
+    this.nama,
+    this.alamatLengkap,
     this.noTelp,
     this.email,
     this.jabatan,
-    this.desa,
-    this.kecamatan,
-    this.kabupaten,
-    this.provinsi,
     this.userId,
-    required this.createdAt,
+    this.createdAt,
     this.updatedAt,
   });
 
@@ -40,34 +32,28 @@ class PetugasDesaModel {
       PetugasDesaModel(
         id: json["id"],
         nama: json["nama"],
-        alamat: json["alamat"],
+        alamatLengkap: json["alamat_lengkap"],
         noTelp: json["no_telp"],
         email: json["email"],
         jabatan: json["jabatan"],
-        desa: json["desa"],
-        kecamatan: json["kecamatan"],
-        kabupaten: json["kabupaten"],
-        provinsi: json["provinsi"],
         userId: json["user_id"],
-        createdAt: DateTime.parse(json["created_at"]),
-        updatedAt: json["updated_at"] == null
-            ? null
-            : DateTime.parse(json["updated_at"]),
+        createdAt: json["created_at"] != null
+            ? DateTime.parse(json["created_at"])
+            : null,
+        updatedAt: json["updated_at"] != null
+            ? DateTime.parse(json["updated_at"])
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
         "nama": nama,
-        "alamat": alamat,
+        "alamat_lengkap": alamatLengkap,
         "no_telp": noTelp,
         "email": email,
         "jabatan": jabatan,
-        "desa": desa,
-        "kecamatan": kecamatan,
-        "kabupaten": kabupaten,
-        "provinsi": provinsi,
         "user_id": userId,
-        "created_at": createdAt.toIso8601String(),
+        "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
 }

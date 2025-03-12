@@ -1,36 +1,46 @@
 import 'dart:convert';
+import 'package:penyaluran_app/app/data/models/donatur_model.dart';
+import 'package:penyaluran_app/app/data/models/kategori_bantuan_model.dart';
 
 class PenitipanBantuanModel {
   final String? id;
   final String? donaturId;
-  final String? bentukBantuanId;
-  final String? nama;
+  final String? stokBantuanId;
   final double? jumlah;
-  final String? satuan;
   final String? deskripsi;
   final String? status;
   final String? alasanPenolakan;
-  final List<String>? gambarUrls;
+  final List<String>? fotoBantuan;
   final DateTime? tanggalPenitipan;
   final DateTime? tanggalVerifikasi;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? tanggalKadaluarsa;
+  final String? petugasDesaId;
+  final String? fotoBuktiSerahTerima;
+  final String? sumberBantuanId;
+  final DonaturModel? donatur;
+  final KategoriBantuanModel? kategoriBantuan;
 
   PenitipanBantuanModel({
     this.id,
     this.donaturId,
-    this.bentukBantuanId,
-    this.nama,
+    this.stokBantuanId,
     this.jumlah,
-    this.satuan,
     this.deskripsi,
     this.status,
     this.alasanPenolakan,
-    this.gambarUrls,
+    this.fotoBantuan,
     this.tanggalPenitipan,
     this.tanggalVerifikasi,
     this.createdAt,
     this.updatedAt,
+    this.tanggalKadaluarsa,
+    this.petugasDesaId,
+    this.fotoBuktiSerahTerima,
+    this.sumberBantuanId,
+    this.donatur,
+    this.kategoriBantuan,
   });
 
   factory PenitipanBantuanModel.fromRawJson(String str) =>
@@ -42,16 +52,14 @@ class PenitipanBantuanModel {
       PenitipanBantuanModel(
         id: json["id"],
         donaturId: json["donatur_id"],
-        bentukBantuanId: json["bentuk_bantuan_id"],
-        nama: json["nama"],
+        stokBantuanId: json["stok_bantuan_id"],
         jumlah: json["jumlah"] != null ? json["jumlah"].toDouble() : 0.0,
-        satuan: json["satuan"],
         deskripsi: json["deskripsi"],
         status: json["status"],
         alasanPenolakan: json["alasan_penolakan"],
-        gambarUrls: json["gambar_urls"] == null
+        fotoBantuan: json["foto_bantuan"] == null
             ? null
-            : List<String>.from(json["gambar_urls"].map((x) => x)),
+            : List<String>.from(json["foto_bantuan"].map((x) => x)),
         tanggalPenitipan: json["tanggal_penitipan"] != null
             ? DateTime.parse(json["tanggal_penitipan"])
             : null,
@@ -64,24 +72,38 @@ class PenitipanBantuanModel {
         updatedAt: json["updated_at"] != null
             ? DateTime.parse(json["updated_at"])
             : null,
+        tanggalKadaluarsa: json["tanggal_kadaluarsa"] != null
+            ? DateTime.parse(json["tanggal_kadaluarsa"])
+            : null,
+        petugasDesaId: json["petugas_desa_id"],
+        fotoBuktiSerahTerima: json["foto_bukti_serah_terima"],
+        sumberBantuanId: json["sumber_bantuan_id"],
+        donatur: json["donatur"] != null
+            ? DonaturModel.fromJson(json["donatur"])
+            : null,
+        kategoriBantuan: json["kategori_bantuan"] != null
+            ? KategoriBantuanModel.fromJson(json["kategori_bantuan"])
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
         "donatur_id": donaturId,
-        "bentuk_bantuan_id": bentukBantuanId,
-        "nama": nama,
+        "stok_bantuan_id": stokBantuanId,
         "jumlah": jumlah,
-        "satuan": satuan,
         "deskripsi": deskripsi,
         "status": status,
         "alasan_penolakan": alasanPenolakan,
-        "gambar_urls": gambarUrls == null
+        "foto_bantuan": fotoBantuan == null
             ? null
-            : List<dynamic>.from(gambarUrls!.map((x) => x)),
+            : List<dynamic>.from(fotoBantuan!.map((x) => x)),
         "tanggal_penitipan": tanggalPenitipan?.toIso8601String(),
         "tanggal_verifikasi": tanggalVerifikasi?.toIso8601String(),
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
+        "tanggal_kadaluarsa": tanggalKadaluarsa?.toIso8601String(),
+        "petugas_desa_id": petugasDesaId,
+        "foto_bukti_serah_terima": fotoBuktiSerahTerima,
+        "sumber_bantuan_id": sumberBantuanId,
       };
 }

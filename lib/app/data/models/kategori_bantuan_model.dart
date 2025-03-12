@@ -1,30 +1,33 @@
 import 'dart:convert';
 
-class SumberBantuanModel {
+class KategoriBantuanModel {
   final String? id;
   final String? nama;
   final String? deskripsi;
+  final String? satuan;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  SumberBantuanModel({
+  KategoriBantuanModel({
     this.id,
     this.nama,
     this.deskripsi,
+    this.satuan,
     this.createdAt,
     this.updatedAt,
   });
 
-  factory SumberBantuanModel.fromRawJson(String str) =>
-      SumberBantuanModel.fromJson(json.decode(str));
+  factory KategoriBantuanModel.fromRawJson(String str) =>
+      KategoriBantuanModel.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory SumberBantuanModel.fromJson(Map<String, dynamic> json) =>
-      SumberBantuanModel(
+  factory KategoriBantuanModel.fromJson(Map<String, dynamic> json) =>
+      KategoriBantuanModel(
         id: json["id"],
         nama: json["nama"],
         deskripsi: json["deskripsi"],
+        satuan: json["satuan"],
         createdAt: json["created_at"] != null
             ? DateTime.parse(json["created_at"])
             : null,
@@ -37,6 +40,7 @@ class SumberBantuanModel {
         "id": id,
         "nama": nama,
         "deskripsi": deskripsi,
+        "satuan": satuan,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
