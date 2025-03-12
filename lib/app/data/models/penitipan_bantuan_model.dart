@@ -15,12 +15,12 @@ class PenitipanBantuanModel {
   final DateTime? tanggalVerifikasi;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  final DateTime? tanggalKadaluarsa;
   final String? petugasDesaId;
   final String? fotoBuktiSerahTerima;
   final String? sumberBantuanId;
   final DonaturModel? donatur;
   final KategoriBantuanModel? kategoriBantuan;
+  final bool? isUang;
 
   PenitipanBantuanModel({
     this.id,
@@ -35,12 +35,12 @@ class PenitipanBantuanModel {
     this.tanggalVerifikasi,
     this.createdAt,
     this.updatedAt,
-    this.tanggalKadaluarsa,
     this.petugasDesaId,
     this.fotoBuktiSerahTerima,
     this.sumberBantuanId,
     this.donatur,
     this.kategoriBantuan,
+    this.isUang,
   });
 
   factory PenitipanBantuanModel.fromRawJson(String str) =>
@@ -72,9 +72,6 @@ class PenitipanBantuanModel {
         updatedAt: json["updated_at"] != null
             ? DateTime.parse(json["updated_at"])
             : null,
-        tanggalKadaluarsa: json["tanggal_kadaluarsa"] != null
-            ? DateTime.parse(json["tanggal_kadaluarsa"])
-            : null,
         petugasDesaId: json["petugas_desa_id"],
         fotoBuktiSerahTerima: json["foto_bukti_serah_terima"],
         sumberBantuanId: json["sumber_bantuan_id"],
@@ -84,6 +81,7 @@ class PenitipanBantuanModel {
         kategoriBantuan: json["kategori_bantuan"] != null
             ? KategoriBantuanModel.fromJson(json["kategori_bantuan"])
             : null,
+        isUang: json["is_uang"] ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -101,9 +99,9 @@ class PenitipanBantuanModel {
         "tanggal_verifikasi": tanggalVerifikasi?.toIso8601String(),
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
-        "tanggal_kadaluarsa": tanggalKadaluarsa?.toIso8601String(),
         "petugas_desa_id": petugasDesaId,
         "foto_bukti_serah_terima": fotoBuktiSerahTerima,
         "sumber_bantuan_id": sumberBantuanId,
+        "is_uang": isUang ?? false,
       };
 }

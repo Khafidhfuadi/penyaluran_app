@@ -72,37 +72,15 @@ class StokBantuanView extends GetView<StokBantuanController> {
                   color: Colors.white,
                 ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  icon: Icons.inventory_2_outlined,
-                  title: 'Stok Tersedia',
-                  value: DateFormatter.formatNumber(controller.totalStok.value),
+          const SizedBox(height: 4),
+          Text(
+            'Data stok diambil dari penitipan bantuan terverifikasi',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withOpacity(0.8),
                 ),
-              ),
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  icon: Icons.input,
-                  title: 'Total Masuk',
-                  value: DateFormatter.formatNumber(controller.stokMasuk.value),
-                ),
-              ),
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  icon: Icons.output,
-                  title: 'Total Keluar',
-                  value:
-                      DateFormatter.formatNumber(controller.stokKeluar.value),
-                ),
-              ),
-            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
           Row(
             children: [
               Expanded(
@@ -119,24 +97,74 @@ class StokBantuanView extends GetView<StokBantuanController> {
               Expanded(
                 child: _buildSummaryItem(
                   context,
-                  icon: Icons.access_time,
-                  title: 'Segera Kadaluarsa',
-                  value: '${controller.getStokSegeraKadaluarsa()}',
-                  valueColor: controller.getStokSegeraKadaluarsa() > 0
-                      ? Colors.amber
-                      : Colors.white,
+                  icon: Icons.handshake_outlined,
+                  title: 'Penitipan',
+                  value: '${controller.daftarPenitipanTerverifikasi.length}',
+                  valueColor: Colors.white,
                 ),
               ),
               Expanded(
                 child: _buildSummaryItem(
                   context,
-                  icon: Icons.category_outlined,
-                  title: 'Kategori Bantuan',
-                  value: '${controller.daftarKategoriBantuan.length}',
+                  icon: Icons.inventory_2,
+                  title: 'Jenis Bantuan',
+                  value: '${controller.daftarStokBantuan.length}',
                 ),
               ),
             ],
           ),
+
+          // Tampilkan total dana bantuan jika ada
+          if (controller.totalDanaBantuan.value > 0) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.monetization_on,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total Dana Bantuan',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white,
+                                  ),
+                        ),
+                        Text(
+                          'Rp ${DateFormatter.formatNumber(controller.totalDanaBantuan.value)}',
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -311,15 +339,27 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     color: AppTheme.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    item.kategoriBantuan != null
-                        ? (item.kategoriBantuan!['nama'] ??
-                            'Tidak Ada Kategori')
-                        : 'Tidak Ada Kategori',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (item.isUang == true)
+                        const Icon(
+                          Icons.monetization_on,
+                          size: 16,
                           color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.bold,
                         ),
+                      if (item.isUang == true) const SizedBox(width: 4),
+                      Text(
+                        item.kategoriBantuan != null
+                            ? (item.kategoriBantuan!['nama'] ??
+                                'Tidak Ada Kategori')
+                            : 'Tidak Ada Kategori',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -340,31 +380,13 @@ class StokBantuanView extends GetView<StokBantuanController> {
                 Expanded(
                   child: _buildItemDetail(
                     context,
-                    icon: Icons.inventory,
-                    label: 'Total Stok',
-                    value:
-                        '${DateFormatter.formatNumber(item.totalStok)} ${item.satuan ?? ''}',
-                  ),
-                ),
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon: Icons.calendar_today,
-                    label: 'Tanggal Masuk',
-                    value: DateFormatter.formatDateTime(item.tanggalMasuk),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon: Icons.timelapse,
-                    label: 'Kadaluarsa',
-                    value: DateFormatter.formatDate(item.tanggalKadaluarsa),
+                    icon: item.isUang == true
+                        ? Icons.monetization_on
+                        : Icons.inventory,
+                    label: item.isUang == true ? 'Total Dana' : 'Total Stok',
+                    value: item.isUang == true
+                        ? 'Rp ${DateFormatter.formatNumber(item.totalStok)}'
+                        : '${DateFormatter.formatNumber(item.totalStok)} ${item.satuan ?? ''}',
                   ),
                 ),
                 Expanded(
@@ -452,14 +474,10 @@ class StokBantuanView extends GetView<StokBantuanController> {
   void _showAddStokDialog(BuildContext context) {
     final formKey = GlobalKey<FormState>();
     final namaController = TextEditingController();
-    final stokController = TextEditingController();
     final satuanController = TextEditingController();
     final deskripsiController = TextEditingController();
     String? selectedJenisBantuanId;
-
-    // Gunakan StatefulBuilder untuk memperbarui state dialog
-    DateTime tanggalMasuk = DateTime.now();
-    DateTime? tanggalKadaluarsa;
+    bool isUang = false;
 
     showDialog(
       context: context,
@@ -510,46 +528,39 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          controller: stokController,
-                          decoration: const InputDecoration(
-                            labelText: 'Jumlah',
-                            border: OutlineInputBorder(),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Jumlah tidak boleh kosong';
-                            }
-                            if (double.tryParse(value) == null) {
-                              return 'Jumlah harus berupa angka';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 1,
-                        child: TextFormField(
-                          controller: satuanController,
-                          decoration: const InputDecoration(
-                            labelText: 'Satuan',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Satuan tidak boleh kosong';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
+
+                  // Tambahkan checkbox untuk menandai sebagai uang
+                  CheckboxListTile(
+                    title: const Text('Bantuan Berbentuk Uang (Rupiah)'),
+                    value: isUang,
+                    onChanged: (value) {
+                      setState(() {
+                        isUang = value ?? false;
+                        if (isUang) {
+                          satuanController.text = 'Rp';
+                        } else {
+                          satuanController.text = '';
+                        }
+                      });
+                    },
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Hapus input jumlah/stok dan hanya tampilkan input satuan
+                  TextFormField(
+                    controller: satuanController,
+                    decoration: const InputDecoration(
+                      labelText: 'Satuan',
+                      border: OutlineInputBorder(),
+                    ),
+                    enabled: !isUang, // Disable jika berbentuk uang
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Satuan tidak boleh kosong';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -561,54 +572,39 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     maxLines: 3,
                   ),
                   const SizedBox(height: 16),
-                  InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: tanggalMasuk,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          tanggalMasuk = picked;
-                        });
-                      }
-                    },
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Tanggal Masuk',
-                        border: OutlineInputBorder(),
-                      ),
-                      child: Text(
-                        DateFormatter.formatDateTime(tanggalMasuk),
-                      ),
+                  // Tambahkan informasi tentang total stok
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: tanggalKadaluarsa ??
-                            DateTime.now().add(const Duration(days: 365)),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          tanggalKadaluarsa = picked;
-                        });
-                      }
-                    },
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Tanggal Kadaluarsa',
-                        border: OutlineInputBorder(),
-                      ),
-                      child: Text(
-                        DateFormatter.formatDate(tanggalKadaluarsa),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.info_outline,
+                                color: Colors.blue, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Informasi',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Total stok akan dihitung otomatis dari jumlah penitipan bantuan yang telah terverifikasi.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -625,12 +621,10 @@ class StokBantuanView extends GetView<StokBantuanController> {
                 if (formKey.currentState!.validate()) {
                   final stok = StokBantuanModel(
                     nama: namaController.text,
-                    totalStok: double.parse(stokController.text),
                     satuan: satuanController.text,
                     deskripsi: deskripsiController.text,
                     kategoriBantuanId: selectedJenisBantuanId,
-                    tanggalMasuk: tanggalMasuk,
-                    tanggalKadaluarsa: tanggalKadaluarsa,
+                    isUang: isUang,
                     createdAt: DateTime.now(),
                     updatedAt: DateTime.now(),
                   );
@@ -649,15 +643,10 @@ class StokBantuanView extends GetView<StokBantuanController> {
   void _showEditStokDialog(BuildContext context, StokBantuanModel stok) {
     final formKey = GlobalKey<FormState>();
     final namaController = TextEditingController(text: stok.nama);
-    final stokController =
-        TextEditingController(text: stok.totalStok?.toString());
     final satuanController = TextEditingController(text: stok.satuan);
     final deskripsiController = TextEditingController(text: stok.deskripsi);
     String? selectedJenisBantuanId = stok.kategoriBantuanId;
-
-    // Gunakan StatefulBuilder untuk memperbarui state dialog
-    DateTime? tanggalMasuk = stok.tanggalMasuk;
-    DateTime? tanggalKadaluarsa = stok.tanggalKadaluarsa;
+    bool isUang = stok.isUang ?? false;
 
     showDialog(
       context: context,
@@ -713,46 +702,55 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          controller: stokController,
-                          decoration: const InputDecoration(
-                            labelText: 'Jumlah',
-                            border: OutlineInputBorder(),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Jumlah tidak boleh kosong';
-                            }
-                            if (double.tryParse(value) == null) {
-                              return 'Jumlah harus berupa angka';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 1,
-                        child: TextFormField(
-                          controller: satuanController,
-                          decoration: const InputDecoration(
-                            labelText: 'Satuan',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Satuan tidak boleh kosong';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
+
+                  // Tambahkan checkbox untuk menandai sebagai uang
+                  CheckboxListTile(
+                    title: const Text('Bantuan Berbentuk Uang (Rupiah)'),
+                    value: isUang,
+                    onChanged: (value) {
+                      setState(() {
+                        isUang = value ?? false;
+                        if (isUang) {
+                          satuanController.text = 'Rp';
+                        }
+                      });
+                    },
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Tampilkan total stok saat ini (read-only)
+                  InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: isUang
+                          ? 'Total Dana Saat Ini'
+                          : 'Total Stok Saat Ini',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.all(10),
+                    ),
+                    child: Text(
+                      isUang
+                          ? 'Rp ${DateFormatter.formatNumber(stok.totalStok)}'
+                          : '${DateFormatter.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Hanya tampilkan input satuan
+                  TextFormField(
+                    controller: satuanController,
+                    decoration: const InputDecoration(
+                      labelText: 'Satuan',
+                      border: OutlineInputBorder(),
+                    ),
+                    enabled: !isUang, // Disable jika berbentuk uang
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Satuan tidak boleh kosong';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -764,54 +762,39 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     maxLines: 3,
                   ),
                   const SizedBox(height: 16),
-                  InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: tanggalMasuk ?? DateTime.now(),
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          tanggalMasuk = picked;
-                        });
-                      }
-                    },
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Tanggal Masuk',
-                        border: OutlineInputBorder(),
-                      ),
-                      child: Text(
-                        DateFormatter.formatDateTime(tanggalMasuk),
-                      ),
+                  // Tambahkan informasi tentang total stok
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: tanggalKadaluarsa ??
-                            DateTime.now().add(const Duration(days: 365)),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          tanggalKadaluarsa = picked;
-                        });
-                      }
-                    },
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Tanggal Kadaluarsa',
-                        border: OutlineInputBorder(),
-                      ),
-                      child: Text(
-                        DateFormatter.formatDate(tanggalKadaluarsa),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.info_outline,
+                                color: Colors.blue, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Informasi',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Total stok dihitung otomatis dari jumlah penitipan bantuan yang telah terverifikasi dan tidak dapat diubah secara manual.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -829,12 +812,10 @@ class StokBantuanView extends GetView<StokBantuanController> {
                   final updatedStok = StokBantuanModel(
                     id: stok.id,
                     nama: namaController.text,
-                    totalStok: double.parse(stokController.text),
                     satuan: satuanController.text,
                     deskripsi: deskripsiController.text,
                     kategoriBantuanId: selectedJenisBantuanId,
-                    tanggalMasuk: tanggalMasuk,
-                    tanggalKadaluarsa: tanggalKadaluarsa,
+                    isUang: isUang,
                     createdAt: stok.createdAt,
                     updatedAt: DateTime.now(),
                   );

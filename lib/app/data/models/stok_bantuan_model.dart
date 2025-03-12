@@ -8,10 +8,9 @@ class StokBantuanModel {
   final double? totalStok;
   final String? satuan;
   final String? deskripsi;
-  final DateTime? tanggalMasuk;
-  final DateTime? tanggalKadaluarsa;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final bool? isUang;
 
   StokBantuanModel({
     this.id,
@@ -21,10 +20,9 @@ class StokBantuanModel {
     this.totalStok,
     this.satuan,
     this.deskripsi,
-    this.tanggalMasuk,
-    this.tanggalKadaluarsa,
     this.createdAt,
     this.updatedAt,
+    this.isUang,
   });
 
   factory StokBantuanModel.fromRawJson(String str) =>
@@ -38,35 +36,27 @@ class StokBantuanModel {
         nama: json["nama"],
         kategoriBantuanId: json["kategori_bantuan_id"],
         kategoriBantuan: json["kategori_bantuan"],
-        totalStok:
-            json["total_stok"] != null ? json["total_stok"].toDouble() : 0.0,
+        totalStok: 0.0,
         satuan: json["satuan"],
         deskripsi: json["deskripsi"],
-        tanggalMasuk: json["tanggal_masuk"] != null
-            ? DateTime.parse(json["tanggal_masuk"])
-            : null,
-        tanggalKadaluarsa: json["tanggal_kadaluarsa"] != null
-            ? DateTime.parse(json["tanggal_kadaluarsa"])
-            : null,
         createdAt: json["created_at"] != null
             ? DateTime.parse(json["created_at"])
             : null,
         updatedAt: json["updated_at"] != null
             ? DateTime.parse(json["updated_at"])
             : null,
+        isUang: json["is_uang"] ?? false,
       );
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
       "nama": nama,
       "kategori_bantuan_id": kategoriBantuanId,
-      "total_stok": totalStok,
       "satuan": satuan,
       "deskripsi": deskripsi,
-      "tanggal_masuk": tanggalMasuk?.toIso8601String(),
-      "tanggal_kadaluarsa": tanggalKadaluarsa?.toIso8601String(),
       "created_at": createdAt?.toIso8601String(),
       "updated_at": updatedAt?.toIso8601String(),
+      "is_uang": isUang ?? false,
     };
 
     // Tambahkan id hanya jika tidak null

@@ -442,6 +442,22 @@ class SupabaseService extends GetxService {
     }
   }
 
+  // Metode untuk mengambil data penitipan bantuan dengan status TERVERIFIKASI
+  Future<List<Map<String, dynamic>>?> getPenitipanBantuanTerverifikasi() async {
+    try {
+      final response = await client
+          .from('penitipan_bantuan')
+          .select('*, donatur:donatur_id(*), stok_bantuan:stok_bantuan_id(*)')
+          .eq('status', 'TERVERIFIKASI')
+          .order('tanggal_penitipan', ascending: false);
+
+      return response;
+    } catch (e) {
+      print('Error getting penitipan bantuan terverifikasi: $e');
+      return null;
+    }
+  }
+
   // Upload file methods
   Future<String?> uploadFile(
       String filePath, String bucket, String folder) async {

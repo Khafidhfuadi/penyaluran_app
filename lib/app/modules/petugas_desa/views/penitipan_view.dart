@@ -294,6 +294,9 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
     print(
         'PenitipanItem - kategoriNama: $kategoriNama, kategoriSatuan: $kategoriSatuan');
 
+    // Cek apakah penitipan berbentuk uang
+    final isUang = item.isUang ?? false;
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
@@ -360,7 +363,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                 Expanded(
                   child: _buildItemDetail(
                     context,
-                    icon: Icons.category,
+                    icon: isUang ? Icons.monetization_on : Icons.category,
                     label: 'Kategori Bantuan',
                     value: kategoriNama,
                   ),
@@ -368,10 +371,12 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                 Expanded(
                   child: _buildItemDetail(
                     context,
-                    icon: Icons.inventory,
+                    icon:
+                        isUang ? Icons.account_balance_wallet : Icons.inventory,
                     label: 'Jumlah',
-                    value:
-                        '${DateFormatter.formatNumber(item.jumlah)} ${kategoriSatuan}',
+                    value: isUang
+                        ? 'Rp ${DateFormatter.formatNumber(item.jumlah)}'
+                        : '${DateFormatter.formatNumber(item.jumlah)} ${kategoriSatuan}',
                   ),
                 ),
               ],
@@ -381,7 +386,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
               context,
               icon: Icons.calendar_today,
               label: 'Tanggal Penitipan',
-              value: DateFormatter.formatDate(item.tanggalPenitipan,
+              value: DateFormatter.formatDateTime(item.tanggalPenitipan,
                   defaultValue: 'Tidak ada tanggal'),
             ),
 
@@ -673,6 +678,9 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
     final kategoriSatuan = item.kategoriBantuan?.satuan ??
         controller.getKategoriSatuan(item.stokBantuanId);
 
+    // Cek apakah penitipan berbentuk uang
+    final isUang = item.isUang ?? false;
+
     Get.dialog(
       AlertDialog(
         title: const Text('Detail Penitipan'),
@@ -684,42 +692,96 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
               _buildDetailItem('Donatur', donaturNama),
               _buildDetailItem('Status', item.status ?? 'Tidak diketahui'),
               _buildDetailItem('Kategori Bantuan', kategoriNama),
-              _buildDetailItem('Jumlah',
-                  '${DateFormatter.formatNumber(item.jumlah)} ${kategoriSatuan}'),
+              _buildDetailItem(
+                  'Jumlah',
+                  isUang
+                      ? 'Rp ${DateFormatter.formatNumber(item.jumlah)}'
+                      : '${DateFormatter.formatNumber(item.jumlah)} ${kategoriSatuan}'),
+              if (isUang) _buildDetailItem('Jenis Bantuan', 'Uang (Rupiah)'),
               _buildDetailItem(
                   'Deskripsi', item.deskripsi ?? 'Tidak ada deskripsi'),
               _buildDetailItem(
                 'Tanggal Penitipan',
-                DateFormatter.formatDate(item.tanggalPenitipan,
+                DateFormatter.formatDateTime(item.tanggalPenitipan,
                     defaultValue: 'Tidak ada tanggal'),
               ),
               if (item.tanggalVerifikasi != null)
                 _buildDetailItem(
                   'Tanggal Verifikasi',
-                  DateFormatter.formatDate(item.tanggalVerifikasi),
+                  DateFormatter.formatDateTime(item.tanggalVerifikasi),
                 ),
               if (item.status == 'TERVERIFIKASI' && item.petugasDesaId != null)
                 _buildDetailItem(
                   'Diverifikasi Oleh',
                   controller.getPetugasDesaNama(item.petugasDesaId),
                 ),
-              if (item.tanggalKadaluarsa != null)
-                _buildDetailItem(
-                  'Tanggal Kadaluarsa',
-                  DateFormatter.formatDate(item.tanggalKadaluarsa),
-                ),
+              _buildDetailItem('Tanggal Masuk',
+                  DateFormatter.formatDateTime(item.tanggalPenitipan)),
               if (item.alasanPenolakan != null &&
                   item.alasanPenolakan!.isNotEmpty)
                 _buildDetailItem('Alasan Penolakan', item.alasanPenolakan!),
 
               // Foto Bantuan
-              if (item.fotoBantuan != null && item.fotoBantuan!.isNotEmpty)
+              if (!isUang &&
+                  item.fotoBantuan != null &&
+                  item.fotoBantuan!.isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
                     const Text(
                       'Foto Bantuan:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 100,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: item.fotoBantuan!.length,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              _showFullScreenImage(
+                                  context, item.fotoBantuan![index]);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  item.fotoBantuan![index],
+                                  height: 100,
+                                  width: 100,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 100,
+                                      width: 100,
+                                      color: Colors.grey.shade300,
+                                      child: const Icon(Icons.error),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+
+              // Bukti Transfer (untuk bantuan uang)
+              if (isUang &&
+                  item.fotoBantuan != null &&
+                  item.fotoBantuan!.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Bukti Transfer:',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
