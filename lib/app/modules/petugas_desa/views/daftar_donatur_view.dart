@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/donatur_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/data/models/donatur_model.dart';
+import 'package:penyaluran_app/app/routes/app_pages.dart';
 
 class DaftarDonaturView extends GetView<DonaturController> {
   const DaftarDonaturView({super.key});
@@ -199,8 +200,8 @@ class DaftarDonaturView extends GetView<DonaturController> {
       ),
       child: InkWell(
         onTap: () {
-          // Navigasi ke halaman detail donatur (akan diimplementasikan nanti)
-          // Get.toNamed('/daftar-donatur/detail', arguments: donatur.id);
+          // Navigasi ke halaman detail donatur
+          Get.toNamed(Routes.detailDonatur, arguments: donatur.id);
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -268,14 +269,14 @@ class DaftarDonaturView extends GetView<DonaturController> {
                               const Icon(
                                 Icons.attach_money,
                                 size: 14,
-                                color: Color.fromARGB(255, 210, 158, 4),
+                                color: Colors.green,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '${jumlahDonasiUang}x Donasi Uang',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Color.fromARGB(255, 210, 158, 4),
+                                  color: Colors.green,
                                 ),
                               ),
                             ],
@@ -287,14 +288,14 @@ class DaftarDonaturView extends GetView<DonaturController> {
                               const Icon(
                                 Icons.inventory_2,
                                 size: 14,
-                                color: Colors.purple,
+                                color: Colors.orange,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '${jumlahDonasiBarang}x Donasi Barang',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.purple,
+                                  color: Colors.orange,
                                 ),
                               ),
                             ],
@@ -319,8 +320,8 @@ class DaftarDonaturView extends GetView<DonaturController> {
 
     switch (status) {
       case 'AKTIF':
-        backgroundColor = Colors.green.withOpacity(0.1);
-        textColor = Colors.green;
+        backgroundColor = Colors.blue.withOpacity(0.1);
+        textColor = Colors.blue;
         label = 'Aktif';
         break;
       case 'NONAKTIF':
@@ -446,7 +447,7 @@ class DonaturSearchDelegate extends SearchDelegate {
           child: ListTile(
             onTap: () {
               close(context, null);
-              // Get.toNamed('/daftar-donatur/detail', arguments: donatur.id);
+              Get.toNamed(Routes.detailDonatur, arguments: donatur.id);
             },
             leading: CircleAvatar(
               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),

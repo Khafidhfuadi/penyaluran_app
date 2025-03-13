@@ -18,6 +18,7 @@ abstract class Routes {
   static const profile = _Paths.profile;
   static const riwayatPenitipan = _Paths.riwayatPenitipan;
   static const daftarDonatur = _Paths.daftarDonatur;
+  static const detailDonatur = _Paths.detailDonatur;
 }
 
 abstract class _Paths {
@@ -38,4 +39,5 @@ abstract class _Paths {
   static const profile = '/profile';
   static const riwayatPenitipan = '/petugas-desa/riwayat-penitipan';
   static const daftarDonatur = '/daftar-donatur';
+  static const detailDonatur = '/daftar-donatur/detail';
 }

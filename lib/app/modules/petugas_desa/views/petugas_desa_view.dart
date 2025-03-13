@@ -298,7 +298,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.volunteer_activism),
+            leading: const Icon(Icons.volunteer_activism_outlined),
             title: const Text('Daftar Donatur'),
             onTap: () {
               Navigator.pop(context); // Tutup drawer terlebih dahulu

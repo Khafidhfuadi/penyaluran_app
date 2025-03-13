@@ -2,11 +2,14 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:penyaluran_app/app/data/models/donatur_model.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
+import 'package:penyaluran_app/app/data/models/stok_bantuan_model.dart';
 
 class DonaturController extends GetxController {
   final RxList<DonaturModel> daftarDonatur = <DonaturModel>[].obs;
   final RxMap<String, List<PenitipanBantuanModel>> penitipanPerDonatur =
       <String, List<PenitipanBantuanModel>>{}.obs;
+  final RxMap<String, StokBantuanModel> stokBantuanMap =
+      <String, StokBantuanModel>{}.obs;
   final RxBool isLoading = false.obs;
   final SupabaseService _supabaseService = SupabaseService.to;
 
@@ -14,6 +17,7 @@ class DonaturController extends GetxController {
   void onInit() {
     super.onInit();
     fetchDaftarDonatur();
+    fetchStokBantuan();
   }
 
   @override
@@ -71,6 +75,25 @@ class DonaturController extends GetxController {
       }
     } catch (e) {
       print('Error saat mengambil data penitipan bantuan: $e');
+    }
+  }
+
+  Future<void> fetchStokBantuan() async {
+    try {
+      final result = await _supabaseService.getStokBantuan();
+
+      if (result != null) {
+        stokBantuanMap.clear();
+
+        for (var data in result) {
+          final stokBantuan = StokBantuanModel.fromJson(data);
+          if (stokBantuan.id != null) {
+            stokBantuanMap[stokBantuan.id!] = stokBantuan;
+          }
+        }
+      }
+    } catch (e) {
+      print('Error saat mengambil data stok bantuan: $e');
     }
   }
 
@@ -230,5 +253,40 @@ class DonaturController extends GetxController {
     });
 
     return penitipanList;
+  }
+
+  String getStokBantuanSatuan(String? stokBantuanId) {
+    if (stokBantuanId == null || !stokBantuanMap.containsKey(stokBantuanId)) {
+      return 'item';
+    }
+    return stokBantuanMap[stokBantuanId]?.satuan ?? 'item';
+  }
+
+  String getStokBantuanNama(String? stokBantuanId) {
+    if (stokBantuanId == null || !stokBantuanMap.containsKey(stokBantuanId)) {
+      return '';
+    }
+    return stokBantuanMap[stokBantuanId]?.nama ?? '';
+  }
+
+  // Mendapatkan nama donatur berdasarkan ID
+  String? getDonaturNama(String? donaturId) {
+    if (donaturId == null) return null;
+
+    try {
+      final donatur = daftarDonatur.firstWhere((d) => d.id == donaturId);
+      return donatur.nama;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Mendapatkan nama petugas desa berdasarkan ID
+  String? getPetugasDesaNama(String? petugasDesaId) {
+    if (petugasDesaId == null) return null;
+
+    // Implementasi ini perlu disesuaikan dengan cara aplikasi menyimpan data petugas desa
+    // Contoh sederhana:
+    return 'Petugas Desa'; // Ganti dengan implementasi yang sesuai
   }
 }
