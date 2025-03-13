@@ -298,6 +298,14 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.volunteer_activism),
+            title: const Text('Daftar Donatur'),
+            onTap: () {
+              Navigator.pop(context); // Tutup drawer terlebih dahulu
+              Get.toNamed('/daftar-donatur');
+            },
+          ),
+          ListTile(
             leading: Stack(
               alignment: Alignment.center,
               children: [
