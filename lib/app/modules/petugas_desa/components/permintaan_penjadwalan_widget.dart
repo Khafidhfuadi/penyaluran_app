@@ -120,7 +120,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  permintaan.judul ?? '',
+                  permintaan.nama ?? '',
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -149,7 +149,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Jenis Bantuan: ${permintaan.judul ?? ''}',
+              'Jenis Bantuan: ${permintaan.kategoriBantuanId ?? ''}',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 4),
@@ -200,7 +200,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
       return DropdownMenuItem<String>(
         value: jadwal.id,
         child: Text(
-            '${jadwal.tanggalPenjadwalan?.toString().substring(0, 10) ?? ''} - ${jadwal.lokasiPenyaluranId ?? ''} (${jadwal.judul ?? ''})'),
+            '${jadwal.tanggalPenjadwalan?.toString().substring(0, 10) ?? ''} - ${jadwal.lokasiPenyaluranId ?? ''} (${jadwal.nama ?? ''})'),
       );
     }).toList();
 
@@ -220,7 +220,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Anda akan mengkonfirmasi permintaan penjadwalan dari ${permintaan.judul}.'),
+                'Anda akan mengkonfirmasi permintaan penjadwalan dari ${permintaan.nama}.'),
             const SizedBox(height: 16),
             const Text('Pilih jadwal penyaluran:'),
             const SizedBox(height: 8),
@@ -290,7 +290,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Anda akan menolak permintaan penjadwalan dari ${permintaan.judul}.'),
+                'Anda akan menolak permintaan penjadwalan dari ${permintaan.nama}.'),
             const SizedBox(height: 16),
             const Text('Alasan penolakan:'),
             const SizedBox(height: 8),

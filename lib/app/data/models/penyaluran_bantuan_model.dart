@@ -2,7 +2,7 @@ import 'dart:convert';
 
 class PenyaluranBantuanModel {
   final String? id;
-  final String? judul;
+  final String? nama;
   final String? deskripsi;
   final String? lokasiPenyaluranId;
   final String? petugasId;
@@ -10,12 +10,16 @@ class PenyaluranBantuanModel {
   final String? alasanPenolakan;
   final DateTime? tanggalPenjadwalan;
   final DateTime? tanggalPenyaluran;
+  final String? kategoriBantuanId;
+  final DateTime? tanggalPermintaan;
+  final int? jumlahPenerima;
+  final String? skemaId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   PenyaluranBantuanModel({
     this.id,
-    this.judul,
+    this.nama,
     this.deskripsi,
     this.lokasiPenyaluranId,
     this.petugasId,
@@ -23,6 +27,10 @@ class PenyaluranBantuanModel {
     this.alasanPenolakan,
     this.tanggalPenjadwalan,
     this.tanggalPenyaluran,
+    this.kategoriBantuanId,
+    this.tanggalPermintaan,
+    this.jumlahPenerima,
+    this.skemaId,
     this.createdAt,
     this.updatedAt,
   });
@@ -35,7 +43,7 @@ class PenyaluranBantuanModel {
   factory PenyaluranBantuanModel.fromJson(Map<String, dynamic> json) =>
       PenyaluranBantuanModel(
         id: json["id"],
-        judul: json["judul"],
+        nama: json["nama"],
         deskripsi: json["deskripsi"],
         lokasiPenyaluranId: json["lokasi_penyaluran_id"],
         petugasId: json["petugas_id"],
@@ -47,6 +55,12 @@ class PenyaluranBantuanModel {
         tanggalPenyaluran: json["tanggal_penyaluran"] != null
             ? DateTime.parse(json["tanggal_penyaluran"])
             : null,
+        kategoriBantuanId: json["kategori_bantuan_id"],
+        tanggalPermintaan: json["tanggal_permintaan"] != null
+            ? DateTime.parse(json["tanggal_permintaan"])
+            : null,
+        jumlahPenerima: json["jumlah_penerima"],
+        skemaId: json["skema_id"],
         createdAt: json["created_at"] != null
             ? DateTime.parse(json["created_at"])
             : null,
@@ -57,7 +71,7 @@ class PenyaluranBantuanModel {
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "judul": judul,
+        "nama": nama,
         "deskripsi": deskripsi,
         "lokasi_penyaluran_id": lokasiPenyaluranId,
         "petugas_id": petugasId,
@@ -65,6 +79,10 @@ class PenyaluranBantuanModel {
         "alasan_penolakan": alasanPenolakan,
         "tanggal_penjadwalan": tanggalPenjadwalan?.toIso8601String(),
         "tanggal_penyaluran": tanggalPenyaluran?.toIso8601String(),
+        "kategori_bantuan_id": kategoriBantuanId,
+        "tanggal_permintaan": tanggalPermintaan?.toIso8601String(),
+        "jumlah_penerima": jumlahPenerima,
+        "skema_id": skemaId,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };

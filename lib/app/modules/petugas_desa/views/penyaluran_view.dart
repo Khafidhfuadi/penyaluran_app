@@ -10,50 +10,65 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Ringkasan jadwal
-            _buildJadwalSummary(context),
+    return RefreshIndicator(
+      onRefresh: () => controller.refreshData(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Obx(() {
+            if (controller.isLoading.value) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
 
-            const SizedBox(height: 20),
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Ringkasan jadwal
+                _buildJadwalSummary(context),
 
-            // Ringkasan Permintaan Penjadwalan
-            PermintaanPenjadwalanSummaryWidget(controller: controller),
+                const SizedBox(height: 20),
 
-            const SizedBox(height: 20),
+                // Ringkasan Permintaan Penjadwalan
+                PermintaanPenjadwalanSummaryWidget(controller: controller),
 
-            // Jadwal hari ini
-            JadwalSectionWidget(
-              controller: controller,
-              title: 'Hari Ini',
-              jadwalList: controller.jadwalHariIni,
-              status: 'Aktif',
-            ),
+                const SizedBox(height: 20),
 
-            const SizedBox(height: 20),
+                // Jadwal hari ini
+                JadwalSectionWidget(
+                  controller: controller,
+                  title: 'Hari Ini',
+                  jadwalList: controller.jadwalHariIni,
+                  status: 'Aktif',
+                ),
 
-            // Jadwal mendatang
-            JadwalSectionWidget(
-              controller: controller,
-              title: 'Mendatang',
-              jadwalList: controller.jadwalMendatang,
-              status: 'Terjadwal',
-            ),
+                const SizedBox(height: 20),
 
-            const SizedBox(height: 20),
+                // Jadwal mendatang
+                JadwalSectionWidget(
+                  controller: controller,
+                  title: 'Mendatang',
+                  jadwalList: controller.jadwalMendatang,
+                  status: 'Terjadwal',
+                ),
 
-            // Jadwal selesai
-            JadwalSectionWidget(
-              controller: controller,
-              title: 'Selesai',
-              jadwalList: controller.jadwalSelesai,
-              status: 'Selesai',
-            ),
-          ],
+                const SizedBox(height: 20),
+
+                // Jadwal selesai
+                JadwalSectionWidget(
+                  controller: controller,
+                  title: 'Selesai',
+                  jadwalList: controller.jadwalSelesai,
+                  status: 'Selesai',
+                ),
+              ],
+            );
+          }),
         ),
       ),
     );

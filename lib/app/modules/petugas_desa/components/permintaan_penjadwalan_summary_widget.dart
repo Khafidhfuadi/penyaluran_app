@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
@@ -134,10 +136,16 @@ class PermintaanPenjadwalanSummaryWidget extends StatelessWidget {
     });
   }
 
-  Widget _buildPermintaanPreview(TextTheme textTheme, dynamic permintaan) {
-    // Konversi permintaan ke Map jika itu adalah PenyaluranBantuanModel
-    final Map<String, dynamic> permintaanData =
-        permintaan is Map<String, dynamic> ? permintaan : permintaan.toJson();
+  Widget _buildPermintaanPreview(
+      TextTheme textTheme, PenyaluranBantuanModel permintaan) {
+    // Format tanggal
+    String formattedDate = permintaan.tanggalPermintaan != null
+        ? DateFormat('dd MMMM yyyy').format(permintaan.tanggalPermintaan!)
+        : 'Belum ditentukan';
+
+    // Dapatkan nama kategori
+    String kategoriName =
+        controller.getKategoriBantuanName(permintaan.kategoriBantuanId);
 
     return Container(
       width: double.infinity,
@@ -155,7 +163,7 @@ class PermintaanPenjadwalanSummaryWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  permintaanData['nama'] ?? '',
+                  permintaan.nama ?? 'Tanpa Nama',
                   style: textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -180,13 +188,20 @@ class PermintaanPenjadwalanSummaryWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
+          if (permintaan.deskripsi != null && permintaan.deskripsi!.isNotEmpty)
+            Text(
+              permintaan.deskripsi!,
+              style: textTheme.bodySmall,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           Text(
-            'Kategori: ${permintaanData['kategori_bantuan'] ?? ''}',
+            'Kategori: $kategoriName',
             style: textTheme.bodySmall,
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            'Tanggal: ${permintaanData['tanggal_permintaan'] ?? ''}',
+            'Tanggal: $formattedDate',
             style: textTheme.bodySmall,
             overflow: TextOverflow.ellipsis,
           ),

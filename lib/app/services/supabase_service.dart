@@ -249,13 +249,14 @@ class SupabaseService extends GetxService {
   Future<List<Map<String, dynamic>>?> getJadwalMendatang() async {
     try {
       final now = DateTime.now();
-      final tomorrow =
-          DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+      final today = DateTime(now.year, now.month, now.day);
+      final week = today.add(const Duration(days: 7));
 
       final response = await client
           .from('penyaluran_bantuan')
           .select('*')
-          .gte('tanggal_penyaluran', tomorrow.toIso8601String())
+          .gte('tanggal_penyaluran', today.toIso8601String())
+          .lt('tanggal_penyaluran', week.toIso8601String())
           .inFilter('status', ['DISETUJUI', 'DIJADWALKAN']);
 
       return response;
@@ -958,6 +959,34 @@ class SupabaseService extends GetxService {
       return null;
     } catch (e) {
       print('Error getting petugas desa by ID: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan semua lokasi penyaluran
+  Future<List<Map<String, dynamic>>?> getAllLokasiPenyaluran() async {
+    try {
+      final response = await client
+          .from('lokasi_penyaluran')
+          .select('*')
+          .order('nama', ascending: true);
+      return response;
+    } catch (e) {
+      print('Error getting all lokasi penyaluran: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan semua kategori bantuan
+  Future<List<Map<String, dynamic>>?> getAllKategoriBantuan() async {
+    try {
+      final response = await client
+          .from('kategori_bantuan')
+          .select('*')
+          .order('nama', ascending: true);
+      return response;
+    } catch (e) {
+      print('Error getting all kategori bantuan: $e');
       return null;
     }
   }

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
 
 class JadwalSectionWidget extends StatelessWidget {
   final JadwalPenyaluranController controller;
   final String title;
-  final List<dynamic> jadwalList;
+  final List<PenyaluranBantuanModel> jadwalList;
   final String status;
 
   const JadwalSectionWidget({
@@ -62,7 +64,7 @@ class JadwalSectionWidget extends StatelessWidget {
     );
   }
 
-  List<dynamic> _getCurrentJadwalList() {
+  List<PenyaluranBantuanModel> _getCurrentJadwalList() {
     switch (title) {
       case 'Hari Ini':
         return controller.jadwalHariIni.toList();
@@ -75,11 +77,7 @@ class JadwalSectionWidget extends StatelessWidget {
     }
   }
 
-  Widget _buildJadwalItem(TextTheme textTheme, dynamic jadwal) {
-    // Konversi jadwal ke Map jika itu adalah PenyaluranBantuanModel
-    final Map<String, dynamic> jadwalData =
-        jadwal is Map<String, dynamic> ? jadwal : jadwal.toJson();
-
+  Widget _buildJadwalItem(TextTheme textTheme, PenyaluranBantuanModel jadwal) {
     Color statusColor;
     switch (status) {
       case 'Aktif':
@@ -95,10 +93,26 @@ class JadwalSectionWidget extends StatelessWidget {
         statusColor = Colors.orange;
     }
 
+    // Format tanggal
+    String formattedDate = jadwal.tanggalPenyaluran != null
+        ? DateFormat('dd MMMM yyyy').format(jadwal.tanggalPenyaluran!)
+        : 'Belum ditentukan';
+
+    // Format waktu
+    String formattedTime = jadwal.tanggalPenyaluran != null
+        ? DateFormat('HH:mm').format(jadwal.tanggalPenyaluran!)
+        : '-';
+
+    // Dapatkan nama lokasi dan kategori
+    String lokasiName =
+        controller.getLokasiPenyaluranName(jadwal.lokasiPenyaluranId);
+    String kategoriName =
+        controller.getKategoriBantuanName(jadwal.kategoriBantuanId);
+
     return GestureDetector(
       onTap: () {
         // Navigasi ke halaman pelaksanaan penyaluran dengan data jadwal
-        Get.toNamed(Routes.pelaksanaanPenyaluran, arguments: jadwalData);
+        Get.toNamed(Routes.pelaksanaanPenyaluran, arguments: jadwal);
       },
       child: Container(
         width: double.infinity,
@@ -123,10 +137,13 @@ class JadwalSectionWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    jadwalData['lokasi'] ?? '',
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      jadwal.nama ?? 'Tanpa Nama',
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Container(
@@ -147,24 +164,38 @@ class JadwalSectionWidget extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
+              if (jadwal.deskripsi != null && jadwal.deskripsi!.isNotEmpty) ...[
+                Text(
+                  jadwal.deskripsi!,
+                  style: textTheme.bodyMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+              ],
               Text(
-                'Kategori Bantuan: ${jadwalData['kategori_bantuan'] ?? ''}',
+                'Lokasi: $lokasiName',
                 style: textTheme.bodyMedium,
               ),
               const SizedBox(height: 4),
               Text(
-                'Tanggal: ${jadwalData['tanggal'] ?? ''}',
+                'Kategori: $kategoriName',
                 style: textTheme.bodyMedium,
               ),
               const SizedBox(height: 4),
               Text(
-                'Waktu: ${jadwalData['waktu'] ?? ''}',
+                'Tanggal: $formattedDate',
                 style: textTheme.bodyMedium,
               ),
-              if (jadwalData['jumlah_penerima'] != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Waktu: $formattedTime',
+                style: textTheme.bodyMedium,
+              ),
+              if (jadwal.jumlahPenerima != null) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Jumlah Penerima: ${jadwalData['jumlah_penerima']}',
+                  'Jumlah Penerima: ${jadwal.jumlahPenerima}',
                   style: textTheme.bodyMedium,
                 ),
               ],

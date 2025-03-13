@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
+import 'package:penyaluran_app/app/data/models/lokasi_penyaluran_model.dart';
+import 'package:penyaluran_app/app/data/models/kategori_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
@@ -27,6 +29,12 @@ class JadwalPenyaluranController extends GetxController {
       <PenyaluranBantuanModel>[].obs;
   final RxInt jumlahPermintaanPenjadwalan = 0.obs;
 
+  // Cache untuk lokasi penyaluran dan kategori bantuan
+  final RxMap<String, LokasiPenyaluranModel> lokasiPenyaluranCache =
+      <String, LokasiPenyaluranModel>{}.obs;
+  final RxMap<String, KategoriBantuanModel> kategoriBantuanCache =
+      <String, KategoriBantuanModel>{}.obs;
+
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
 
@@ -37,6 +45,8 @@ class JadwalPenyaluranController extends GetxController {
     super.onInit();
     loadJadwalData();
     loadPermintaanPenjadwalanData();
+    loadLokasiPenyaluranData();
+    loadKategoriBantuanData();
   }
 
   @override
@@ -90,6 +100,50 @@ class JadwalPenyaluranController extends GetxController {
     } catch (e) {
       print('Error loading permintaan penjadwalan data: $e');
     }
+  }
+
+  Future<void> loadLokasiPenyaluranData() async {
+    try {
+      final lokasiData = await _supabaseService.getAllLokasiPenyaluran();
+      if (lokasiData != null) {
+        for (var lokasi in lokasiData) {
+          final lokasiModel = LokasiPenyaluranModel.fromJson(lokasi);
+          lokasiPenyaluranCache[lokasiModel.id] = lokasiModel;
+        }
+      }
+    } catch (e) {
+      print('Error loading lokasi penyaluran data: $e');
+    }
+  }
+
+  Future<void> loadKategoriBantuanData() async {
+    try {
+      final kategoriData = await _supabaseService.getAllKategoriBantuan();
+      if (kategoriData != null) {
+        for (var kategori in kategoriData) {
+          final kategoriModel = KategoriBantuanModel.fromJson(kategori);
+          if (kategoriModel.id != null) {
+            kategoriBantuanCache[kategoriModel.id!] = kategoriModel;
+          }
+        }
+      }
+    } catch (e) {
+      print('Error loading kategori bantuan data: $e');
+    }
+  }
+
+  // Mendapatkan nama lokasi penyaluran berdasarkan ID
+  String getLokasiPenyaluranName(String? lokasiId) {
+    if (lokasiId == null) return 'Lokasi tidak diketahui';
+    final lokasi = lokasiPenyaluranCache[lokasiId];
+    return lokasi?.nama ?? 'Lokasi tidak diketahui';
+  }
+
+  // Mendapatkan nama kategori bantuan berdasarkan ID
+  String getKategoriBantuanName(String? kategoriId) {
+    if (kategoriId == null) return 'Kategori tidak diketahui';
+    final kategori = kategoriBantuanCache[kategoriId];
+    return kategori?.nama ?? 'Kategori tidak diketahui';
   }
 
   Future<void> approveJadwal(String jadwalId) async {
@@ -176,6 +230,8 @@ class JadwalPenyaluranController extends GetxController {
     try {
       await loadJadwalData();
       await loadPermintaanPenjadwalanData();
+      await loadLokasiPenyaluranData();
+      await loadKategoriBantuanData();
     } finally {
       isLoading.value = false;
     }

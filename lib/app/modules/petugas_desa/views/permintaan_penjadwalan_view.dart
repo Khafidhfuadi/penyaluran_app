@@ -237,7 +237,8 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
     );
   }
 
-  Widget _buildPermintaanItem(BuildContext context, PenyaluranBantuanModel item) {
+  Widget _buildPermintaanItem(
+      BuildContext context, PenyaluranBantuanModel item) {
     Color statusColor = Colors.orange;
     IconData statusIcon = Icons.pending_actions;
 
@@ -266,7 +267,7 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
               children: [
                 Expanded(
                   child: Text(
-                    item.judul ?? '',
+                    item.nama ?? '',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -317,7 +318,7 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
                     context,
                     icon: Icons.category,
                     label: 'Jenis Bantuan',
-                    value: item.judul ?? '',
+                    value: item.nama ?? '',
                   ),
                 ),
               ],
@@ -429,7 +430,7 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
       return DropdownMenuItem<String>(
         value: jadwal.id,
         child: Text(
-            '${jadwal.tanggalPenjadwalan?.toString().substring(0, 10) ?? ''} - ${jadwal.lokasiPenyaluranId ?? ''} (${jadwal.judul ?? ''})'),
+            '${jadwal.tanggalPenjadwalan?.toString().substring(0, 10) ?? ''} - ${jadwal.lokasiPenyaluranId ?? ''} (${jadwal.nama ?? ''})'),
       );
     }).toList();
 
@@ -449,7 +450,7 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Anda akan mengkonfirmasi permintaan penjadwalan dari ${permintaan.judul ?? 'Penerima'}.'),
+                'Anda akan mengkonfirmasi permintaan penjadwalan dari ${permintaan.nama ?? 'Penerima'}.'),
             const SizedBox(height: 16),
             const Text('Pilih jadwal penyaluran:'),
             const SizedBox(height: 8),
@@ -519,7 +520,7 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Anda akan menolak permintaan penjadwalan dari ${permintaan.judul ?? 'Penerima'}.'),
+                'Anda akan menolak permintaan penjadwalan dari ${permintaan.nama ?? 'Penerima'}.'),
             const SizedBox(height: 16),
             const Text('Alasan penolakan:'),
             const SizedBox(height: 8),
