@@ -430,7 +430,7 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
       return DropdownMenuItem<String>(
         value: jadwal.id,
         child: Text(
-            '${jadwal.tanggalPenjadwalan?.toString().substring(0, 10) ?? ''} - ${jadwal.lokasiPenyaluranId ?? ''} (${jadwal.nama ?? ''})'),
+            '${jadwal.createdAt?.toString().substring(0, 10) ?? ''} - ${jadwal.lokasiPenyaluranId ?? ''} (${jadwal.nama ?? ''})'),
       );
     }).toList();
 

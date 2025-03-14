@@ -260,16 +260,17 @@ class JadwalPenyaluranController extends GetxController {
     }
   }
 
-  Future<void> rejectJadwal(String jadwalId, String alasan) async {
+  Future<void> rejectJadwal(String jadwalId, String alasanPenolakan) async {
     isLoading.value = true;
     try {
-      await _supabaseService.rejectJadwal(jadwalId, alasan);
+      await _supabaseService.rejectJadwal(jadwalId, alasanPenolakan);
       await loadPermintaanPenjadwalanData();
+      await loadJadwalData();
       Get.snackbar(
         'Sukses',
         'Jadwal berhasil ditolak',
         snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.red,
         colorText: Colors.white,
       );
     } catch (e) {
@@ -317,8 +318,8 @@ class JadwalPenyaluranController extends GetxController {
     try {
       await loadJadwalData();
       await loadPermintaanPenjadwalanData();
-      await loadLokasiPenyaluranData();
-      await loadKategoriBantuanData();
+    } catch (e) {
+      print('Error refreshing data: $e');
     } finally {
       isLoading.value = false;
     }
@@ -326,5 +327,64 @@ class JadwalPenyaluranController extends GetxController {
 
   void changeCategory(int index) {
     selectedCategoryIndex.value = index;
+  }
+
+  // Fungsi untuk menambahkan penyaluran baru
+  Future<void> tambahPenyaluran({
+    required String nama,
+    required String deskripsi,
+    required String kategoriBantuanId,
+    required String lokasiPenyaluranId,
+    required int jumlahPenerima,
+    required DateTime? tanggalPenyaluran,
+  }) async {
+    isLoading.value = true;
+    try {
+      // Pastikan user sudah login dan memiliki ID
+      if (user?.id == null) {
+        throw Exception('User tidak terautentikasi');
+      }
+
+      // Buat objek penyaluran
+      final penyaluran = {
+        'nama': nama,
+        'deskripsi': deskripsi,
+        'kategori_bantuan_id': kategoriBantuanId,
+        'lokasi_penyaluran_id': lokasiPenyaluranId,
+        'petugas_id': user!.id,
+        'jumlah_penerima': jumlahPenerima,
+        'tanggal_penyaluran': tanggalPenyaluran?.toUtc().toIso8601String(),
+        'status': 'DIJADWALKAN', // Status awal adalah terjadwal
+      };
+
+      // Simpan ke database
+      await _supabaseService.tambahPenyaluran(penyaluran);
+
+      // Refresh data
+      await loadJadwalData();
+
+      // Kembali ke halaman sebelumnya
+      Get.back();
+
+      // Tampilkan notifikasi sukses
+      Get.snackbar(
+        'Sukses',
+        'Penyaluran berhasil ditambahkan',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      print('Error menambahkan penyaluran: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal menambahkan penyaluran: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

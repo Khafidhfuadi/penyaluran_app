@@ -1122,4 +1122,14 @@ class SupabaseService extends GetxService {
     // Tipe data lainnya
     print('$prefix Data: $data (${data.runtimeType})');
   }
+
+  // Fungsi untuk menambahkan penyaluran baru
+  Future<void> tambahPenyaluran(Map<String, dynamic> penyaluran) async {
+    try {
+      await client.from('penyaluran_bantuan').insert(penyaluran);
+    } catch (e) {
+      print('Error menambahkan penyaluran: $e');
+      throw e.toString();
+    }
+  }
 }

@@ -5,6 +5,7 @@ import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/jadwal_section_widget.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/permintaan_penjadwalan_summary_widget.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/calendar_view_widget.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_penyaluran_view.dart';
 
 class PenyaluranView extends GetView<JadwalPenyaluranController> {
   const PenyaluranView({super.key});
@@ -13,29 +14,36 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: Column(
-        children: [
-          TabBar(
-            tabs: const [
-              Tab(text: 'Daftar Jadwal'),
-              Tab(text: 'Kalender'),
-            ],
-            labelColor: AppTheme.primaryColor,
-            indicatorColor: AppTheme.primaryColor,
-            unselectedLabelColor: Colors.grey,
-          ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                // Tab 1: Daftar Jadwal
-                _buildJadwalListView(),
-
-                // Tab 2: Kalender
-                _buildCalendarView(),
+      child: Scaffold(
+        body: Column(
+          children: [
+            TabBar(
+              tabs: const [
+                Tab(text: 'Daftar Jadwal'),
+                Tab(text: 'Kalender'),
               ],
+              labelColor: AppTheme.primaryColor,
+              indicatorColor: AppTheme.primaryColor,
+              unselectedLabelColor: Colors.grey,
             ),
-          ),
-        ],
+            Expanded(
+              child: TabBarView(
+                children: [
+                  // Tab 1: Daftar Jadwal
+                  _buildJadwalListView(),
+
+                  // Tab 2: Kalender
+                  _buildCalendarView(),
+                ],
+              ),
+            ),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => Get.to(() => const TambahPenyaluranView()),
+          backgroundColor: AppTheme.primaryColor,
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
       ),
     );
   }
