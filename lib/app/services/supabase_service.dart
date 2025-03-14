@@ -244,6 +244,8 @@ class SupabaseService extends GetxService {
           .lt('tanggal_penyaluran', tomorrowUtc)
           .inFilter('status', ['AKTIF', 'DIJADWALKAN']);
 
+      print("hari ini $response");
+
       return response;
     } catch (e) {
       print('Error getting jadwal hari ini: $e');

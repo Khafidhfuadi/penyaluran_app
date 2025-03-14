@@ -9,6 +9,7 @@ class PenyaluranBantuanModel {
   final String? status;
   final String? alasanPenolakan;
   final DateTime? tanggalPenyaluran;
+  final DateTime? tanggalWaktuSelesai;
   final String? kategoriBantuanId;
   final DateTime? tanggalPermintaan;
   final int? jumlahPenerima;
@@ -25,6 +26,7 @@ class PenyaluranBantuanModel {
     this.status,
     this.alasanPenolakan,
     this.tanggalPenyaluran,
+    this.tanggalWaktuSelesai,
     this.kategoriBantuanId,
     this.tanggalPermintaan,
     this.jumlahPenerima,
@@ -50,6 +52,9 @@ class PenyaluranBantuanModel {
         tanggalPenyaluran: json["tanggal_penyaluran"] != null
             ? DateTime.parse(json["tanggal_penyaluran"]).toUtc()
             : null,
+        tanggalWaktuSelesai: json["tanggal_waktu_selesai"] != null
+            ? DateTime.parse(json["tanggal_waktu_selesai"]).toUtc()
+            : null,
         kategoriBantuanId: json["kategori_bantuan_id"],
         tanggalPermintaan: json["tanggal_permintaan"] != null
             ? DateTime.parse(json["tanggal_permintaan"]).toUtc()
@@ -73,6 +78,7 @@ class PenyaluranBantuanModel {
         "status": status,
         "alasan_penolakan": alasanPenolakan,
         "tanggal_penyaluran": tanggalPenyaluran?.toUtc().toIso8601String(),
+        "tanggal_waktu_selesai": tanggalWaktuSelesai?.toUtc().toIso8601String(),
         "kategori_bantuan_id": kategoriBantuanId,
         "tanggal_permintaan": tanggalPermintaan?.toUtc().toIso8601String(),
         "jumlah_penerima": jumlahPenerima,

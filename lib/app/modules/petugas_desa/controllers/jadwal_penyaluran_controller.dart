@@ -89,17 +89,14 @@ class JadwalPenyaluranController extends GetxController {
   // Memeriksa dan memperbarui status jadwal
   Future<void> checkAndUpdateJadwalStatus() async {
     try {
-      // Dapatkan tanggal dan waktu saat ini dalam timezone lokal
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
 
-      // Periksa jadwal mendatang yang tanggalnya hari ini
       List<PenyaluranBantuanModel> jadwalToUpdate = [];
       List<PenyaluranBantuanModel> jadwalTerlewat = [];
 
       for (var jadwal in jadwalHariIni) {
         if (jadwal.tanggalPenyaluran != null) {
-          // Konversi tanggal jadwal ke timezone lokal
           final jadwalDateTime =
               DateTimeHelper.toLocalDateTime(jadwal.tanggalPenyaluran!);
           final jadwalDate = DateTime(
@@ -108,30 +105,35 @@ class JadwalPenyaluranController extends GetxController {
             jadwalDateTime.day,
           );
 
-          // Jika tanggal jadwal adalah hari ini
           if (isSameDay(jadwalDate, today)) {
-            // Jika waktu jadwal sudah tiba atau lewat
             if (now.isAfter(jadwalDateTime) ||
                 now.isAtSameMomentAs(jadwalDateTime)) {
               if (jadwal.status == 'DIJADWALKAN') {
-                // Jika status masih DIJADWALKAN, ubah menjadi BATALTERLAKSANA
-                await _supabaseService.updateJadwalStatus(
-                    jadwal.id!, 'BATALTERLAKSANA');
-                jadwalTerlewat.add(jadwal);
+                if (now
+                    .isBefore(jadwalDateTime.add(const Duration(hours: 2)))) {
+                  await _supabaseService.updateJadwalStatus(
+                      jadwal.id!, 'AKTIF');
+                  jadwalToUpdate.add(jadwal);
+                } else {
+                  await _supabaseService.updateJadwalStatus(
+                      jadwal.id!, 'BATALTERLAKSANA');
+                  jadwalTerlewat.add(jadwal);
+                }
               } else if (jadwal.status == 'AKTIF') {
-                // Jika status BERLANGSUNG, tambahkan ke daftar update
-                jadwalToUpdate.add(jadwal);
+                if (now.isAfter(jadwalDateTime.add(const Duration(hours: 2)))) {
+                  await _supabaseService.updateJadwalStatus(
+                      jadwal.id!, 'BATALTERLAKSANA');
+                  jadwalTerlewat.add(jadwal);
+                }
               }
             }
           }
         }
       }
 
-      // Refresh data setelah pembaruan
       if (jadwalToUpdate.isNotEmpty || jadwalTerlewat.isNotEmpty) {
         await loadJadwalData();
 
-        // Tampilkan notifikasi jika ada jadwal yang dipindahkan
         if (jadwalToUpdate.isNotEmpty) {
           Get.snackbar(
             'Jadwal Diperbarui',
@@ -143,7 +145,6 @@ class JadwalPenyaluranController extends GetxController {
           );
         }
 
-        // Tampilkan notifikasi jika ada jadwal yang terlewat
         if (jadwalTerlewat.isNotEmpty) {
           Get.snackbar(
             'Jadwal Terlewat',
@@ -155,8 +156,9 @@ class JadwalPenyaluranController extends GetxController {
           );
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Error checking and updating jadwal status: $e');
+      print('Stack trace: $stackTrace');
     }
   }
 
@@ -375,9 +377,11 @@ class JadwalPenyaluranController extends GetxController {
     required String nama,
     required String deskripsi,
     required String skemaId,
+    required String kategoriBantuanId,
     required String lokasiPenyaluranId,
     required int jumlahPenerima,
     required DateTime? tanggalPenyaluran,
+    DateTime? tanggalWaktuSelesai,
   }) async {
     isLoading.value = true;
     try {
@@ -395,7 +399,9 @@ class JadwalPenyaluranController extends GetxController {
         'petugas_id': user!.id,
         'jumlah_penerima': jumlahPenerima,
         'tanggal_penyaluran': tanggalPenyaluran?.toUtc().toIso8601String(),
+        'tanggal_waktu_selesai': tanggalWaktuSelesai?.toUtc().toIso8601String(),
         'status': 'DIJADWALKAN', // Status awal adalah terjadwal
+        'kategori_bantuan_id': kategoriBantuanId,
       };
 
       // Simpan ke database dan dapatkan ID penyaluran
