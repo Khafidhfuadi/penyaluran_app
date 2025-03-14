@@ -4,6 +4,7 @@ import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/lokasi_penyaluran_model.dart';
 import 'package:penyaluran_app/app/data/models/kategori_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
+import 'package:penyaluran_app/app/data/models/skema_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
@@ -12,6 +13,8 @@ import 'dart:async';
 class JadwalPenyaluranController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   final SupabaseService _supabaseService = SupabaseService.to;
+
+  SupabaseService get supabaseService => _supabaseService;
 
   final RxBool isLoading = false.obs;
 
@@ -23,7 +26,7 @@ class JadwalPenyaluranController extends GetxController {
       <PenyaluranBantuanModel>[].obs;
   final RxList<PenyaluranBantuanModel> jadwalMendatang =
       <PenyaluranBantuanModel>[].obs;
-  final RxList<PenyaluranBantuanModel> jadwalSelesai =
+  final RxList<PenyaluranBantuanModel> jadwalTerlaksana =
       <PenyaluranBantuanModel>[].obs;
 
   // Data untuk permintaan penjadwalan
@@ -36,6 +39,8 @@ class JadwalPenyaluranController extends GetxController {
       <String, LokasiPenyaluranModel>{}.obs;
   final RxMap<String, KategoriBantuanModel> kategoriBantuanCache =
       <String, KategoriBantuanModel>{}.obs;
+  final RxMap<String, SkemaBantuanModel> skemaBantuanCache =
+      <String, SkemaBantuanModel>{}.obs;
 
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
@@ -49,6 +54,7 @@ class JadwalPenyaluranController extends GetxController {
     loadPermintaanPenjadwalanData();
     loadLokasiPenyaluranData();
     loadKategoriBantuanData();
+    loadSkemaBantuanData();
 
     // Jalankan timer untuk memeriksa jadwal secara berkala
     _startJadwalCheckTimer();
@@ -89,8 +95,9 @@ class JadwalPenyaluranController extends GetxController {
 
       // Periksa jadwal mendatang yang tanggalnya hari ini
       List<PenyaluranBantuanModel> jadwalToUpdate = [];
+      List<PenyaluranBantuanModel> jadwalTerlewat = [];
 
-      for (var jadwal in jadwalMendatang) {
+      for (var jadwal in jadwalHariIni) {
         if (jadwal.tanggalPenyaluran != null) {
           // Konversi tanggal jadwal ke timezone lokal
           final jadwalDateTime =
@@ -103,32 +110,50 @@ class JadwalPenyaluranController extends GetxController {
 
           // Jika tanggal jadwal adalah hari ini
           if (isSameDay(jadwalDate, today)) {
-            jadwalToUpdate.add(jadwal);
-
             // Jika waktu jadwal sudah tiba atau lewat
             if (now.isAfter(jadwalDateTime) ||
                 now.isAtSameMomentAs(jadwalDateTime)) {
-              // Ubah status menjadi BERLANGSUNG (aktif)
-              await _supabaseService.updateJadwalStatus(
-                  jadwal.id!, 'BERLANGSUNG');
+              if (jadwal.status == 'DIJADWALKAN') {
+                // Jika status masih DIJADWALKAN, ubah menjadi BATALTERLAKSANA
+                await _supabaseService.updateJadwalStatus(
+                    jadwal.id!, 'BATALTERLAKSANA');
+                jadwalTerlewat.add(jadwal);
+              } else if (jadwal.status == 'AKTIF') {
+                // Jika status BERLANGSUNG, tambahkan ke daftar update
+                jadwalToUpdate.add(jadwal);
+              }
             }
           }
         }
       }
 
       // Refresh data setelah pembaruan
-      if (jadwalToUpdate.isNotEmpty) {
+      if (jadwalToUpdate.isNotEmpty || jadwalTerlewat.isNotEmpty) {
         await loadJadwalData();
 
         // Tampilkan notifikasi jika ada jadwal yang dipindahkan
-        Get.snackbar(
-          'Jadwal Diperbarui',
-          '${jadwalToUpdate.length} jadwal dipindahkan ke section Hari Ini',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 3),
-        );
+        if (jadwalToUpdate.isNotEmpty) {
+          Get.snackbar(
+            'Jadwal Diperbarui',
+            '${jadwalToUpdate.length} jadwal dipindahkan ke section Hari Ini',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 3),
+          );
+        }
+
+        // Tampilkan notifikasi jika ada jadwal yang terlewat
+        if (jadwalTerlewat.isNotEmpty) {
+          Get.snackbar(
+            'Jadwal Terlewat',
+            '${jadwalTerlewat.length} jadwal diubah menjadi BATALTERLAKSANA',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 3),
+          );
+        }
       }
     } catch (e) {
       print('Error checking and updating jadwal status: $e');
@@ -162,9 +187,9 @@ class JadwalPenyaluranController extends GetxController {
       }
 
       // Mengambil data jadwal selesai
-      final jadwalSelesaiData = await _supabaseService.getJadwalSelesai();
-      if (jadwalSelesaiData != null) {
-        jadwalSelesai.value = jadwalSelesaiData
+      final jadwalTerlaksanaData = await _supabaseService.getJadwalTerlaksana();
+      if (jadwalTerlaksanaData != null) {
+        jadwalTerlaksana.value = jadwalTerlaksanaData
             .map((data) => PenyaluranBantuanModel.fromJson(data))
             .toList();
       }
@@ -216,6 +241,22 @@ class JadwalPenyaluranController extends GetxController {
       }
     } catch (e) {
       print('Error loading kategori bantuan data: $e');
+    }
+  }
+
+  Future<void> loadSkemaBantuanData() async {
+    try {
+      final skemaData = await _supabaseService.getAllSkemaBantuan();
+      if (skemaData != null) {
+        for (var skema in skemaData) {
+          final skemaModel = SkemaBantuanModel.fromJson(skema);
+          if (skemaModel.id != null) {
+            skemaBantuanCache[skemaModel.id!] = skemaModel;
+          }
+        }
+      }
+    } catch (e) {
+      print('Error loading skema bantuan data: $e');
     }
   }
 
@@ -333,7 +374,7 @@ class JadwalPenyaluranController extends GetxController {
   Future<void> tambahPenyaluran({
     required String nama,
     required String deskripsi,
-    required String kategoriBantuanId,
+    required String skemaId,
     required String lokasiPenyaluranId,
     required int jumlahPenerima,
     required DateTime? tanggalPenyaluran,
@@ -349,7 +390,7 @@ class JadwalPenyaluranController extends GetxController {
       final penyaluran = {
         'nama': nama,
         'deskripsi': deskripsi,
-        'kategori_bantuan_id': kategoriBantuanId,
+        'skema_id': skemaId,
         'lokasi_penyaluran_id': lokasiPenyaluranId,
         'petugas_id': user!.id,
         'jumlah_penerima': jumlahPenerima,
@@ -357,8 +398,30 @@ class JadwalPenyaluranController extends GetxController {
         'status': 'DIJADWALKAN', // Status awal adalah terjadwal
       };
 
-      // Simpan ke database
-      await _supabaseService.tambahPenyaluran(penyaluran);
+      // Simpan ke database dan dapatkan ID penyaluran
+      final response = await _supabaseService.tambahPenyaluran(penyaluran);
+      final penyaluranId = response['id'];
+
+      // Ambil data pengajuan kelayakan bantuan yang disetujui
+      final pengajuanData = await _supabaseService.client
+          .from('xx02_pengajuan_kelayakan_bantuan')
+          .select('*')
+          .eq('skema_bantuan_id', skemaId)
+          .eq('status', 'TERVERIFIKASI');
+
+      // Buat data penerima penyaluran untuk setiap pengajuan yang disetujui
+      for (var pengajuan in pengajuanData) {
+        final penerimaPenyaluran = {
+          'penyaluran_bantuan_id': penyaluranId,
+          'warga_id': pengajuan['warga_id'],
+          'stok_bantuan_id': skemaBantuanCache[skemaId]?.stokBantuanId,
+          'status_penerimaan': 'MENUNGGU',
+        };
+
+        await _supabaseService.client
+            .from('penerima_penyaluran')
+            .insert(penerimaPenyaluran);
+      }
 
       // Refresh data
       await loadJadwalData();

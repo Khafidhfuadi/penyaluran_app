@@ -245,7 +245,7 @@ class CalendarViewWidget extends StatelessWidget {
     List<PenyaluranBantuanModel> allJadwal = [
       ...controller.jadwalHariIni,
       ...controller.jadwalMendatang,
-      ...controller.jadwalSelesai,
+      ...controller.jadwalTerlaksana,
     ];
 
     DateTime now = DateTime.now();

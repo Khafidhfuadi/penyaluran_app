@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
+import 'package:penyaluran_app/app/data/models/skema_bantuan_model.dart';
+import 'package:penyaluran_app/app/data/models/pengajuan_kelayakan_bantuan_model.dart';
 
 class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
   const TambahPenyaluranView({super.key});
@@ -23,20 +25,37 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
     final formKey = GlobalKey<FormState>();
     final TextEditingController namaController = TextEditingController();
     final TextEditingController deskripsiController = TextEditingController();
-    final TextEditingController jumlahPenerimaController =
-        TextEditingController();
     final TextEditingController tanggalPenyaluranController =
         TextEditingController();
     final TextEditingController waktuPenyaluranController =
         TextEditingController();
 
     // Variabel untuk menyimpan nilai yang dipilih
-    final Rx<String?> selectedKategoriBantuanId = Rx<String?>(null);
+    final Rx<String?> selectedSkemaBantuanId = Rx<String?>(null);
     final Rx<String?> selectedLokasiPenyaluranId = Rx<String?>(null);
+    final Rx<SkemaBantuanModel?> selectedSkemaBantuan =
+        Rx<SkemaBantuanModel?>(null);
+    final RxInt jumlahPenerima = 0.obs;
 
     // Tanggal dan waktu penyaluran
     final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
     final Rx<TimeOfDay?> selectedTime = Rx<TimeOfDay?>(null);
+
+    // Fungsi untuk memuat data pengajuan kelayakan bantuan
+    Future<void> loadPengajuanKelayakan(String skemaId) async {
+      try {
+        final pengajuanData = await controller.supabaseService.client
+            .from('xx02_pengajuan_kelayakan_bantuan')
+            .select('*')
+            .eq('skema_bantuan_id', skemaId)
+            .eq('status', 'TERVERIFIKASI');
+        print('pengajuan $pengajuanData');
+
+        jumlahPenerima.value = pengajuanData.length;
+      } catch (e) {
+        print('Error loading pengajuan kelayakan: $e');
+      }
+    }
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -82,9 +101,9 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
               ),
               const SizedBox(height: 16),
 
-              // Kategori Bantuan
+              // Skema Bantuan
               Text(
-                'Kategori Bantuan',
+                'Skema Bantuan',
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const SizedBox(height: 8),
@@ -98,20 +117,25 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                         vertical: 8,
                       ),
                     ),
-                    hint: const Text('Pilih kategori bantuan'),
-                    value: selectedKategoriBantuanId.value,
-                    items: controller.kategoriBantuanCache.entries
+                    hint: const Text('Pilih skema bantuan'),
+                    value: selectedSkemaBantuanId.value,
+                    items: controller.skemaBantuanCache.entries
                         .map((entry) => DropdownMenuItem<String>(
                               value: entry.key,
                               child: Text(entry.value.nama ?? 'Tidak ada nama'),
                             ))
                         .toList(),
-                    onChanged: (value) {
-                      selectedKategoriBantuanId.value = value;
+                    onChanged: (value) async {
+                      selectedSkemaBantuanId.value = value;
+                      if (value != null) {
+                        selectedSkemaBantuan.value =
+                            controller.skemaBantuanCache[value];
+                        await loadPengajuanKelayakan(value);
+                      }
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Kategori bantuan harus dipilih';
+                        return 'Skema bantuan harus dipilih';
                       }
                       return null;
                     },
@@ -154,38 +178,117 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                   )),
               const SizedBox(height: 16),
 
-              // Jumlah Penerima
+              // Jumlah Penerima (Otomatis)
               Text(
                 'Jumlah Penerima',
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: jumlahPenerimaController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'Masukkan jumlah penerima',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Jumlah penerima tidak boleh kosong';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Jumlah penerima harus berupa angka';
-                  }
-                  if (int.parse(value) <= 0) {
-                    return 'Jumlah penerima harus lebih dari 0';
-                  }
-                  return null;
-                },
-              ),
+              Obx(() => TextFormField(
+                    readOnly: true,
+                    controller: TextEditingController(
+                        text: jumlahPenerima.value.toString()),
+                    decoration: InputDecoration(
+                      hintText: 'Jumlah penerima akan diambil otomatis',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                  )),
+              const SizedBox(height: 8),
+              Obx(() => jumlahPenerima.value > 0
+                  ? TextButton.icon(
+                      onPressed: () async {
+                        final pengajuanData = await controller
+                            .supabaseService.client
+                            .from('xx02_pengajuan_kelayakan_bantuan')
+                            .select('*, warga:warga_id(*)')
+                            .eq('skema_bantuan_id',
+                                selectedSkemaBantuanId.value ?? '')
+                            .eq('status', 'TERVERIFIKASI');
+
+                        if (pengajuanData != null) {
+                          Get.dialog(
+                            Dialog(
+                              child: Container(
+                                width: MediaQuery.of(context).size.width * 0.9,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.8,
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Daftar Penerima Bantuan',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: () => Get.back(),
+                                          icon: const Icon(Icons.close),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Expanded(
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: SingleChildScrollView(
+                                          child: DataTable(
+                                            columnSpacing: 20,
+                                            horizontalMargin: 20,
+                                            columns: const [
+                                              DataColumn(label: Text('No')),
+                                              DataColumn(label: Text('Nama')),
+                                              DataColumn(label: Text('NIK')),
+                                              DataColumn(label: Text('Alamat')),
+                                            ],
+                                            rows: pengajuanData
+                                                .asMap()
+                                                .entries
+                                                .map((entry) {
+                                              final warga =
+                                                  entry.value['warga'];
+                                              return DataRow(
+                                                cells: [
+                                                  DataCell(
+                                                      Text('${entry.key + 1}')),
+                                                  DataCell(Text(
+                                                      warga['nama_lengkap'] ??
+                                                          '-')),
+                                                  DataCell(Text(
+                                                      warga['nik'] ?? '-')),
+                                                  DataCell(Text(
+                                                      warga['alamat'] ?? '-')),
+                                                ],
+                                              );
+                                            }).toList(),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.people),
+                      label: const Text('Lihat Daftar Penerima'),
+                    )
+                  : const SizedBox.shrink()),
               const SizedBox(height: 16),
 
               // Tanggal Penyaluran
@@ -321,10 +424,9 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                       controller.tambahPenyaluran(
                         nama: namaController.text,
                         deskripsi: deskripsiController.text,
-                        kategoriBantuanId: selectedKategoriBantuanId.value!,
+                        skemaId: selectedSkemaBantuanId.value!,
                         lokasiPenyaluranId: selectedLokasiPenyaluranId.value!,
-                        jumlahPenerima:
-                            int.parse(jumlahPenerimaController.text),
+                        jumlahPenerima: jumlahPenerima.value,
                         tanggalPenyaluran: tanggalWaktuPenyaluran,
                       );
                     }

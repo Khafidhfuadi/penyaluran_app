@@ -242,7 +242,7 @@ class SupabaseService extends GetxService {
           .select('*')
           .gte('tanggal_penyaluran', todayUtc)
           .lt('tanggal_penyaluran', tomorrowUtc)
-          .inFilter('status', ['DISETUJUI', 'BERLANGSUNG', 'DIJADWALKAN']);
+          .inFilter('status', ['AKTIF', 'DIJADWALKAN']);
 
       return response;
     } catch (e) {
@@ -267,7 +267,7 @@ class SupabaseService extends GetxService {
           .select('*')
           .gte('tanggal_penyaluran', tomorrowUtc)
           .lt('tanggal_penyaluran', weekUtc)
-          .inFilter('status', ['DISETUJUI', 'DIJADWALKAN']);
+          .inFilter('status', ['DIJADWALKAN']);
 
       return response;
     } catch (e) {
@@ -276,12 +276,12 @@ class SupabaseService extends GetxService {
     }
   }
 
-  Future<List<Map<String, dynamic>>?> getJadwalSelesai() async {
+  Future<List<Map<String, dynamic>>?> getJadwalTerlaksana() async {
     try {
       final response = await client
           .from('penyaluran_bantuan')
           .select('*')
-          .eq('status', 'SELESAI')
+          .eq('status', 'TERLAKSANA')
           .order('tanggal_penyaluran', ascending: false)
           .limit(10);
 
@@ -1124,12 +1124,33 @@ class SupabaseService extends GetxService {
   }
 
   // Fungsi untuk menambahkan penyaluran baru
-  Future<void> tambahPenyaluran(Map<String, dynamic> penyaluran) async {
+  Future<Map<String, dynamic>> tambahPenyaluran(
+      Map<String, dynamic> penyaluran) async {
     try {
-      await client.from('penyaluran_bantuan').insert(penyaluran);
+      final response = await client
+          .from('penyaluran_bantuan')
+          .insert(penyaluran)
+          .select()
+          .single();
+
+      return response;
     } catch (e) {
       print('Error menambahkan penyaluran: $e');
       throw e.toString();
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> getAllSkemaBantuan() async {
+    try {
+      final response = await client
+          .from('xx02_skema_bantuan')
+          .select('*')
+          .order('created_at', ascending: false);
+
+      return response;
+    } catch (e) {
+      print('Error getting all skema bantuan: $e');
+      return null;
     }
   }
 }

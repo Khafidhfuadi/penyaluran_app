@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-enum StatusKelayakan { pending, disetujui, ditolak }
+enum StatusKelayakan { MENUNGGU, TERVERIFIKASI, DITOLAK }
 
 class PengajuanKelayakanBantuanModel {
   final String? id;

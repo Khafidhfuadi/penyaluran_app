@@ -92,8 +92,10 @@ class JadwalSectionWidget extends StatelessWidget {
         return Icons.event_note;
       case 'Terjadwal':
         return Icons.pending_actions;
-      case 'Selesai':
+      case 'Terlaksana':
         return Icons.event_available;
+      case 'Tidak Terlaksana':
+        return Icons.event_busy;
       default:
         return Icons.event_note;
     }
@@ -105,8 +107,9 @@ class JadwalSectionWidget extends StatelessWidget {
         return Icons.calendar_today;
       case 'Terjadwal':
         return Icons.schedule;
-      case 'Selesai':
+      case 'Terlaksana':
         return Icons.task_alt;
+
       default:
         return Icons.event_note;
     }
@@ -118,7 +121,7 @@ class JadwalSectionWidget extends StatelessWidget {
         return Colors.green;
       case 'Terjadwal':
         return Colors.blue;
-      case 'Selesai':
+      case 'Terlaksana':
         return Colors.grey;
       default:
         return Colors.orange;
@@ -127,16 +130,18 @@ class JadwalSectionWidget extends StatelessWidget {
 
   String _getStatusText(PenyaluranBantuanModel jadwal) {
     // Jika status jadwal adalah BERLANGSUNG, tampilkan sebagai "Aktif"
-    if (jadwal.status == 'BERLANGSUNG') {
+    if (jadwal.status == 'AKTIF') {
       return 'Aktif';
     }
     // Jika status jadwal adalah DIJADWALKAN, tampilkan sebagai "Terjadwal"
-    else if (jadwal.status == 'DIJADWALKAN' || jadwal.status == 'DISETUJUI') {
+    else if (jadwal.status == 'DIJADWALKAN') {
       return 'Terjadwal';
     }
-    // Jika status jadwal adalah SELESAI, tampilkan sebagai "Selesai"
-    else if (jadwal.status == 'SELESAI') {
-      return 'Selesai';
+    // Jika status jadwal adalah terlaksana, tampilkan sebagai "Terlaksana"
+    else if (jadwal.status == 'TERLAKSANA') {
+      return 'Terlaksana';
+    } else if (jadwal.status == 'BATALTERLAKSANA') {
+      return 'Batal Terlaksana';
     }
     // Default status
     return status;
@@ -144,16 +149,16 @@ class JadwalSectionWidget extends StatelessWidget {
 
   Color _getStatusColorByJadwal(PenyaluranBantuanModel jadwal) {
     // Jika status jadwal adalah BERLANGSUNG, gunakan warna hijau
-    if (jadwal.status == 'BERLANGSUNG') {
+    if (jadwal.status == 'AKTIF') {
       return Colors.green;
     }
     // Jika status jadwal adalah DIJADWALKAN, gunakan warna biru
-    else if (jadwal.status == 'DIJADWALKAN' || jadwal.status == 'DISETUJUI') {
+    else if (jadwal.status == 'DIJADWALKAN') {
       return Colors.blue;
-    }
-    // Jika status jadwal adalah SELESAI, gunakan warna abu-abu
-    else if (jadwal.status == 'SELESAI') {
+    } else if (jadwal.status == 'TERLAKSANA') {
       return Colors.grey;
+    } else if (jadwal.status == 'BATALTERLAKSANA') {
+      return Colors.red;
     }
     // Default warna
     return _getStatusColor();
@@ -165,8 +170,8 @@ class JadwalSectionWidget extends StatelessWidget {
         return controller.jadwalHariIni.toList();
       case 'Mendatang':
         return controller.jadwalMendatang.toList();
-      case 'Selesai':
-        return controller.jadwalSelesai.toList();
+      case 'Terlaksana':
+        return controller.jadwalTerlaksana.toList();
       default:
         return jadwalList;
     }

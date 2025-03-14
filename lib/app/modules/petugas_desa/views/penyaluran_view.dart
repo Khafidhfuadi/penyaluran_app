@@ -101,9 +101,9 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
                 // Jadwal selesai
                 JadwalSectionWidget(
                   controller: controller,
-                  title: 'Selesai',
-                  jadwalList: controller.jadwalSelesai,
-                  status: 'Selesai',
+                  title: 'Terlaksana',
+                  jadwalList: controller.jadwalTerlaksana,
+                  status: 'Terlaksana',
                 ),
               ],
             );
@@ -190,9 +190,9 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
               Expanded(
                 child: Obx(() => _buildSummaryItem(
                       context,
-                      icon: Icons.event_busy,
-                      title: 'Selesai',
-                      value: '${controller.jadwalSelesai.length}',
+                      icon: Icons.event_note,
+                      title: 'Terlaksana',
+                      value: '${controller.jadwalTerlaksana.length}',
                       color: Colors.grey,
                     )),
               ),
