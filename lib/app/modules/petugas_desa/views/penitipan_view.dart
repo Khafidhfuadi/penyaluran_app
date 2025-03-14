@@ -547,7 +547,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                 Get.snackbar(
                   'Error',
                   'Alasan penolakan tidak boleh kosong',
-                  snackPosition: SnackPosition.BOTTOM,
+                  snackPosition: SnackPosition.TOP,
                   backgroundColor: Colors.red,
                   colorText: Colors.white,
                 );
@@ -869,7 +869,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
 
                     // Pilih kategori bantuan
                     Text(
-                      'Kategori Bantuan',
+                      'Jenis Stok Bantuan',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
@@ -881,7 +881,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
                       ),
-                      hint: const Text('Pilih kategori bantuan'),
+                      hint: const Text('Pilih jenis stok bantuan'),
                       value: selectedStokBantuanId.value,
                       items: controller.stokBantuanMap.entries.map((entry) {
                         return DropdownMenuItem<String>(
@@ -1288,7 +1288,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                                       Get.snackbar(
                                         'Error',
                                         'Foto bantuan harus diupload',
-                                        snackPosition: SnackPosition.BOTTOM,
+                                        snackPosition: SnackPosition.TOP,
                                         backgroundColor: Colors.red,
                                         colorText: Colors.white,
                                       );
@@ -1572,7 +1572,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                               Get.snackbar(
                                 'Sukses',
                                 'Donatur berhasil ditambahkan',
-                                snackPosition: SnackPosition.BOTTOM,
+                                snackPosition: SnackPosition.TOP,
                                 backgroundColor: Colors.green,
                                 colorText: Colors.white,
                               );

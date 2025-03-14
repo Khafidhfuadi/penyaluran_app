@@ -6,6 +6,8 @@ import 'package:penyaluran_app/app/data/models/kategori_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'dart:async';
 
 class JadwalPenyaluranController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
@@ -47,12 +49,97 @@ class JadwalPenyaluranController extends GetxController {
     loadPermintaanPenjadwalanData();
     loadLokasiPenyaluranData();
     loadKategoriBantuanData();
+
+    // Jalankan timer untuk memeriksa jadwal secara berkala
+    _startJadwalCheckTimer();
   }
 
   @override
   void onClose() {
     searchController.dispose();
+    // Hentikan timer jika ada
+    _stopJadwalCheckTimer();
     super.onClose();
+  }
+
+  // Timer untuk memeriksa jadwal secara berkala
+  Timer? _jadwalCheckTimer;
+
+  void _startJadwalCheckTimer() {
+    // Periksa jadwal setiap 1 menit
+    _jadwalCheckTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      checkAndUpdateJadwalStatus();
+    });
+
+    // Periksa jadwal segera saat aplikasi dimulai
+    checkAndUpdateJadwalStatus();
+  }
+
+  void _stopJadwalCheckTimer() {
+    _jadwalCheckTimer?.cancel();
+    _jadwalCheckTimer = null;
+  }
+
+  // Memeriksa dan memperbarui status jadwal
+  Future<void> checkAndUpdateJadwalStatus() async {
+    try {
+      // Dapatkan tanggal dan waktu saat ini dalam timezone lokal
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      // Periksa jadwal mendatang yang tanggalnya hari ini
+      List<PenyaluranBantuanModel> jadwalToUpdate = [];
+
+      for (var jadwal in jadwalMendatang) {
+        if (jadwal.tanggalPenyaluran != null) {
+          // Konversi tanggal jadwal ke timezone lokal
+          final jadwalDateTime =
+              DateTimeHelper.toLocalDateTime(jadwal.tanggalPenyaluran!);
+          final jadwalDate = DateTime(
+            jadwalDateTime.year,
+            jadwalDateTime.month,
+            jadwalDateTime.day,
+          );
+
+          // Jika tanggal jadwal adalah hari ini
+          if (isSameDay(jadwalDate, today)) {
+            jadwalToUpdate.add(jadwal);
+
+            // Jika waktu jadwal sudah tiba atau lewat
+            if (now.isAfter(jadwalDateTime) ||
+                now.isAtSameMomentAs(jadwalDateTime)) {
+              // Ubah status menjadi BERLANGSUNG (aktif)
+              await _supabaseService.updateJadwalStatus(
+                  jadwal.id!, 'BERLANGSUNG');
+            }
+          }
+        }
+      }
+
+      // Refresh data setelah pembaruan
+      if (jadwalToUpdate.isNotEmpty) {
+        await loadJadwalData();
+
+        // Tampilkan notifikasi jika ada jadwal yang dipindahkan
+        Get.snackbar(
+          'Jadwal Diperbarui',
+          '${jadwalToUpdate.length} jadwal dipindahkan ke section Hari Ini',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      print('Error checking and updating jadwal status: $e');
+    }
+  }
+
+  // Helper method untuk memeriksa apakah dua tanggal adalah hari yang sama
+  bool isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 
   Future<void> loadJadwalData() async {
@@ -155,7 +242,7 @@ class JadwalPenyaluranController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Jadwal berhasil disetujui',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -164,7 +251,7 @@ class JadwalPenyaluranController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menyetujui jadwal: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -181,7 +268,7 @@ class JadwalPenyaluranController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Jadwal berhasil ditolak',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -190,7 +277,7 @@ class JadwalPenyaluranController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menolak jadwal: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -207,7 +294,7 @@ class JadwalPenyaluranController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Jadwal berhasil diselesaikan',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -216,7 +303,7 @@ class JadwalPenyaluranController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menyelesaikan jadwal: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

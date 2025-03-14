@@ -486,7 +486,7 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
                   'Permintaan penjadwalan berhasil dikonfirmasi',
                   backgroundColor: Colors.green,
                   colorText: Colors.white,
-                  snackPosition: SnackPosition.BOTTOM,
+                  snackPosition: SnackPosition.TOP,
                 );
               } else {
                 Get.snackbar(
@@ -494,7 +494,7 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
                   'Silakan pilih jadwal penyaluran terlebih dahulu',
                   backgroundColor: Colors.orange,
                   colorText: Colors.white,
-                  snackPosition: SnackPosition.BOTTOM,
+                  snackPosition: SnackPosition.TOP,
                 );
               }
             },
@@ -554,7 +554,7 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
                   'Permintaan penjadwalan berhasil ditolak',
                   backgroundColor: Colors.red,
                   colorText: Colors.white,
-                  snackPosition: SnackPosition.BOTTOM,
+                  snackPosition: SnackPosition.TOP,
                 );
               } else {
                 Get.snackbar(
@@ -562,7 +562,7 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
                   'Silakan masukkan alasan penolakan',
                   backgroundColor: Colors.orange,
                   colorText: Colors.white,
-                  snackPosition: SnackPosition.BOTTOM,
+                  snackPosition: SnackPosition.TOP,
                 );
               }
             },

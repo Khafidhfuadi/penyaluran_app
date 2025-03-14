@@ -4,12 +4,43 @@ import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penya
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/jadwal_section_widget.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/permintaan_penjadwalan_summary_widget.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/components/calendar_view_widget.dart';
 
 class PenyaluranView extends GetView<JadwalPenyaluranController> {
   const PenyaluranView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          TabBar(
+            tabs: const [
+              Tab(text: 'Daftar Jadwal'),
+              Tab(text: 'Kalender'),
+            ],
+            labelColor: AppTheme.primaryColor,
+            indicatorColor: AppTheme.primaryColor,
+            unselectedLabelColor: Colors.grey,
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                // Tab 1: Daftar Jadwal
+                _buildJadwalListView(),
+
+                // Tab 2: Kalender
+                _buildCalendarView(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJadwalListView() {
     return RefreshIndicator(
       onRefresh: () => controller.refreshData(),
       child: SingleChildScrollView(
@@ -30,7 +61,7 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Ringkasan jadwal
-                _buildJadwalSummary(context),
+                _buildJadwalSummary(Get.context!),
 
                 const SizedBox(height: 20),
 
@@ -52,7 +83,7 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
                 // Jadwal mendatang
                 JadwalSectionWidget(
                   controller: controller,
-                  title: 'Mendatang',
+                  title: '7 Hari Mendatang',
                   jadwalList: controller.jadwalMendatang,
                   status: 'Terjadwal',
                 ),
@@ -66,6 +97,41 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
                   jadwalList: controller.jadwalSelesai,
                   status: 'Selesai',
                 ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalendarView() {
+    return RefreshIndicator(
+      onRefresh: () => controller.refreshData(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Obx(() {
+            if (controller.isLoading.value) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Ringkasan jadwal
+                _buildJadwalSummary(Get.context!),
+
+                const SizedBox(height: 20),
+
+                // Kalender Penyaluran Bulan Ini
+                CalendarViewWidget(controller: controller),
               ],
             );
           }),

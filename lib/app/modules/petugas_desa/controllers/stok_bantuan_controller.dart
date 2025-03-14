@@ -123,7 +123,7 @@ class StokBantuanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Stok bantuan berhasil ditambahkan',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -132,7 +132,7 @@ class StokBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menambahkan stok bantuan: $e',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -155,7 +155,7 @@ class StokBantuanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Stok bantuan berhasil diperbarui',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -164,7 +164,7 @@ class StokBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal memperbarui stok bantuan: $e',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -178,7 +178,7 @@ class StokBantuanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Stok bantuan berhasil dihapus',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -187,7 +187,7 @@ class StokBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menghapus stok bantuan: $e',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

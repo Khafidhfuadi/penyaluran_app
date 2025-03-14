@@ -19,6 +19,10 @@ class PetugasDesaController extends GetxController {
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
 
+  // Controller untuk pencarian penerima
+  final TextEditingController searchPenerimaController =
+      TextEditingController();
+
   // Data profil pengguna dari cache
   final RxMap<String, dynamic> userProfile = RxMap<String, dynamic>({});
 
@@ -27,6 +31,23 @@ class PetugasDesaController extends GetxController {
 
   // Data jadwal hari ini
   final RxList<dynamic> jadwalHariIni = <dynamic>[].obs;
+
+  // Data penerima penyaluran
+  final RxList<Map<String, dynamic>> penerimaPenyaluran =
+      <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> filteredPenerima =
+      <Map<String, dynamic>>[].obs;
+  final RxInt jumlahPenerima = 0.obs;
+  final RxString filterStatus = 'SEMUA'.obs;
+
+  // Tambahkan variabel isLoading
+  final isLoading = false.obs;
+
+  // Tambahkan instance supabaseService yang sudah diinisialisasi
+  final supabaseService = SupabaseService.to;
+
+  // Variabel untuk pencarian dan filter
+  final searchQuery = ''.obs;
 
   UserModel? get user => _authController.user;
   String get role => user?.role ?? 'PETUGASDESA';
@@ -81,6 +102,7 @@ class PetugasDesaController extends GetxController {
   @override
   void onClose() {
     searchController.dispose();
+    searchPenerimaController.dispose();
     super.onClose();
   }
 
@@ -216,6 +238,258 @@ class PetugasDesaController extends GetxController {
     }
   }
 
+  // Metode untuk memastikan format UUID yang benar
+  String ensureValidUUID(String id) {
+    // Jika ID sudah dalam format UUID yang benar, kembalikan apa adanya
+    if (id.contains('-') && id.length == 36) {
+      return id;
+    }
+
+    // Jika ID adalah string UUID tanpa tanda hubung, tambahkan tanda hubung
+    if (id.length == 32) {
+      return '${id.substring(0, 8)}-${id.substring(8, 12)}-${id.substring(12, 16)}-${id.substring(16, 20)}-${id.substring(20)}';
+    }
+
+    // Jika format tidak dikenali, kembalikan apa adanya
+    return id;
+  }
+
+  // Metode untuk memuat ulang data penerima
+  Future<void> reloadPenerimaPenyaluran() async {
+    isLoading.value = true;
+    try {
+      // Gunakan data dummy sementara
+      final dummyData = _createDummyPenerimaPenyaluran();
+      penerimaPenyaluran.value = dummyData;
+      jumlahPenerima.value = dummyData.length;
+      print(
+          'Data dummy penerima berhasil dimuat: ${penerimaPenyaluran.length} data');
+    } catch (e) {
+      print('Error saat memuat data dummy penerima: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Membuat data dummy penerima penyaluran
+  List<Map<String, dynamic>> _createDummyPenerimaPenyaluran() {
+    return [
+      {
+        'id': 1,
+        'penyaluran_bantuan_id': 'a2dabc5a-761f-4f11-9fbe-a376768880c3',
+        'warga_id': 'warga-001',
+        'status_penerimaan': 'SUDAHMENERIMA',
+        'jumlah_bantuan': 1,
+        'created_at': '2023-01-01',
+        'warga': {
+          'id': 'warga-001',
+          'nama_lengkap': 'Budi Santoso',
+          'nik': '3201234567890001',
+          'alamat': 'Jl. Merdeka No. 123, RT 01/RW 02',
+          'jenis_kelamin': 'L',
+          'tanggal_lahir': '1980-01-01',
+        }
+      },
+      {
+        'id': 2,
+        'penyaluran_bantuan_id': 'a2dabc5a-761f-4f11-9fbe-a376768880c3',
+        'warga_id': 'warga-002',
+        'status_penerimaan': 'BELUMMENERIMA',
+        'jumlah_bantuan': 1,
+        'created_at': '2023-01-01',
+        'warga': {
+          'id': 'warga-002',
+          'nama_lengkap': 'Siti Aminah',
+          'nik': '3201234567890002',
+          'alamat': 'Jl. Pahlawan No. 45, RT 03/RW 04',
+          'jenis_kelamin': 'P',
+          'tanggal_lahir': '1985-05-15',
+        }
+      },
+      {
+        'id': 3,
+        'penyaluran_bantuan_id': 'a2dabc5a-761f-4f11-9fbe-a376768880c3',
+        'warga_id': 'warga-003',
+        'status_penerimaan': 'SUDAHMENERIMA',
+        'jumlah_bantuan': 1,
+        'created_at': '2023-01-01',
+        'warga': {
+          'id': 'warga-003',
+          'nama_lengkap': 'Ahmad Hidayat',
+          'nik': '3201234567890003',
+          'alamat': 'Jl. Cendrawasih No. 78, RT 05/RW 06',
+          'jenis_kelamin': 'L',
+          'tanggal_lahir': '1975-12-10',
+        }
+      },
+      {
+        'id': 4,
+        'penyaluran_bantuan_id': 'a2dabc5a-761f-4f11-9fbe-a376768880c3',
+        'warga_id': 'warga-004',
+        'status_penerimaan': 'BELUMMENERIMA',
+        'jumlah_bantuan': 1,
+        'created_at': '2023-01-01',
+        'warga': {
+          'id': 'warga-004',
+          'nama_lengkap': 'Dewi Lestari',
+          'nik': '3201234567890004',
+          'alamat': 'Jl. Mawar No. 12, RT 07/RW 08',
+          'jenis_kelamin': 'P',
+          'tanggal_lahir': '1990-08-22',
+        }
+      },
+      {
+        'id': 5,
+        'penyaluran_bantuan_id': 'a2dabc5a-761f-4f11-9fbe-a376768880c3',
+        'warga_id': 'warga-005',
+        'status_penerimaan': 'SUDAHMENERIMA',
+        'jumlah_bantuan': 1,
+        'created_at': '2023-01-01',
+        'warga': {
+          'id': 'warga-005',
+          'nama_lengkap': 'Joko Widodo',
+          'nik': '3201234567890005',
+          'alamat': 'Jl. Kenanga No. 56, RT 09/RW 10',
+          'jenis_kelamin': 'L',
+          'tanggal_lahir': '1965-06-30',
+        }
+      }
+    ];
+  }
+
+  // Metode untuk menginisialisasi data penerima penyaluran
+  void initPenerimaPenyaluran(List<Map<String, dynamic>> data) {
+    print(
+        'DEBUG CONTROLLER: Inisialisasi penerima penyaluran dengan ${data.length} item');
+
+    // Periksa struktur data
+    if (data.isNotEmpty) {
+      final firstItem = data.first;
+      print(
+          'DEBUG CONTROLLER: Struktur data penerima: ${firstItem.keys.join(', ')}');
+
+      if (firstItem.containsKey('warga')) {
+        final warga = firstItem['warga'];
+        print(
+            'DEBUG CONTROLLER: Struktur data warga: ${warga != null ? (warga is Map ? warga.keys.join(', ') : 'bukan Map') : 'null'}');
+      } else {
+        print(
+            'DEBUG CONTROLLER: Data warga tidak ditemukan dalam item penerima');
+      }
+    }
+
+    penerimaPenyaluran.value = data;
+    filteredPenerima.value = data;
+    jumlahPenerima.value = data.length;
+
+    print(
+        'DEBUG CONTROLLER: Selesai inisialisasi, jumlah penerima: ${jumlahPenerima.value}');
+  }
+
+  // Metode untuk memfilter penerima berdasarkan kata kunci
+  void filterPenerima(String keyword) {
+    print('DEBUG CONTROLLER: Memfilter penerima dengan keyword: "$keyword"');
+
+    if (keyword.isEmpty) {
+      print('DEBUG CONTROLLER: Keyword kosong, menerapkan filter status saja');
+      applyFilters();
+      return;
+    }
+
+    final lowercaseKeyword = keyword.toLowerCase();
+    final filtered = penerimaPenyaluran.where((penerima) {
+      final warga = penerima['warga'] as Map<String, dynamic>?;
+      if (warga == null) {
+        print(
+            'DEBUG CONTROLLER: Data warga null untuk penerima: ${penerima['id']}');
+        return false;
+      }
+
+      final namaLengkap =
+          (warga['nama_lengkap'] ?? '').toString().toLowerCase();
+      final nik = (warga['nik'] ?? '').toString().toLowerCase();
+      final alamat = (warga['alamat'] ?? '').toString().toLowerCase();
+
+      final matches = namaLengkap.contains(lowercaseKeyword) ||
+          nik.contains(lowercaseKeyword) ||
+          alamat.contains(lowercaseKeyword);
+
+      return matches;
+    }).toList();
+
+    print(
+        'DEBUG CONTROLLER: Hasil filter: ${filtered.length} dari ${penerimaPenyaluran.length} item');
+    filteredPenerima.value = filtered;
+  }
+
+  // Metode untuk menerapkan filter status
+  void applyFilters() {
+    final keyword = searchPenerimaController.text.toLowerCase();
+    print(
+        'DEBUG CONTROLLER: Menerapkan filter dengan status: ${filterStatus.value}, keyword: "$keyword"');
+
+    if (filterStatus.value == 'SEMUA' && keyword.isEmpty) {
+      print('DEBUG CONTROLLER: Tidak ada filter, menampilkan semua data');
+      filteredPenerima.value = penerimaPenyaluran;
+      return;
+    }
+
+    final filtered = penerimaPenyaluran.where((penerima) {
+      bool statusMatch = true;
+      if (filterStatus.value != 'SEMUA') {
+        statusMatch = penerima['status_penerimaan'] == filterStatus.value;
+      }
+
+      if (keyword.isEmpty) return statusMatch;
+
+      final warga = penerima['warga'] as Map<String, dynamic>?;
+      if (warga == null) return false;
+
+      final namaLengkap =
+          (warga['nama_lengkap'] ?? '').toString().toLowerCase();
+      final nik = (warga['nik'] ?? '').toString().toLowerCase();
+      final alamat = (warga['alamat'] ?? '').toString().toLowerCase();
+
+      final keywordMatch = namaLengkap.contains(keyword) ||
+          nik.contains(keyword) ||
+          alamat.contains(keyword);
+
+      return statusMatch && keywordMatch;
+    }).toList();
+
+    print(
+        'DEBUG CONTROLLER: Hasil filter gabungan: ${filtered.length} dari ${penerimaPenyaluran.length} item');
+    filteredPenerima.value = filtered;
+  }
+
+  // Metode untuk memperbarui status penerimaan bantuan
+  Future<bool> updateStatusPenerimaan(int penerimaId, String status,
+      {DateTime? tanggalPenerimaan,
+      String? buktiPenerimaan,
+      String? keterangan}) async {
+    try {
+      final result = await _supabaseService.updateStatusPenerimaan(
+          penerimaId, status,
+          tanggalPenerimaan: tanggalPenerimaan,
+          buktiPenerimaan: buktiPenerimaan,
+          keterangan: keterangan);
+      return result;
+    } catch (e) {
+      print('Error updating status penerimaan: $e');
+      return false;
+    }
+  }
+
+  // Metode untuk menyelesaikan jadwal penyaluran
+  Future<void> completeJadwal(String jadwalId) async {
+    try {
+      await _supabaseService.completeJadwal(jadwalId);
+    } catch (e) {
+      print('Error completing jadwal: $e');
+      throw e.toString();
+    }
+  }
+
   // Metode untuk mengubah tab aktif
   void changeTab(int index) {
     activeTabIndex.value = index;
@@ -250,5 +524,77 @@ class PetugasDesaController extends GetxController {
   // Metode untuk logout
   Future<void> logout() async {
     await _authController.logout();
+  }
+
+  // Metode untuk debugging struktur data jadwal
+  void debugJadwalData(Map<String, dynamic> jadwal) {
+    print('DEBUG CONTROLLER: ===== DEBUGGING JADWAL DATA =====');
+    print('DEBUG CONTROLLER: Keys dalam jadwal: ${jadwal.keys.join(', ')}');
+
+    // Periksa ID
+    final id = jadwal['id'];
+    print('DEBUG CONTROLLER: ID jadwal: $id (${id.runtimeType})');
+
+    // Periksa data lain yang penting
+    print('DEBUG CONTROLLER: Nama: ${jadwal['nama']}');
+    print('DEBUG CONTROLLER: Status: ${jadwal['status']}');
+    print('DEBUG CONTROLLER: Jumlah penerima: ${jadwal['jumlah_penerima']}');
+
+    // Periksa apakah ada data yang null
+    jadwal.forEach((key, value) {
+      if (value == null) {
+        print('DEBUG CONTROLLER: Field "$key" bernilai null');
+      }
+    });
+
+    print('DEBUG CONTROLLER: ===== END DEBUGGING JADWAL DATA =====');
+  }
+
+  // Metode untuk mendapatkan daftar penerima penyaluran
+  Future<List<Map<String, dynamic>>?> getPenerimaPenyaluran(
+      String penyaluranId) async {
+    print(
+        'DEBUG CONTROLLER: Mengambil data penerima untuk penyaluran ID: $penyaluranId');
+    // Gunakan data dummy sementara
+    final dummyData = _createDummyPenerimaPenyaluran();
+    print(
+        'DEBUG CONTROLLER: Mengembalikan ${dummyData.length} data dummy penerima');
+    return dummyData;
+  }
+
+  // Metode untuk memfilter data penerima berdasarkan status dan pencarian
+  List<Map<String, dynamic>> get filteredPenerimaPenyaluran {
+    if (penerimaPenyaluran.isEmpty) {
+      return [];
+    }
+
+    List<Map<String, dynamic>> filtered =
+        List<Map<String, dynamic>>.from(penerimaPenyaluran);
+
+    // Filter berdasarkan status
+    if (filterStatus.value != 'SEMUA') {
+      filtered = filtered.where((penerima) {
+        return penerima['status_penerimaan'] == filterStatus.value;
+      }).toList();
+    }
+
+    // Filter berdasarkan pencarian
+    if (searchQuery.value.isNotEmpty) {
+      final query = searchQuery.value.toLowerCase();
+      filtered = filtered.where((penerima) {
+        final warga = penerima['warga'] as Map<String, dynamic>?;
+        if (warga == null) return false;
+
+        final nama = (warga['nama_lengkap'] ?? '').toString().toLowerCase();
+        final nik = (warga['nik'] ?? '').toString().toLowerCase();
+        final alamat = (warga['alamat'] ?? '').toString().toLowerCase();
+
+        return nama.contains(query) ||
+            nik.contains(query) ||
+            alamat.contains(query);
+      }).toList();
+    }
+
+    return filtered;
   }
 }

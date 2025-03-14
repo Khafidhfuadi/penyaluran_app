@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class SupabaseService extends GetxService {
   static SupabaseService get to => Get.find<SupabaseService>();
@@ -232,12 +233,16 @@ class SupabaseService extends GetxService {
       final today = DateTime(now.year, now.month, now.day);
       final tomorrow = today.add(const Duration(days: 1));
 
+      // Konversi ke UTC untuk query ke database
+      final todayUtc = today.toUtc().toIso8601String();
+      final tomorrowUtc = tomorrow.toUtc().toIso8601String();
+
       final response = await client
           .from('penyaluran_bantuan')
           .select('*')
-          .gte('tanggal_penyaluran', today.toIso8601String())
-          .lt('tanggal_penyaluran', tomorrow.toIso8601String())
-          .inFilter('status', ['DISETUJUI', 'BERLANGSUNG']);
+          .gte('tanggal_penyaluran', todayUtc)
+          .lt('tanggal_penyaluran', tomorrowUtc)
+          .inFilter('status', ['DISETUJUI', 'BERLANGSUNG', 'DIJADWALKAN']);
 
       return response;
     } catch (e) {
@@ -250,13 +255,18 @@ class SupabaseService extends GetxService {
     try {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
+      final tomorrow = today.add(const Duration(days: 1));
       final week = today.add(const Duration(days: 7));
+
+      // Konversi ke UTC untuk query ke database
+      final tomorrowUtc = tomorrow.toUtc().toIso8601String();
+      final weekUtc = week.toUtc().toIso8601String();
 
       final response = await client
           .from('penyaluran_bantuan')
           .select('*')
-          .gte('tanggal_penyaluran', today.toIso8601String())
-          .lt('tanggal_penyaluran', week.toIso8601String())
+          .gte('tanggal_penyaluran', tomorrowUtc)
+          .lt('tanggal_penyaluran', weekUtc)
           .inFilter('status', ['DISETUJUI', 'DIJADWALKAN']);
 
       return response;
@@ -329,6 +339,19 @@ class SupabaseService extends GetxService {
       }).eq('id', jadwalId);
     } catch (e) {
       print('Error completing jadwal: $e');
+      throw e.toString();
+    }
+  }
+
+  // Metode untuk memperbarui status jadwal
+  Future<void> updateJadwalStatus(String jadwalId, String status) async {
+    try {
+      await client.from('penyaluran_bantuan').update({
+        'status': status,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }).eq('id', jadwalId);
+    } catch (e) {
+      print('Error updating jadwal status: $e');
       throw e.toString();
     }
   }
@@ -966,14 +989,53 @@ class SupabaseService extends GetxService {
   // Metode untuk mendapatkan semua lokasi penyaluran
   Future<List<Map<String, dynamic>>?> getAllLokasiPenyaluran() async {
     try {
-      final response = await client
-          .from('lokasi_penyaluran')
-          .select('*')
-          .order('nama', ascending: true);
+      final response = await client.from('lokasi_penyaluran').select('*');
       return response;
     } catch (e) {
       print('Error getting all lokasi penyaluran: $e');
       return null;
+    }
+  }
+
+  // Metode untuk mendapatkan daftar penerima penyaluran berdasarkan ID penyaluran
+  Future<List<Map<String, dynamic>>?> getPenerimaPenyaluran(
+      String penyaluranId) async {
+    // Metode ini tidak lagi mengambil data dari database
+    // Gunakan data dummy dari controller
+    return [];
+  }
+
+  // Metode untuk memperbarui status penerimaan bantuan
+  Future<bool> updateStatusPenerimaan(int penerimaId, String status,
+      {DateTime? tanggalPenerimaan,
+      String? buktiPenerimaan,
+      String? keterangan}) async {
+    try {
+      final Map<String, dynamic> updateData = {
+        'status_penerimaan': status,
+      };
+
+      if (tanggalPenerimaan != null) {
+        updateData['tanggal_penerimaan'] = tanggalPenerimaan.toIso8601String();
+      }
+
+      if (buktiPenerimaan != null) {
+        updateData['bukti_penerimaan'] = buktiPenerimaan;
+      }
+
+      if (keterangan != null) {
+        updateData['keterangan'] = keterangan;
+      }
+
+      await client
+          .from('penerima_penyaluran')
+          .update(updateData)
+          .eq('id', penerimaId);
+
+      return true;
+    } catch (e) {
+      print('Error updating status penerimaan: $e');
+      return false;
     }
   }
 
@@ -989,5 +1051,75 @@ class SupabaseService extends GetxService {
       print('Error getting all kategori bantuan: $e');
       return null;
     }
+  }
+
+  // Metode untuk memeriksa koneksi ke Supabase
+  Future<bool> checkConnection() async {
+    try {
+      print('DEBUG SERVICE: Memeriksa koneksi ke Supabase...');
+
+      // Coba melakukan query sederhana
+      final response =
+          await client.from('penerima_penyaluran').select('count').limit(1);
+
+      print('DEBUG SERVICE: Koneksi berhasil, response: $response');
+      return true;
+    } catch (e) {
+      print('DEBUG SERVICE: Error saat memeriksa koneksi: $e');
+      return false;
+    }
+  }
+
+  // Metode untuk mendapatkan data warga berdasarkan ID
+  Future<Map<String, dynamic>?> getWargaById(String wargaId) async {
+    // Metode ini tidak lagi mengambil data dari database
+    // Gunakan data dummy
+    return {
+      'id': wargaId,
+      'nama_lengkap': 'Warga Dummy',
+      'nik': '1234567890123456',
+      'alamat': 'Alamat Dummy',
+      'jenis_kelamin': 'L',
+      'tanggal_lahir': '1990-01-01',
+    };
+  }
+
+  // Metode untuk mencetak struktur data ke konsol
+  void printDataStructure(dynamic data, {String prefix = ''}) {
+    if (data == null) {
+      print('$prefix Data: null');
+      return;
+    }
+
+    if (data is List) {
+      print('$prefix Data adalah List dengan ${data.length} item');
+      if (data.isNotEmpty) {
+        print('$prefix Contoh item pertama:');
+        printDataStructure(data.first, prefix: '$prefix  ');
+      }
+      return;
+    }
+
+    if (data is Map<String, dynamic>) {
+      print(
+          '$prefix Data adalah Map dengan keys: ${data.keys.toList().join(', ')}');
+
+      // Cek apakah ada key warga
+      if (data.containsKey('warga')) {
+        print('$prefix Data memiliki key "warga"');
+        print('$prefix Tipe data warga: ${data['warga'].runtimeType}');
+        printDataStructure(data['warga'], prefix: '$prefix  warga: ');
+      }
+
+      // Cek apakah ada key warga_id
+      if (data.containsKey('warga_id')) {
+        print('$prefix Data memiliki key "warga_id": ${data['warga_id']}');
+      }
+
+      return;
+    }
+
+    // Tipe data lainnya
+    print('$prefix Data: $data (${data.runtimeType})');
   }
 }

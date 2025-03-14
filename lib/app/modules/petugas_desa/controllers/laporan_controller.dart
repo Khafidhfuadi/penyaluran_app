@@ -78,7 +78,7 @@ class LaporanController extends GetxController {
         Get.snackbar(
           'Sukses',
           'Laporan berhasil dibuat',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
@@ -88,7 +88,7 @@ class LaporanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal membuat laporan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -106,7 +106,7 @@ class LaporanController extends GetxController {
         Get.snackbar(
           'Sukses',
           'Laporan berhasil diunduh',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
@@ -116,7 +116,7 @@ class LaporanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal mengunduh laporan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -133,7 +133,7 @@ class LaporanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Laporan berhasil dihapus',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -142,7 +142,7 @@ class LaporanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menghapus laporan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

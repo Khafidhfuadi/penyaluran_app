@@ -256,7 +256,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
                   'Permintaan penjadwalan berhasil dikonfirmasi',
                   backgroundColor: Colors.green,
                   colorText: Colors.white,
-                  snackPosition: SnackPosition.BOTTOM,
+                  snackPosition: SnackPosition.TOP,
                 );
               } else {
                 Get.snackbar(
@@ -264,7 +264,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
                   'Silakan pilih jadwal penyaluran terlebih dahulu',
                   backgroundColor: Colors.orange,
                   colorText: Colors.white,
-                  snackPosition: SnackPosition.BOTTOM,
+                  snackPosition: SnackPosition.TOP,
                 );
               }
             },
@@ -324,7 +324,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
                   'Permintaan penjadwalan berhasil ditolak',
                   backgroundColor: Colors.red,
                   colorText: Colors.white,
-                  snackPosition: SnackPosition.BOTTOM,
+                  snackPosition: SnackPosition.TOP,
                 );
               } else {
                 Get.snackbar(
@@ -332,7 +332,7 @@ class PermintaanPenjadwalanWidget extends StatelessWidget {
                   'Silakan masukkan alasan penolakan',
                   backgroundColor: Colors.orange,
                   colorText: Colors.white,
-                  snackPosition: SnackPosition.BOTTOM,
+                  snackPosition: SnackPosition.TOP,
                 );
               }
             },

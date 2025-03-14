@@ -76,7 +76,7 @@ class PengaduanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Pengaduan berhasil diproses',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -85,7 +85,7 @@ class PengaduanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal memproses pengaduan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -120,7 +120,7 @@ class PengaduanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Tindakan berhasil ditambahkan',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -129,7 +129,7 @@ class PengaduanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menambahkan tindakan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -146,7 +146,7 @@ class PengaduanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Pengaduan berhasil diselesaikan',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -155,7 +155,7 @@ class PengaduanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menyelesaikan pengaduan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

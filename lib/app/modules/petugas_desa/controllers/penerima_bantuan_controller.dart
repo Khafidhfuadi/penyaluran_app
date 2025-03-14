@@ -102,7 +102,7 @@ class PenerimaBantuanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Penerima bantuan berhasil ditambahkan',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -111,7 +111,7 @@ class PenerimaBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menambahkan penerima bantuan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -147,7 +147,7 @@ class PenerimaBantuanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Penerima bantuan berhasil diperbarui',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -156,7 +156,7 @@ class PenerimaBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal memperbarui penerima bantuan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -173,7 +173,7 @@ class PenerimaBantuanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Penerima bantuan berhasil dinonaktifkan',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -182,7 +182,7 @@ class PenerimaBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menonaktifkan penerima bantuan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -199,7 +199,7 @@ class PenerimaBantuanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Penerima bantuan berhasil diaktifkan',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -208,7 +208,7 @@ class PenerimaBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal mengaktifkan penerima bantuan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

@@ -5,6 +5,7 @@ import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class JadwalSectionWidget extends StatelessWidget {
   final JadwalPenyaluranController controller;
@@ -88,11 +89,11 @@ class JadwalSectionWidget extends StatelessWidget {
   IconData _getStatusIcon() {
     switch (status) {
       case 'Aktif':
-        return Icons.event_available;
+        return Icons.event_note;
       case 'Terjadwal':
         return Icons.pending_actions;
       case 'Selesai':
-        return Icons.event_busy;
+        return Icons.event_available;
       default:
         return Icons.event_note;
     }
@@ -124,6 +125,40 @@ class JadwalSectionWidget extends StatelessWidget {
     }
   }
 
+  String _getStatusText(PenyaluranBantuanModel jadwal) {
+    // Jika status jadwal adalah BERLANGSUNG, tampilkan sebagai "Aktif"
+    if (jadwal.status == 'BERLANGSUNG') {
+      return 'Aktif';
+    }
+    // Jika status jadwal adalah DIJADWALKAN, tampilkan sebagai "Terjadwal"
+    else if (jadwal.status == 'DIJADWALKAN' || jadwal.status == 'DISETUJUI') {
+      return 'Terjadwal';
+    }
+    // Jika status jadwal adalah SELESAI, tampilkan sebagai "Selesai"
+    else if (jadwal.status == 'SELESAI') {
+      return 'Selesai';
+    }
+    // Default status
+    return status;
+  }
+
+  Color _getStatusColorByJadwal(PenyaluranBantuanModel jadwal) {
+    // Jika status jadwal adalah BERLANGSUNG, gunakan warna hijau
+    if (jadwal.status == 'BERLANGSUNG') {
+      return Colors.green;
+    }
+    // Jika status jadwal adalah DIJADWALKAN, gunakan warna biru
+    else if (jadwal.status == 'DIJADWALKAN' || jadwal.status == 'DISETUJUI') {
+      return Colors.blue;
+    }
+    // Jika status jadwal adalah SELESAI, gunakan warna abu-abu
+    else if (jadwal.status == 'SELESAI') {
+      return Colors.grey;
+    }
+    // Default warna
+    return _getStatusColor();
+  }
+
   List<PenyaluranBantuanModel> _getCurrentJadwalList() {
     switch (title) {
       case 'Hari Ini':
@@ -138,12 +173,12 @@ class JadwalSectionWidget extends StatelessWidget {
   }
 
   Widget _buildJadwalItem(TextTheme textTheme, PenyaluranBantuanModel jadwal) {
-    Color statusColor = _getStatusColor();
+    Color statusColor = _getStatusColorByJadwal(jadwal);
+    String statusText = _getStatusText(jadwal);
 
-    // Format tanggal dan waktu
-    String formattedDateTime = jadwal.tanggalPenyaluran != null
-        ? "${DateFormat('dd MMM yyyy').format(jadwal.tanggalPenyaluran!)} ${DateFormat('HH:mm').format(jadwal.tanggalPenyaluran!)}"
-        : 'Belum ditentukan';
+    // Format tanggal dan waktu menggunakan helper
+    String formattedDateTime =
+        DateTimeHelper.formatDateTime(jadwal.tanggalPenyaluran);
 
     // Dapatkan nama lokasi dan kategori
     String lokasiName =
@@ -164,7 +199,24 @@ class JadwalSectionWidget extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          Get.toNamed(Routes.pelaksanaanPenyaluran, arguments: jadwal);
+          // Konversi PenyaluranBantuanModel ke Map<String, dynamic>
+          final jadwalMap = {
+            'id': jadwal.id,
+            'nama': jadwal.nama,
+            'deskripsi': jadwal.deskripsi,
+            'lokasi': jadwal.nama, // Gunakan nama sebagai lokasi
+            'kategori_bantuan': jadwal.kategoriBantuanId,
+            'tanggal': jadwal.tanggalPenyaluran != null
+                ? DateTimeHelper.formatDate(jadwal.tanggalPenyaluran)
+                : '-',
+            'waktu': jadwal.tanggalPenyaluran != null
+                ? DateTimeHelper.formatTime(jadwal.tanggalPenyaluran)
+                : '-',
+            'jumlah_penerima': jadwal.jumlahPenerima,
+            'status': jadwal.status,
+          };
+
+          Get.toNamed(Routes.pelaksanaanPenyaluran, arguments: jadwalMap);
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -213,7 +265,7 @@ class JadwalSectionWidget extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                status,
+                                statusText,
                                 style: textTheme.bodySmall?.copyWith(
                                   color: statusColor,
                                   fontWeight: FontWeight.bold,
@@ -279,8 +331,25 @@ class JadwalSectionWidget extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
                   onPressed: () {
+                    // Konversi PenyaluranBantuanModel ke Map<String, dynamic>
+                    final jadwalMap = {
+                      'id': jadwal.id,
+                      'nama': jadwal.nama,
+                      'deskripsi': jadwal.deskripsi,
+                      'lokasi': jadwal.nama, // Gunakan nama sebagai lokasi
+                      'kategori_bantuan': jadwal.kategoriBantuanId,
+                      'tanggal': jadwal.tanggalPenyaluran != null
+                          ? DateTimeHelper.formatDate(jadwal.tanggalPenyaluran)
+                          : '-',
+                      'waktu': jadwal.tanggalPenyaluran != null
+                          ? DateTimeHelper.formatTime(jadwal.tanggalPenyaluran)
+                          : '-',
+                      'jumlah_penerima': jadwal.jumlahPenerima,
+                      'status': jadwal.status,
+                    };
+
                     Get.toNamed(Routes.pelaksanaanPenyaluran,
-                        arguments: jadwal);
+                        arguments: jadwalMap);
                   },
                   icon: const Icon(Icons.info_outline, size: 16),
                   label: const Text('Lihat Detail'),

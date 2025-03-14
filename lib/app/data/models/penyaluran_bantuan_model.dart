@@ -50,22 +50,22 @@ class PenyaluranBantuanModel {
         status: json["status"],
         alasanPenolakan: json["alasan_penolakan"],
         tanggalPenjadwalan: json["tanggal_penjadwalan"] != null
-            ? DateTime.parse(json["tanggal_penjadwalan"])
+            ? DateTime.parse(json["tanggal_penjadwalan"]).toUtc()
             : null,
         tanggalPenyaluran: json["tanggal_penyaluran"] != null
-            ? DateTime.parse(json["tanggal_penyaluran"])
+            ? DateTime.parse(json["tanggal_penyaluran"]).toUtc()
             : null,
         kategoriBantuanId: json["kategori_bantuan_id"],
         tanggalPermintaan: json["tanggal_permintaan"] != null
-            ? DateTime.parse(json["tanggal_permintaan"])
+            ? DateTime.parse(json["tanggal_permintaan"]).toUtc()
             : null,
         jumlahPenerima: json["jumlah_penerima"],
         skemaId: json["skema_id"],
         createdAt: json["created_at"] != null
-            ? DateTime.parse(json["created_at"])
+            ? DateTime.parse(json["created_at"]).toUtc()
             : null,
         updatedAt: json["updated_at"] != null
-            ? DateTime.parse(json["updated_at"])
+            ? DateTime.parse(json["updated_at"]).toUtc()
             : null,
       );
 
@@ -77,13 +77,13 @@ class PenyaluranBantuanModel {
         "petugas_id": petugasId,
         "status": status,
         "alasan_penolakan": alasanPenolakan,
-        "tanggal_penjadwalan": tanggalPenjadwalan?.toIso8601String(),
-        "tanggal_penyaluran": tanggalPenyaluran?.toIso8601String(),
+        "tanggal_penjadwalan": tanggalPenjadwalan?.toUtc().toIso8601String(),
+        "tanggal_penyaluran": tanggalPenyaluran?.toUtc().toIso8601String(),
         "kategori_bantuan_id": kategoriBantuanId,
-        "tanggal_permintaan": tanggalPermintaan?.toIso8601String(),
+        "tanggal_permintaan": tanggalPermintaan?.toUtc().toIso8601String(),
         "jumlah_penerima": jumlahPenerima,
         "skema_id": skemaId,
-        "created_at": createdAt?.toIso8601String(),
-        "updated_at": updatedAt?.toIso8601String(),
+        "created_at": createdAt?.toUtc().toIso8601String(),
+        "updated_at": updatedAt?.toUtc().toIso8601String(),
       };
 }

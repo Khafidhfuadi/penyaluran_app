@@ -214,7 +214,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal mengambil gambar: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -237,7 +237,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal mengambil gambar: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -261,7 +261,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Foto bantuan harus diupload',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -291,7 +291,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Penitipan bantuan berhasil ditambahkan',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -300,7 +300,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menambahkan penitipan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -315,7 +315,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Bukti serah terima harus diupload',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -339,7 +339,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Penitipan berhasil diverifikasi',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -348,7 +348,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal memverifikasi penitipan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -369,7 +369,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Penitipan berhasil ditolak',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -378,7 +378,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menolak penitipan: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -666,7 +666,7 @@ class PenitipanBantuanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menambahkan donatur: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

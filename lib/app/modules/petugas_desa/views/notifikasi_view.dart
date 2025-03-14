@@ -112,7 +112,7 @@ class NotifikasiView extends GetView<PetugasDesaController> {
           Get.snackbar(
             'Notifikasi',
             'Semua notifikasi telah ditandai sebagai dibaca',
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
             backgroundColor: AppTheme.primaryColor,
             colorText: Colors.white,
           );
@@ -171,7 +171,7 @@ class NotifikasiView extends GetView<PetugasDesaController> {
             Get.snackbar(
               'Notifikasi',
               'Notifikasi ditandai sebagai dibaca',
-              snackPosition: SnackPosition.BOTTOM,
+              snackPosition: SnackPosition.TOP,
               backgroundColor: AppTheme.primaryColor,
               colorText: Colors.white,
             );

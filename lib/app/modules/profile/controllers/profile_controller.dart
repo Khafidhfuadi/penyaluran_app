@@ -49,7 +49,7 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal memuat data profil: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -67,7 +67,7 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Error',
         'Nama tidak boleh kosong',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -98,7 +98,7 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Profil berhasil diperbarui',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -106,7 +106,7 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal memperbarui profil: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -121,7 +121,7 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Error',
         'Konfirmasi password tidak sesuai',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -138,7 +138,7 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Sukses',
         'Password berhasil diubah',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -146,7 +146,7 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal mengubah password: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

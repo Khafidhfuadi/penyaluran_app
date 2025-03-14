@@ -205,7 +205,7 @@ class AuthController extends GetxController {
       Get.snackbar(
         'Error',
         'Terjadi kesalahan pada form login. Silakan coba lagi.',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -252,7 +252,7 @@ class AuthController extends GetxController {
       Get.snackbar(
         'Error',
         'Login gagal: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -278,7 +278,7 @@ class AuthController extends GetxController {
       Get.snackbar(
         'Error',
         'Logout gagal: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

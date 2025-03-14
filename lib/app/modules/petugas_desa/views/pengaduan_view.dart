@@ -587,7 +587,7 @@ class PengaduanView extends GetView<PetugasDesaController> {
               Get.snackbar(
                 'Berhasil',
                 'Status pengaduan berhasil diubah menjadi Tindakan',
-                snackPosition: SnackPosition.BOTTOM,
+                snackPosition: SnackPosition.TOP,
                 backgroundColor: Colors.blue,
                 colorText: Colors.white,
               );
@@ -633,7 +633,7 @@ class PengaduanView extends GetView<PetugasDesaController> {
               Get.snackbar(
                 'Berhasil',
                 'Status pengaduan berhasil diubah menjadi Selesai',
-                snackPosition: SnackPosition.BOTTOM,
+                snackPosition: SnackPosition.TOP,
                 backgroundColor: Colors.green,
                 colorText: Colors.white,
               );
