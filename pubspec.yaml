@@ -52,7 +52,6 @@ dependencies:
   flutter_spinkit: ^5.2.0
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.17
-
   # Untuk format tanggal dan waktu
   intl: ^0.19.0
 
@@ -63,7 +62,7 @@ dependencies:
   flutter_secure_storage: ^9.0.0
 
   # Image picker untuk mengambil gambar dari kamera atau galeri
-  image_picker: ^1.0.7
+  image_picker: ^1.1.2
   syncfusion_flutter_calendar: ^28.2.11
   syncfusion_localizations: ^28.2.11
   flutter_localizations:

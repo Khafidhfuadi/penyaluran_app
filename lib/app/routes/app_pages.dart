@@ -6,11 +6,12 @@ import 'package:penyaluran_app/app/modules/petugas_desa/bindings/petugas_desa_bi
 import 'package:penyaluran_app/app/modules/petugas_desa/views/permintaan_penjadwalan_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_penerima_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_penerima_view.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerima_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_penitipan_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_penyaluran_view.dart';
+import 'package:penyaluran_app/app/modules/penyaluran/detail_penyaluran_page.dart';
+import 'package:penyaluran_app/app/modules/penyaluran/penyaluran_binding.dart';
 
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/penerima_binding.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/donatur_binding.dart';
@@ -58,11 +59,6 @@ class AppPages {
       binding: PenerimaBinding(),
     ),
     GetPage(
-      name: _Paths.konfirmasiPenerima,
-      page: () => const KonfirmasiPenerimaView(),
-      binding: PenerimaBinding(),
-    ),
-    GetPage(
       name: _Paths.profile,
       page: () => const ProfileView(),
       binding: ProfileBinding(),
@@ -86,6 +82,11 @@ class AppPages {
       name: _Paths.tambahPenyaluran,
       page: () => const TambahPenyaluranView(),
       binding: PetugasDesaBinding(),
+    ),
+    GetPage(
+      name: _Paths.detailPenyaluran,
+      page: () => DetailPenyaluranPage(),
+      binding: PenyaluranBinding(),
     ),
   ];
 }

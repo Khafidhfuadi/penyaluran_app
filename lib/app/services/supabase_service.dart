@@ -492,7 +492,7 @@ class SupabaseService extends GetxService {
       final fileKey =
           '$folder/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
 
-      final file = await client.storage.from(bucket).upload(
+      await client.storage.from(bucket).upload(
             fileKey,
             File(filePath),
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),

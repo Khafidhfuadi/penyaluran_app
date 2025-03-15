@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
-import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class JadwalSectionWidget extends StatelessWidget {
@@ -203,8 +202,16 @@ class JadwalSectionWidget extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // Hanya kirim ID penyaluran
-          Get.toNamed(Routes.pelaksanaanPenyaluran, arguments: jadwal.id);
+          if (jadwal.id != null) {
+            Get.toNamed(Routes.detailPenyaluran,
+                parameters: {'id': jadwal.id!});
+          } else {
+            Get.snackbar(
+              'Error',
+              'ID penyaluran tidak ditemukan',
+              snackPosition: SnackPosition.BOTTOM,
+            );
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -314,23 +321,30 @@ class JadwalSectionWidget extends StatelessWidget {
                   textTheme,
                 ),
               ],
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () {
-                    // Hanya kirim ID penyaluran
-                    Get.toNamed(Routes.pelaksanaanPenyaluran,
-                        arguments: jadwal.id);
-                  },
-                  icon: const Icon(Icons.info_outline, size: 16),
-                  label: const Text('Lihat Detail'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.primaryColor,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    visualDensity: VisualDensity.compact,
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      if (jadwal.id != null) {
+                        Get.toNamed(Routes.detailPenyaluran,
+                            parameters: {'id': jadwal.id!});
+                      } else {
+                        Get.snackbar(
+                          'Error',
+                          'ID penyaluran tidak ditemukan',
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.visibility_outlined),
+                    label: const Text('Lihat Detail'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: statusColor,
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
