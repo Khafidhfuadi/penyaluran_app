@@ -185,12 +185,8 @@ class DaftarDonaturView extends GetView<DonaturController> {
     }
 
     // Hitung jumlah donasi dan total nilai donasi
-    final jumlahDonasi = controller.getJumlahDonasi(donatur.id);
     final jumlahDonasiUang = controller.getJumlahDonasiUang(donatur.id);
     final jumlahDonasiBarang = controller.getJumlahDonasiBarang(donatur.id);
-    final totalNilaiDonasiUang = controller.getTotalNilaiDonasiUang(donatur.id);
-    final totalNilaiDonasiUangFormatted =
-        controller.formatRupiah(totalNilaiDonasiUang);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -431,8 +427,6 @@ class DonaturSearchDelegate extends SearchDelegate {
 
         // Hitung jumlah donasi dan total nilai donasi
         final jumlahDonasi = controller.getJumlahDonasi(donatur.id);
-        final jumlahDonasiUang = controller.getJumlahDonasiUang(donatur.id);
-        final jumlahDonasiBarang = controller.getJumlahDonasiBarang(donatur.id);
         final totalNilaiDonasiUang =
             controller.getTotalNilaiDonasiUang(donatur.id);
         final totalNilaiDonasiUangFormatted =

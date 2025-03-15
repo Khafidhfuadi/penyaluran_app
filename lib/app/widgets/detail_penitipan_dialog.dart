@@ -72,7 +72,7 @@ class DetailPenitipanDialog {
               if (item.status == 'TERVERIFIKASI' && item.petugasDesaId != null)
                 _buildDetailItem(
                   'Diverifikasi Oleh',
-                  getPetugasDesaNama(item.petugasDesaId) ?? 'Tidak diketahui',
+                  getPetugasDesaNama(item.petugasDesaId),
                 ),
               _buildDetailItem('Tanggal Dibuat',
                   DateFormatter.formatDateTime(item.createdAt)),

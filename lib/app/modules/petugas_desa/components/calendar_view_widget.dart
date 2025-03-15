@@ -113,8 +113,6 @@ class CalendarViewWidget extends StatelessWidget {
                     _showAppointmentDetails(context, appointment);
                   } else if (details.targetElement ==
                       CalendarElement.calendarCell) {
-                    final List<Appointment> appointmentsOnDay =
-                        _getAppointmentsOnDay(details.date!);
                     // if (appointmentsOnDay.isNotEmpty) {
                     //   _showAppointmentsOnDay(
                     //       context, details.date!, appointmentsOnDay);
@@ -294,126 +292,6 @@ class CalendarViewWidget extends StatelessWidget {
     return _AppointmentDataSource(appointments);
   }
 
-  List<Appointment> _getAppointmentsOnDay(DateTime date) {
-    final List<Appointment> appointments = [];
-    final _AppointmentDataSource dataSource = _getCalendarDataSource();
-
-    for (final appointment in dataSource.appointments!) {
-      final Appointment app = appointment as Appointment;
-      if (app.startTime.year == date.year &&
-          app.startTime.month == date.month &&
-          app.startTime.day == date.day) {
-        appointments.add(app);
-      }
-    }
-
-    return appointments;
-  }
-
-  void _showAppointmentsOnDay(
-      BuildContext context, DateTime date, List<Appointment> appointments) {
-    final String formattedDate = DateTimeHelper.formatDateIndonesian(date);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Jadwal Penyaluran $formattedDate',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (appointments.isEmpty)
-              const Text('Tidak ada jadwal penyaluran pada tanggal ini.')
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: appointments.length,
-                itemBuilder: (context, index) {
-                  final appointment = appointments[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(12),
-                      leading: Container(
-                        width: 12,
-                        height: double.infinity,
-                        color: appointment.color,
-                      ),
-                      title: Text(
-                        appointment.subject,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.access_time, size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${appointment.startTime.hour}:${appointment.startTime.minute.toString().padLeft(2, '0')} - ${appointment.endTime.hour}:${appointment.endTime.minute.toString().padLeft(2, '0')} WIB',
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on, size: 14),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(appointment.location ?? ''),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      onTap: () => Get.toNamed('/pelaksanaan-penyaluran',
-                          arguments: appointment),
-                    ),
-                  );
-                },
-              ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Tutup'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showAppointmentDetails(BuildContext context, Appointment appointment) {
     final String formattedDate =
         DateTimeHelper.formatDateIndonesian(appointment.startTime);
@@ -510,10 +388,6 @@ class CalendarViewWidget extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatDateIndonesian(DateTime date) {
-    return DateTimeHelper.formatDateIndonesian(date);
   }
 }
 

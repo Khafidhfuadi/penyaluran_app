@@ -702,86 +702,10 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
       donaturNama: donaturNama,
       kategoriNama: kategoriNama,
       kategoriSatuan: kategoriSatuan,
-      getPetugasDesaNama: (String? id) =>
-          controller.getPetugasDesaNama(id) ?? 'Tidak diketahui',
+      getPetugasDesaNama: (String? id) => controller.getPetugasDesaNama(id),
       showFullScreenImage: (String imageUrl) {
         DetailPenitipanDialog.showFullScreenImage(context, imageUrl);
       },
-    );
-  }
-
-  void _showFullScreenImage(BuildContext context, String imageUrl) {
-    Get.dialog(
-      Dialog(
-        insetPadding: EdgeInsets.zero,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            InteractiveViewer(
-              panEnabled: true,
-              minScale: 0.5,
-              maxScale: 4,
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey.shade300,
-                    child: const Center(
-                      child: Icon(
-                        Icons.error,
-                        size: 50,
-                        color: Colors.red,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Positioned(
-              top: 20,
-              right: 20,
-              child: GestureDetector(
-                onTap: () => Get.back(),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 14),
-          ),
-          const Divider(),
-        ],
-      ),
     );
   }
 
