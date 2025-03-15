@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
@@ -204,24 +203,8 @@ class JadwalSectionWidget extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // Konversi PenyaluranBantuanModel ke Map<String, dynamic>
-          final jadwalMap = {
-            'id': jadwal.id,
-            'nama': jadwal.nama,
-            'deskripsi': jadwal.deskripsi,
-            'lokasi': jadwal.nama, // Gunakan nama sebagai lokasi
-            'kategori_bantuan': jadwal.kategoriBantuanId,
-            'tanggal': jadwal.tanggalPenyaluran != null
-                ? DateTimeHelper.formatDate(jadwal.tanggalPenyaluran)
-                : '-',
-            'waktu': jadwal.tanggalPenyaluran != null
-                ? DateTimeHelper.formatTime(jadwal.tanggalPenyaluran)
-                : '-',
-            'jumlah_penerima': jadwal.jumlahPenerima,
-            'status': jadwal.status,
-          };
-
-          Get.toNamed(Routes.pelaksanaanPenyaluran, arguments: jadwalMap);
+          // Hanya kirim ID penyaluran
+          Get.toNamed(Routes.pelaksanaanPenyaluran, arguments: jadwal.id);
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -336,25 +319,9 @@ class JadwalSectionWidget extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
                   onPressed: () {
-                    // Konversi PenyaluranBantuanModel ke Map<String, dynamic>
-                    final jadwalMap = {
-                      'id': jadwal.id,
-                      'nama': jadwal.nama,
-                      'deskripsi': jadwal.deskripsi,
-                      'lokasi': jadwal.nama, // Gunakan nama sebagai lokasi
-                      'kategori_bantuan': jadwal.kategoriBantuanId,
-                      'tanggal': jadwal.tanggalPenyaluran != null
-                          ? DateTimeHelper.formatDate(jadwal.tanggalPenyaluran)
-                          : '-',
-                      'waktu': jadwal.tanggalPenyaluran != null
-                          ? DateTimeHelper.formatTime(jadwal.tanggalPenyaluran)
-                          : '-',
-                      'jumlah_penerima': jadwal.jumlahPenerima,
-                      'status': jadwal.status,
-                    };
-
+                    // Hanya kirim ID penyaluran
                     Get.toNamed(Routes.pelaksanaanPenyaluran,
-                        arguments: jadwalMap);
+                        arguments: jadwal.id);
                   },
                   icon: const Icon(Icons.info_outline, size: 16),
                   label: const Text('Lihat Detail'),

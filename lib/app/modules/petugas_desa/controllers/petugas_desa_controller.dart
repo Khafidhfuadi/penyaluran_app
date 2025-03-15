@@ -219,8 +219,6 @@ class PetugasDesaController extends GetxController {
 
         // Update counter
         _counterService.updatePengaduanCounter(diproses);
-
-        print('Jumlah pengaduan diproses: $diproses');
       } else {
         _counterService.updatePengaduanCounter(0);
       }

@@ -378,10 +378,6 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
   }
 
   Widget _buildBottomNavigationBar() {
-    // Tambahkan print statement untuk debugging
-    print('Jumlah pengaduan diproses: ${controller.jumlahDiproses.value}');
-    print('Jumlah jadwal hari ini: ${controller.jadwalHariIni.length}');
-
     return Obx(() {
       return BottomNavigationBar(
         currentIndex: controller.activeTabIndex.value,

@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penerima_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/pelaksanaan_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
-class KonfirmasiPenerimaView extends GetView<PenerimaController> {
+class KonfirmasiPenerimaView extends GetView<PelaksanaanPenyaluranController> {
   const KonfirmasiPenerimaView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final String id = Get.arguments as String;
+    // Ambil data dari arguments
+    final Map<String, dynamic> args = Get.arguments ?? {};
+
+    // Pastikan semua parameter yang diperlukan tersedia
+    final penerimaId = args['penerima_id'] ?? 0;
+    final String penyaluranId = args['penyaluran_id']?.toString() ?? '';
+    final Map<String, dynamic> warga =
+        args['warga'] as Map<String, dynamic>? ?? {};
+    final Map<String, dynamic> jadwal =
+        args['jadwal'] as Map<String, dynamic>? ?? {};
+    final String statusPenerimaan =
+        args['status_penerimaan']?.toString() ?? 'BELUMMENERIMA';
+    final dynamic jumlahBantuan = args['jumlah_bantuan'] ?? 1;
 
     return Obx(() {
       if (controller.isLoading.value) {
@@ -18,19 +30,6 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
           ),
           body: const Center(
             child: CircularProgressIndicator(),
-          ),
-        );
-      }
-
-      final penerima = controller.getPenerimaById(id);
-
-      if (penerima == null) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Konfirmasi Penerima'),
-          ),
-          body: const Center(
-            child: Text('Data penerima tidak ditemukan'),
           ),
         );
       }
@@ -47,27 +46,28 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
           child: Column(
             children: [
               // Header dengan foto dan nama
-              _buildHeader(penerima),
+              _buildHeader(warga),
 
               // Detail informasi penerima
-              _buildDetailInfo(penerima),
+              _buildDetailInfo(warga),
 
               // Detail jadwal dan bantuan
-              _buildDetailJadwalBantuan(penerima),
+              _buildDetailJadwalBantuan(jadwal, jumlahBantuan),
 
               // Form konfirmasi
-              _buildKonfirmasiForm(context, penerima),
+              _buildKonfirmasiForm(context, penerimaId, penyaluranId),
 
               const SizedBox(height: 20),
             ],
           ),
         ),
-        bottomNavigationBar: _buildBottomButtons(penerima),
+        bottomNavigationBar:
+            _buildBottomButtons(penerimaId, penyaluranId, statusPenerimaan),
       );
     });
   }
 
-  Widget _buildHeader(Map<String, dynamic> penerima) {
+  Widget _buildHeader(Map<String, dynamic> warga) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -80,11 +80,11 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
           CircleAvatar(
             radius: 40,
             backgroundColor: Colors.white,
-            child: penerima['foto'] != null
+            child: warga['foto_url'] != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(40),
-                    child: Image.asset(
-                      penerima['foto'],
+                    child: Image.network(
+                      warga['foto_url'],
                       width: 80,
                       height: 80,
                       fit: BoxFit.cover,
@@ -106,7 +106,7 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
           const SizedBox(height: 12),
           // Nama penerima
           Text(
-            penerima['nama'] ?? 'Nama tidak tersedia',
+            warga['nama'] ?? 'Nama tidak tersedia',
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -116,7 +116,7 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
           const SizedBox(height: 4),
           // NIK
           Text(
-            penerima['nik'] ?? 'NIK tidak tersedia',
+            warga['nik'] ?? 'NIK tidak tersedia',
             style: const TextStyle(
               fontSize: 14,
               color: Colors.white,
@@ -127,24 +127,23 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: penerima['status'] == 'Terjadwal'
-                  ? AppTheme.scheduledColor
-                  : AppTheme.completedColor,
+              color: controller.getStatusColor(
+                  warga['status_penerimaan'] ?? 'BELUMMENERIMA'),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  penerima['status'] == 'Terjadwal'
-                      ? Icons.event_available
-                      : Icons.check_circle,
+                  controller.getStatusIcon(
+                      warga['status_penerimaan'] ?? 'BELUMMENERIMA'),
                   color: Colors.white,
                   size: 16,
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  penerima['status'] ?? 'Status tidak tersedia',
+                  controller.getStatusText(
+                      warga['status_penerimaan'] ?? 'BELUMMENERIMA'),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -159,7 +158,7 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
     );
   }
 
-  Widget _buildDetailInfo(Map<String, dynamic> penerima) {
+  Widget _buildDetailInfo(Map<String, dynamic> warga) {
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -182,21 +181,19 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildDetailRow('NIK', penerima['nik'] ?? '-'),
-                  _buildDetailRow('No KK', penerima['noKK'] ?? '-'),
+                  _buildDetailRow('NIK', warga['nik'] ?? '-'),
+                  _buildDetailRow('No KK', warga['no_kk'] ?? '-'),
+                  _buildDetailRow('No Handphone', warga['no_hp'] ?? '-'),
+                  _buildDetailRow('Email', warga['email'] ?? '-'),
                   _buildDetailRow(
-                      'No Handphone', penerima['noHandphone'] ?? '-'),
-                  _buildDetailRow('Email', penerima['email'] ?? '-'),
-                  _buildDetailRow(
-                      'Jenis Kelamin', penerima['jenisKelamin'] ?? '-'),
-                  _buildDetailRow('Agama', penerima['agama'] ?? '-'),
+                      'Jenis Kelamin', warga['jenis_kelamin'] ?? '-'),
+                  _buildDetailRow('Agama', warga['agama'] ?? '-'),
                   _buildDetailRow('Tempat, Tanggal Lahir',
-                      penerima['tempatTanggalLahir'] ?? '-'),
+                      '${warga['tempat_lahir'] ?? '-'}, ${warga['tanggal_lahir'] ?? '-'}'),
+                  _buildDetailRow('Alamat Lengkap', warga['alamat'] ?? '-'),
+                  _buildDetailRow('Pekerjaan', warga['pekerjaan'] ?? '-'),
                   _buildDetailRow(
-                      'Alamat Lengkap', penerima['alamatLengkap'] ?? '-'),
-                  _buildDetailRow('Pekerjaan', penerima['pekerjaan'] ?? '-'),
-                  _buildDetailRow('Pendidikan Terakhir',
-                      penerima['pendidikanTerakhir'] ?? '-'),
+                      'Pendidikan Terakhir', warga['pendidikan'] ?? '-'),
                 ],
               ),
             ),
@@ -206,17 +203,8 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
     );
   }
 
-  Widget _buildDetailJadwalBantuan(Map<String, dynamic> penerima) {
-    // Simulasi data jadwal dan bantuan
-    final jadwalBantuan = {
-      'tanggal': '15 Agustus 2023',
-      'waktu': '09:00 - 12:00 WIB',
-      'lokasi': 'Balai Desa Gunung Putri, Jl. Raya Gunung Putri No. 10',
-      'jenisBantuan': 'Bantuan Sosial Tunai (BST)',
-      'nilaiNominal': 'Rp 600.000',
-      'keterangan': 'Bantuan diberikan dalam bentuk tunai'
-    };
-
+  Widget _buildDetailJadwalBantuan(
+      Map<String, dynamic> jadwal, dynamic jumlahBantuan) {
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -240,15 +228,13 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
               child: Column(
                 children: [
                   _buildDetailRow(
-                      'Tanggal Penyaluran', jadwalBantuan['tanggal'] ?? '-'),
-                  _buildDetailRow('Waktu', jadwalBantuan['waktu'] ?? '-'),
-                  _buildDetailRow('Lokasi', jadwalBantuan['lokasi'] ?? '-'),
+                      'Tanggal Penyaluran', jadwal['tanggal'] ?? '-'),
+                  _buildDetailRow('Waktu', jadwal['waktu'] ?? '-'),
+                  _buildDetailRow('Lokasi', jadwal['lokasi'] ?? '-'),
                   _buildDetailRow(
-                      'Jenis Bantuan', jadwalBantuan['jenisBantuan'] ?? '-'),
-                  _buildDetailRow(
-                      'Nilai Nominal', jadwalBantuan['nilaiNominal'] ?? '-'),
-                  _buildDetailRow(
-                      'Keterangan', jadwalBantuan['keterangan'] ?? '-'),
+                      'Jenis Bantuan', jadwal['jenis_bantuan'] ?? '-'),
+                  _buildDetailRow('Jumlah Bantuan', '$jumlahBantuan item'),
+                  _buildDetailRow('Keterangan', jadwal['keterangan'] ?? '-'),
                 ],
               ),
             ),
@@ -289,7 +275,7 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
   }
 
   Widget _buildKonfirmasiForm(
-      BuildContext context, Map<String, dynamic> penerima) {
+      BuildContext context, int penerimaId, String penyaluranId) {
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -470,11 +456,23 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: Image.asset(
+                                  child: Image.network(
                                     controller.fotoBuktiPath.value,
                                     height: 200,
                                     width: double.infinity,
                                     fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        height: 200,
+                                        width: double.infinity,
+                                        color: Colors.grey.shade200,
+                                        child: const Icon(
+                                          Icons.broken_image,
+                                          size: 40,
+                                          color: Colors.grey,
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                                 Positioned(
@@ -545,11 +543,23 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: Image.asset(
+                                  child: Image.network(
                                     controller.tandaTanganPath.value,
                                     height: 150,
                                     width: double.infinity,
                                     fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        height: 150,
+                                        width: double.infinity,
+                                        color: Colors.grey.shade200,
+                                        child: const Icon(
+                                          Icons.broken_image,
+                                          size: 40,
+                                          color: Colors.grey,
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                                 Positioned(
@@ -606,7 +616,10 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
     );
   }
 
-  Widget _buildBottomButtons(Map<String, dynamic> penerima) {
+  Widget _buildBottomButtons(
+      int penerimaId, String penyaluranId, String statusPenerimaan) {
+    final bool sudahDiterima = statusPenerimaan == 'SUDAHMENERIMA';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -631,18 +644,22 @@ class KonfirmasiPenerimaView extends GetView<PenerimaController> {
           const SizedBox(width: 16),
           Expanded(
             child: Obx(() => ElevatedButton(
-                  onPressed: controller.isKonfirmasiChecked.value &&
-                          controller.isIdentitasChecked.value &&
-                          controller.isDataValidChecked.value &&
-                          controller.fotoBuktiPath.value.isNotEmpty &&
-                          controller.tandaTanganPath.value.isNotEmpty
-                      ? () => controller.konfirmasiPenyaluran(penerima['id'])
-                      : null,
+                  onPressed: sudahDiterima
+                      ? null
+                      : (controller.isKonfirmasiChecked.value &&
+                              controller.isIdentitasChecked.value &&
+                              controller.isDataValidChecked.value &&
+                              controller.fotoBuktiPath.value.isNotEmpty &&
+                              controller.tandaTanganPath.value.isNotEmpty
+                          ? () => controller.konfirmasiPenyaluran(
+                              penerimaId, penyaluranId)
+                          : null),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
                     disabledBackgroundColor: Colors.grey.shade300,
                   ),
-                  child: const Text('Konfirmasi'),
+                  child:
+                      Text(sudahDiterima ? 'Sudah Dikonfirmasi' : 'Konfirmasi'),
                 )),
           ),
         ],

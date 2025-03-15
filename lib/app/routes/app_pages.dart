@@ -7,7 +7,6 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/permintaan_penjadw
 import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_penerima_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_penerima_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerima_view.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/views/pelaksanaan_penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_penitipan_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_donatur_view.dart';
@@ -62,11 +61,6 @@ class AppPages {
       name: _Paths.konfirmasiPenerima,
       page: () => const KonfirmasiPenerimaView(),
       binding: PenerimaBinding(),
-    ),
-    GetPage(
-      name: _Paths.pelaksanaanPenyaluran,
-      page: () => const PelaksanaanPenyaluranView(),
-      binding: PetugasDesaBinding(),
     ),
     GetPage(
       name: _Paths.profile,

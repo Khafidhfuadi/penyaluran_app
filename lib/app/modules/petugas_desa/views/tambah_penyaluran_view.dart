@@ -221,79 +221,75 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                                 selectedSkemaBantuanId.value ?? '')
                             .eq('status', 'TERVERIFIKASI');
 
-                        if (pengajuanData != null) {
-                          Get.dialog(
-                            Dialog(
-                              child: Container(
-                                width: MediaQuery.of(context).size.width * 0.9,
-                                height:
-                                    MediaQuery.of(context).size.height * 0.8,
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'Daftar Penerima Bantuan',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                        Get.dialog(
+                          Dialog(
+                            child: Container(
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              height: MediaQuery.of(context).size.height * 0.8,
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Daftar Penerima Bantuan',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        IconButton(
-                                          onPressed: () => Get.back(),
-                                          icon: const Icon(Icons.close),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Expanded(
+                                      ),
+                                      IconButton(
+                                        onPressed: () => Get.back(),
+                                        icon: const Icon(Icons.close),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Expanded(
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
                                       child: SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: SingleChildScrollView(
-                                          child: DataTable(
-                                            columnSpacing: 20,
-                                            horizontalMargin: 20,
-                                            columns: const [
-                                              DataColumn(label: Text('No')),
-                                              DataColumn(label: Text('Nama')),
-                                              DataColumn(label: Text('NIK')),
-                                              DataColumn(label: Text('Alamat')),
-                                            ],
-                                            rows: pengajuanData
-                                                .asMap()
-                                                .entries
-                                                .map((entry) {
-                                              final warga =
-                                                  entry.value['warga'];
-                                              return DataRow(
-                                                cells: [
-                                                  DataCell(
-                                                      Text('${entry.key + 1}')),
-                                                  DataCell(Text(
-                                                      warga['nama_lengkap'] ??
-                                                          '-')),
-                                                  DataCell(Text(
-                                                      warga['nik'] ?? '-')),
-                                                  DataCell(Text(
-                                                      warga['alamat'] ?? '-')),
-                                                ],
-                                              );
-                                            }).toList(),
-                                          ),
+                                        child: DataTable(
+                                          columnSpacing: 20,
+                                          horizontalMargin: 20,
+                                          columns: const [
+                                            DataColumn(label: Text('No')),
+                                            DataColumn(label: Text('Nama')),
+                                            DataColumn(label: Text('NIK')),
+                                            DataColumn(label: Text('Alamat')),
+                                          ],
+                                          rows: pengajuanData
+                                              .asMap()
+                                              .entries
+                                              .map((entry) {
+                                            final warga = entry.value['warga'];
+                                            return DataRow(
+                                              cells: [
+                                                DataCell(
+                                                    Text('${entry.key + 1}')),
+                                                DataCell(Text(
+                                                    warga['nama_lengkap'] ??
+                                                        '-')),
+                                                DataCell(
+                                                    Text(warga['nik'] ?? '-')),
+                                                DataCell(Text(
+                                                    warga['alamat'] ?? '-')),
+                                              ],
+                                            );
+                                          }).toList(),
                                         ),
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        }
+                          ),
+                        );
                       },
                       icon: const Icon(Icons.people),
                       label: const Text('Lihat Daftar Penerima'),
