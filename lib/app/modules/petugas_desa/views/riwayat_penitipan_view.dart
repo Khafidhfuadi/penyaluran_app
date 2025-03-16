@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penitipan_bantuan_controller.dart';
 import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
   const RiwayatPenitipanView({super.key});
@@ -186,11 +187,11 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
 
     switch (item.status) {
       case 'TERVERIFIKASI':
-        statusColor = Colors.green;
+        statusColor = AppTheme.successColor;
         statusIcon = Icons.check_circle;
         break;
       case 'DITOLAK':
-        statusColor = Colors.red;
+        statusColor = AppTheme.errorColor;
         statusIcon = Icons.cancel;
         break;
       default:

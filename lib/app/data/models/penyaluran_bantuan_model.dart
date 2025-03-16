@@ -7,13 +7,13 @@ class PenyaluranBantuanModel {
   final String? lokasiPenyaluranId;
   final String? petugasId;
   final String? status;
-  final String? alasanPenolakan;
+  final String? alasanPembatalan;
   final DateTime? tanggalPenyaluran;
-  final DateTime? tanggalWaktuSelesai;
   final String? kategoriBantuanId;
-  final DateTime? tanggalPermintaan;
+  final DateTime? tanggalPembatalan;
   final int? jumlahPenerima;
   final String? skemaId;
+  final DateTime? tanggalSelesai;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -24,13 +24,13 @@ class PenyaluranBantuanModel {
     this.lokasiPenyaluranId,
     this.petugasId,
     this.status,
-    this.alasanPenolakan,
+    this.alasanPembatalan,
     this.tanggalPenyaluran,
-    this.tanggalWaktuSelesai,
     this.kategoriBantuanId,
-    this.tanggalPermintaan,
+    this.tanggalPembatalan,
     this.jumlahPenerima,
     this.skemaId,
+    this.tanggalSelesai,
     this.createdAt,
     this.updatedAt,
   });
@@ -48,19 +48,19 @@ class PenyaluranBantuanModel {
         lokasiPenyaluranId: json["lokasi_penyaluran_id"],
         petugasId: json["petugas_id"],
         status: json["status"],
-        alasanPenolakan: json["alasan_penolakan"],
+        alasanPembatalan: json["alasan_pembatalan"],
         tanggalPenyaluran: json["tanggal_penyaluran"] != null
             ? DateTime.parse(json["tanggal_penyaluran"]).toUtc()
             : null,
-        tanggalWaktuSelesai: json["tanggal_waktu_selesai"] != null
-            ? DateTime.parse(json["tanggal_waktu_selesai"]).toUtc()
-            : null,
         kategoriBantuanId: json["kategori_bantuan_id"],
-        tanggalPermintaan: json["tanggal_permintaan"] != null
-            ? DateTime.parse(json["tanggal_permintaan"]).toUtc()
+        tanggalPembatalan: json["tanggal_pembatalan"] != null
+            ? DateTime.parse(json["tanggal_pembatalan"]).toUtc()
             : null,
         jumlahPenerima: json["jumlah_penerima"],
         skemaId: json["skema_id"],
+        tanggalSelesai: json["tanggal_selesai"] != null
+            ? DateTime.parse(json["tanggal_selesai"]).toUtc()
+            : null,
         createdAt: json["created_at"] != null
             ? DateTime.parse(json["created_at"]).toUtc()
             : null,
@@ -76,13 +76,13 @@ class PenyaluranBantuanModel {
         "lokasi_penyaluran_id": lokasiPenyaluranId,
         "petugas_id": petugasId,
         "status": status,
-        "alasan_penolakan": alasanPenolakan,
+        "alasan_pembatalan": alasanPembatalan,
         "tanggal_penyaluran": tanggalPenyaluran?.toUtc().toIso8601String(),
-        "tanggal_waktu_selesai": tanggalWaktuSelesai?.toUtc().toIso8601String(),
         "kategori_bantuan_id": kategoriBantuanId,
-        "tanggal_permintaan": tanggalPermintaan?.toUtc().toIso8601String(),
+        "tanggal_pembatalan": tanggalPembatalan?.toUtc().toIso8601String(),
         "jumlah_penerima": jumlahPenerima,
         "skema_id": skemaId,
+        "tanggal_selesai": tanggalSelesai?.toUtc().toIso8601String(),
         "created_at": createdAt?.toUtc().toIso8601String(),
         "updated_at": updatedAt?.toUtc().toIso8601String(),
       };

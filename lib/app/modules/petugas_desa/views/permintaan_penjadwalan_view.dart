@@ -5,7 +5,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penya
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
-  const PermintaanPenjadwalanView({Key? key}) : super(key: key);
+  const PermintaanPenjadwalanView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -239,7 +239,8 @@ class PermintaanPenjadwalanView extends GetView<JadwalPenyaluranController> {
 
   Widget _buildPermintaanItem(
       BuildContext context, PenyaluranBantuanModel item) {
-    Color statusColor = Colors.orange;
+    // Status selalu MENUNGGU untuk permintaan penjadwalan
+    Color statusColor = AppTheme.warningColor;
     IconData statusIcon = Icons.pending_actions;
 
     return Container(

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 class PenerimaPenyaluranModel {
-  final int? id;
+  final String? id;
   final DateTime? createdAt;
   final String? penyaluranBantuanId;
   final String? wargaId;
@@ -12,6 +12,7 @@ class PenerimaPenyaluranModel {
   final double? jumlahBantuan;
   final String? stokBantuanId;
   final Map<String, dynamic>? warga; // Data warga yang terkait
+  final String? tandaTangan;
 
   PenerimaPenyaluranModel({
     this.id,
@@ -25,6 +26,7 @@ class PenerimaPenyaluranModel {
     this.jumlahBantuan,
     this.stokBantuanId,
     this.warga,
+    this.tandaTangan,
   });
 
   factory PenerimaPenyaluranModel.fromRawJson(String str) =>
@@ -49,6 +51,7 @@ class PenerimaPenyaluranModel {
         jumlahBantuan: json["jumlah_bantuan"]?.toDouble(),
         stokBantuanId: json["stok_bantuan_id"],
         warga: json["warga"],
+        tandaTangan: json["tanda_tangan"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -63,5 +66,6 @@ class PenerimaPenyaluranModel {
         "jumlah_bantuan": jumlahBantuan,
         "stok_bantuan_id": stokBantuanId,
         "warga": warga,
+        "tanda_tangan": tandaTangan,
       };
 }

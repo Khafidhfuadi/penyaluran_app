@@ -127,7 +127,7 @@ class DetailPenerimaView extends GetView<PenerimaController> {
                 vertical: 8,
               ),
               decoration: BoxDecoration(
-                color: Colors.green,
+                color: AppTheme.successColor,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Row(
@@ -247,15 +247,15 @@ class DetailPenerimaView extends GetView<PenerimaController> {
 
     switch (penerima['status']) {
       case 'Selesai':
-        statusColor = Colors.green;
+        statusColor = AppTheme.completedColor;
         statusIcon = Icons.check_circle;
         break;
       case 'Terjadwal':
-        statusColor = Colors.blue;
+        statusColor = AppTheme.processedColor;
         statusIcon = Icons.event;
         break;
       case 'Belum disalurkan':
-        statusColor = Colors.orange;
+        statusColor = AppTheme.warningColor;
         statusIcon = Icons.pending;
         break;
       default:
@@ -412,7 +412,7 @@ class DetailPenerimaView extends GetView<PenerimaController> {
               icon: const Icon(Icons.check_circle),
               label: const Text('Konfirmasi Penyaluran'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: AppTheme.successColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(

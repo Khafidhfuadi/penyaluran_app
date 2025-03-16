@@ -10,6 +10,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_penitipan_
 import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_penyaluran_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/penyaluran/detail_penyaluran_page.dart';
 import 'package:penyaluran_app/app/modules/penyaluran/penyaluran_binding.dart';
 
@@ -66,6 +67,11 @@ class AppPages {
     GetPage(
       name: _Paths.riwayatPenitipan,
       page: () => const RiwayatPenitipanView(),
+      binding: PetugasDesaBinding(),
+    ),
+    GetPage(
+      name: _Paths.riwayatPenyaluran,
+      page: () => const RiwayatPenyaluranView(),
       binding: PetugasDesaBinding(),
     ),
     GetPage(

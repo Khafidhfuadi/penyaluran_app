@@ -109,6 +109,22 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               );
             }
 
+            // Tampilkan tombol riwayat jika tab Penyaluran aktif
+            if (activeTab == 1) {
+              return Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      Get.toNamed('/petugas-desa/riwayat-penyaluran');
+                    },
+                    icon: const Icon(Icons.history),
+                    tooltip: 'Riwayat Penyaluran',
+                  ),
+                  notificationButton,
+                ],
+              );
+            }
+
             return notificationButton;
           }),
         ],

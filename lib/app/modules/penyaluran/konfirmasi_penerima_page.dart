@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:penyaluran_app/app/data/models/bentuk_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/penyaluran/detail_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:signature/signature.dart';
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:penyaluran_app/app/utils/date_formatter.dart';
 
 class KonfirmasiPenerimaPage extends StatefulWidget {
   final PenerimaPenyaluranModel penerima;
@@ -15,12 +18,12 @@ class KonfirmasiPenerimaPage extends StatefulWidget {
   final DateTime? tanggalPenyaluran;
 
   const KonfirmasiPenerimaPage({
-    Key? key,
+    super.key,
     required this.penerima,
     this.bentukBantuan,
     this.jumlahBantuan,
     this.tanggalPenyaluran,
-  }) : super(key: key);
+  });
 
   @override
   State<KonfirmasiPenerimaPage> createState() => _KonfirmasiPenerimaPageState();
@@ -34,11 +37,26 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
   bool _setujuPenggunaan = false;
   bool _isLoading = false;
 
+  // Controller untuk tanda tangan
+  final SignatureController _signatureController = SignatureController(
+    penStrokeWidth: 3,
+    penColor: AppTheme.primaryColor,
+    exportBackgroundColor: Colors.white,
+  );
+
+  // Untuk menyimpan gambar tanda tangan
+  Uint8List? _signatureImage;
+
+  @override
+  void dispose() {
+    // Pastikan controller signature dibersihkan
+    _signatureController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final warga = widget.penerima.warga;
-    final dateFormat = DateFormat('dd MMMM yyyy', 'id_ID');
-    final timeFormat = DateFormat('HH:mm', 'id_ID');
 
     return Scaffold(
       appBar: AppBar(
@@ -49,29 +67,40 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
           onPressed: () => Get.back(),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
+      body: Obx(
+        () => controller.isProcessing.value || _isLoading
+            ? const Center(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildDetailPenerimaSection(warga),
-                    const SizedBox(height: 16),
-                    _buildDetailBantuanSection(),
-                    const SizedBox(height: 16),
-                    _buildFotoBuktiSection(),
-                    const SizedBox(height: 16),
-                    _buildTandaTanganSection(),
-                    const SizedBox(height: 16),
-                    _buildFormPersetujuanSection(),
-                    const SizedBox(height: 24),
-                    _buildKonfirmasiButton(),
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Sedang memproses konfirmasi...'),
                   ],
                 ),
+              )
+            : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailPenerimaSection(warga),
+                      const SizedBox(height: 16),
+                      _buildDetailBantuanSection(),
+                      const SizedBox(height: 16),
+                      _buildFotoBuktiSection(),
+                      const SizedBox(height: 16),
+                      _buildTandaTanganSection(),
+                      const SizedBox(height: 16),
+                      _buildFormPersetujuanSection(),
+                      const SizedBox(height: 24),
+                      _buildKonfirmasiButton(),
+                    ],
+                  ),
+                ),
               ),
-            ),
+      ),
     );
   }
 
@@ -158,7 +187,7 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
                 'Tempat, Tanggal Lahir',
                 warga?['tempat_lahir'] != null &&
                         warga?['tanggal_lahir'] != null
-                    ? '${warga!['tempat_lahir']}, ${DateFormat('d MMMM yyyy').format(DateTime.parse(warga['tanggal_lahir']))}'
+                    ? '${warga!['tempat_lahir']}, ${DateFormatter.formatDate(DateTime.parse(warga['tanggal_lahir']), format: 'd MMMM yyyy')}'
                     : 'Bogor, 2 Juni 1990'),
             const Divider(),
 
@@ -183,9 +212,6 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
   }
 
   Widget _buildDetailBantuanSection() {
-    final dateFormat = DateFormat('dd MMMM yyyy', 'id_ID');
-    final timeFormat = DateFormat('HH:mm', 'id_ID');
-
     // Tentukan satuan berdasarkan data yang tersedia
     String satuan = '';
     if (widget.bentukBantuan?.satuan != null) {
@@ -197,10 +223,10 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
 
     String tanggalWaktuPenyaluran = '';
     if (widget.tanggalPenyaluran != null) {
-      final tanggal = dateFormat.format(widget.tanggalPenyaluran!);
-      final waktuMulai = timeFormat.format(widget.tanggalPenyaluran!);
-      final waktuSelesai = timeFormat
-          .format(widget.tanggalPenyaluran!.add(const Duration(hours: 1)));
+      final tanggal = DateFormatter.formatDate(widget.tanggalPenyaluran!);
+      final waktuMulai = DateFormatter.formatTime(widget.tanggalPenyaluran!);
+      final waktuSelesai = DateFormatter.formatTime(
+          widget.tanggalPenyaluran!.add(const Duration(hours: 1)));
       tanggalWaktuPenyaluran = '$tanggal $waktuMulai-$waktuSelesai';
     } else {
       tanggalWaktuPenyaluran = '09 April 2025 13:00-14:00';
@@ -328,39 +354,65 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // Area tanda tangan
             Container(
               width: double.infinity,
-              height: 100,
+              height: 200,
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey[300]!),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Tanda Tangan Digital',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Image.asset(
-                    'assets/images/signature_placeholder.png',
-                    height: 50,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Image.network(
-                        'https://i.imgur.com/JMoZ0nR.png',
-                        height: 50,
+              child: _signatureImage != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.memory(
+                        _signatureImage!,
                         fit: BoxFit.contain,
-                      );
-                    },
+                      ),
+                    )
+                  : Signature(
+                      controller: _signatureController,
+                      backgroundColor: Colors.white,
+                      height: 200,
+                      width: double.infinity,
+                    ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Tombol aksi untuk tanda tangan
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Tombol hapus tanda tangan
+                ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _signatureController.clear();
+                      _signatureImage = null;
+                    });
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Hapus'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[100],
+                    foregroundColor: Colors.red[800],
                   ),
-                ],
-              ),
+                ),
+
+                // Tombol simpan tanda tangan
+                ElevatedButton.icon(
+                  onPressed: _saveSignature,
+                  icon: const Icon(Icons.check),
+                  label: const Text('Simpan'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[100],
+                    foregroundColor: Colors.green[800],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -531,6 +583,36 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
     }
   }
 
+  Future<void> _saveSignature() async {
+    if (_signatureController.isEmpty) {
+      Get.snackbar(
+        'Perhatian',
+        'Tanda tangan tidak boleh kosong',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    // Mendapatkan data tanda tangan
+    final signature = await _signatureController.toPngBytes();
+
+    if (signature != null) {
+      setState(() {
+        _signatureImage = signature;
+      });
+
+      Get.snackbar(
+        'Sukses',
+        'Tanda tangan berhasil disimpan',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
   Future<void> _konfirmasiPenerimaan() async {
     if (!_setujuPenerimaan || !_setujuPenggunaan) {
       Get.snackbar(
@@ -543,35 +625,98 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
       return;
     }
 
+    if (_signatureImage == null) {
+      Get.snackbar(
+        'Perhatian',
+        'Tanda tangan digital diperlukan',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    if (_buktiPenerimaan == null) {
+      Get.snackbar(
+        'Perhatian',
+        'Foto bukti penerimaan diperlukan',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
-    try {
-      String? imageUrl;
+    Directory? tempDir;
+    File? signatureFile;
 
-      if (_buktiPenerimaan != null) {
-        // Upload bukti penerimaan
-        imageUrl =
-            await controller.uploadBuktiPenerimaan(_buktiPenerimaan!.path);
-      }
+    try {
+      String imageUrl;
+      String signatureUrl;
+
+      // Upload bukti penerimaan
+      imageUrl = await controller.uploadBuktiPenerimaan(_buktiPenerimaan!.path);
+
+      // Simpan tanda tangan ke file sementara dan upload
+      tempDir = await Directory.systemTemp.createTemp('signature');
+      signatureFile = File('${tempDir.path}/signature.png');
+      await signatureFile.writeAsBytes(_signatureImage!);
+
+      print('Signature file path: ${signatureFile.path}');
+      print('Signature file exists: ${signatureFile.existsSync()}');
+      print('Signature file size: ${signatureFile.lengthSync()} bytes');
+
+      signatureUrl = await controller.uploadBuktiPenerimaan(
+        signatureFile.path,
+        isTandaTangan: true,
+      );
 
       // Konfirmasi penerimaan
       await controller.konfirmasiPenerimaan(
         widget.penerima,
         buktiPenerimaan: imageUrl,
+        tandaTangan: signatureUrl,
       );
 
+      // Hapus file sementara sebelum navigasi
+      try {
+        if (signatureFile.existsSync()) {
+          await signatureFile.delete();
+        }
+        if (tempDir.existsSync()) {
+          await tempDir.delete();
+        }
+      } catch (e) {
+        print('Error saat menghapus file sementara: $e');
+      }
+
+      // Tutup semua snackbar yang mungkin masih terbuka
+      if (Get.isSnackbarOpen) {
+        Get.closeAllSnackbars();
+      }
+
+      // Kembali ke halaman sebelumnya dengan hasil true (berhasil)
+      // Gunakan Get.back(result: true) untuk kembali ke halaman detail penyaluran
+      // dengan membawa hasil bahwa konfirmasi berhasil
       Get.back(result: true);
 
-      Get.snackbar(
-        'Sukses',
-        'Konfirmasi penerimaan bantuan berhasil',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      // Tampilkan snackbar sukses di halaman detail penyaluran
+      Future.delayed(const Duration(milliseconds: 300), () {
+        Get.snackbar(
+          'Sukses',
+          'Konfirmasi penerimaan bantuan berhasil',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 2),
+        );
+      });
     } catch (e) {
+      // Tampilkan pesan error
       Get.snackbar(
         'Error',
         'Terjadi kesalahan: $e',
@@ -580,6 +725,18 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
+      // Hapus file sementara jika belum dihapus
+      try {
+        if (signatureFile != null && signatureFile.existsSync()) {
+          await signatureFile.delete();
+        }
+        if (tempDir != null && tempDir.existsSync()) {
+          await tempDir.delete();
+        }
+      } catch (e) {
+        print('Error saat menghapus file sementara: $e');
+      }
+
       setState(() {
         _isLoading = false;
       });

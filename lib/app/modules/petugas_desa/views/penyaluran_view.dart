@@ -73,11 +73,6 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
 
                 const SizedBox(height: 20),
 
-                // Ringkasan Permintaan Penjadwalan
-                PermintaanPenjadwalanSummaryWidget(controller: controller),
-
-                const SizedBox(height: 20),
-
                 // Jadwal hari ini
                 JadwalSectionWidget(
                   controller: controller,
@@ -96,15 +91,7 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
                   status: 'Terjadwal',
                 ),
 
-                const SizedBox(height: 20),
-
-                // Jadwal selesai
-                JadwalSectionWidget(
-                  controller: controller,
-                  title: 'Terlaksana',
-                  jadwalList: controller.jadwalTerlaksana,
-                  status: 'Terlaksana',
-                ),
+                const SizedBox(height: 50),
               ],
             );
           }),

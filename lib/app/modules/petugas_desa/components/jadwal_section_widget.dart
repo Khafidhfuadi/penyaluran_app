@@ -4,6 +4,7 @@ import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class JadwalSectionWidget extends StatelessWidget {
   final JadwalPenyaluranController controller;
@@ -116,18 +117,18 @@ class JadwalSectionWidget extends StatelessWidget {
   Color _getStatusColor() {
     switch (status) {
       case 'Aktif':
-        return Colors.green;
+        return AppTheme.scheduledColor;
       case 'Terjadwal':
-        return Colors.blue;
+        return AppTheme.processedColor;
       case 'Terlaksana':
-        return Colors.grey;
+        return AppTheme.completedColor;
       default:
-        return Colors.orange;
+        return AppTheme.infoColor;
     }
   }
 
   String _getStatusText(PenyaluranBantuanModel jadwal) {
-    // Jika status jadwal adalah BERLANGSUNG, tampilkan sebagai "Aktif"
+    // Jika status jadwal adalah AKTIF, tampilkan sebagai "Aktif"
     if (jadwal.status == 'AKTIF') {
       return 'Aktif';
     }
@@ -135,7 +136,7 @@ class JadwalSectionWidget extends StatelessWidget {
     else if (jadwal.status == 'DIJADWALKAN') {
       return 'Terjadwal';
     }
-    // Jika status jadwal adalah terlaksana, tampilkan sebagai "Terlaksana"
+    // Jika status jadwal adalah TERLAKSANA, tampilkan sebagai "Terlaksana"
     else if (jadwal.status == 'TERLAKSANA') {
       return 'Terlaksana';
     } else if (jadwal.status == 'BATALTERLAKSANA') {
@@ -146,17 +147,17 @@ class JadwalSectionWidget extends StatelessWidget {
   }
 
   Color _getStatusColorByJadwal(PenyaluranBantuanModel jadwal) {
-    // Jika status jadwal adalah BERLANGSUNG, gunakan warna hijau
+    // Jika status jadwal adalah AKTIF, gunakan warna hijau
     if (jadwal.status == 'AKTIF') {
-      return Colors.green;
+      return AppTheme.scheduledColor;
     }
     // Jika status jadwal adalah DIJADWALKAN, gunakan warna biru
     else if (jadwal.status == 'DIJADWALKAN') {
-      return Colors.blue;
+      return AppTheme.processedColor;
     } else if (jadwal.status == 'TERLAKSANA') {
-      return Colors.grey;
+      return AppTheme.completedColor;
     } else if (jadwal.status == 'BATALTERLAKSANA') {
-      return Colors.red;
+      return AppTheme.errorColor;
     }
     // Default warna
     return _getStatusColor();

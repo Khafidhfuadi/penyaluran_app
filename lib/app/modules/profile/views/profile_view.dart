@@ -4,7 +4,7 @@ import 'package:penyaluran_app/app/modules/profile/controllers/profile_controlle
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class ProfileView extends GetView<ProfileController> {
-  const ProfileView({Key? key}) : super(key: key);
+  const ProfileView({super.key});
 
   @override
   Widget build(BuildContext context) {

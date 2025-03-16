@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:penyaluran_app/app/utils/date_formatter.dart';
 
 class DateTimeHelper {
   /// Mengkonversi DateTime dari UTC ke timezone lokal
@@ -12,7 +13,7 @@ class DateTimeHelper {
 
     // Pastikan tanggal dalam timezone lokal
     final localDateTime = toLocalDateTime(dateTime);
-    return DateFormat('dd MMM yyyy').format(localDateTime);
+    return DateFormatter.formatDate(localDateTime, format: 'dd MMM yyyy');
   }
 
   /// Format waktu ke format 24 jam (HH:mm)
@@ -21,7 +22,7 @@ class DateTimeHelper {
 
     // Pastikan waktu dalam timezone lokal
     final localDateTime = toLocalDateTime(dateTime);
-    return DateFormat('HH:mm').format(localDateTime);
+    return DateFormatter.formatTime(localDateTime);
   }
 
   /// Format tanggal dan waktu (dd MMM yyyy HH:mm)
@@ -30,7 +31,8 @@ class DateTimeHelper {
 
     // Pastikan tanggal dan waktu dalam timezone lokal
     final localDateTime = toLocalDateTime(dateTime);
-    return "${DateFormat('dd MMM yyyy').format(localDateTime)} ${DateFormat('HH:mm').format(localDateTime)}";
+    return DateFormatter.formatDateTime(localDateTime,
+        format: 'dd MMM yyyy HH:mm');
   }
 
   /// Format tanggal lengkap dalam bahasa Indonesia (Senin, 01 Januari 2023)

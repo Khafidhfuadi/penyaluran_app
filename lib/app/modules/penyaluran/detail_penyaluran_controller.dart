@@ -22,8 +22,18 @@ class DetailPenyaluranController extends GetxController {
   void onInit() {
     super.onInit();
     final String? penyaluranId = Get.parameters['id'];
-    print('DetailPenyaluranController - ID Penyaluran: $penyaluranId');
-    if (penyaluranId != null) {
+    final PenyaluranBantuanModel? penyaluranData =
+        Get.arguments as PenyaluranBantuanModel?;
+
+    if (penyaluranData != null) {
+      // Jika data penyaluran diterima langsung dari argumen
+      penyaluran.value = penyaluranData;
+      if (penyaluran.value?.id != null) {
+        loadPenyaluranDetails(penyaluran.value!.id!);
+      }
+      checkUserRole();
+    } else if (penyaluranId != null) {
+      // Jika hanya ID penyaluran yang diterima
       loadPenyaluranData(penyaluranId);
       checkUserRole();
     } else {
@@ -42,7 +52,7 @@ class DetailPenyaluranController extends GetxController {
             .eq('id', user.id)
             .single();
 
-        if (userData != null && userData['role'] == 'petugas_desa') {
+        if (userData['role'] == 'petugas_desa') {
           isPetugasDesa.value = true;
         }
       }
@@ -66,90 +76,84 @@ class DetailPenyaluranController extends GetxController {
 
       print('DetailPenyaluranController - Data penyaluran: $penyaluranData');
 
-      if (penyaluranData != null) {
-        // Pastikan data yang diterima sesuai dengan tipe data yang diharapkan
-        Map<String, dynamic> sanitizedData =
-            Map<String, dynamic>.from(penyaluranData);
+      // Pastikan data yang diterima sesuai dengan tipe data yang diharapkan
+      Map<String, dynamic> sanitizedData =
+          Map<String, dynamic>.from(penyaluranData);
 
-        // Konversi jumlah_penerima ke int jika bertipe String
-        if (sanitizedData['jumlah_penerima'] is String) {
-          sanitizedData['jumlah_penerima'] =
-              int.tryParse(sanitizedData['jumlah_penerima'] as String) ?? 0;
-        }
+      // Konversi jumlah_penerima ke int jika bertipe String
+      if (sanitizedData['jumlah_penerima'] is String) {
+        sanitizedData['jumlah_penerima'] =
+            int.tryParse(sanitizedData['jumlah_penerima'] as String) ?? 0;
+      }
 
-        penyaluran.value = PenyaluranBantuanModel.fromJson(sanitizedData);
+      penyaluran.value = PenyaluranBantuanModel.fromJson(sanitizedData);
+      print(
+          'DetailPenyaluranController - Model penyaluran: ${penyaluran.value?.nama}');
+
+      // Ambil data skema bantuan jika ada
+      if (penyaluran.value?.skemaId != null &&
+          penyaluran.value!.skemaId!.isNotEmpty) {
         print(
-            'DetailPenyaluranController - Model penyaluran: ${penyaluran.value?.nama}');
+            'DetailPenyaluranController - Memuat skema bantuan dengan ID: ${penyaluran.value!.skemaId}');
+        final skemaData = await _supabaseService.client
+            .from('xx02_skema_bantuan')
+            .select('*')
+            .eq('id', penyaluran.value!.skemaId!)
+            .single();
 
-        // Ambil data skema bantuan jika ada
-        if (penyaluran.value?.skemaId != null &&
-            penyaluran.value!.skemaId!.isNotEmpty) {
-          print(
-              'DetailPenyaluranController - Memuat skema bantuan dengan ID: ${penyaluran.value!.skemaId}');
-          final skemaData = await _supabaseService.client
-              .from('xx02_skema_bantuan')
-              .select('*')
-              .eq('id', penyaluran.value!.skemaId!)
-              .single();
+        print('DetailPenyaluranController - Data skema bantuan: $skemaData');
+        if (skemaData != null) {
+          // Pastikan data skema sesuai dengan tipe data yang diharapkan
+          Map<String, dynamic> sanitizedSkemaData =
+              Map<String, dynamic>.from(skemaData);
 
-          print('DetailPenyaluranController - Data skema bantuan: $skemaData');
-          if (skemaData != null) {
-            // Pastikan data skema sesuai dengan tipe data yang diharapkan
-            Map<String, dynamic> sanitizedSkemaData =
-                Map<String, dynamic>.from(skemaData);
-
-            // Konversi kuota ke int jika bertipe String
-            if (sanitizedSkemaData['kuota'] is String) {
-              sanitizedSkemaData['kuota'] =
-                  int.tryParse(sanitizedSkemaData['kuota'] as String) ?? 0;
-            }
-
-            // Konversi petugas_verifikasi_id ke int jika bertipe String
-            if (sanitizedSkemaData['petugas_verifikasi_id'] is String) {
-              sanitizedSkemaData['petugas_verifikasi_id'] = int.tryParse(
-                  sanitizedSkemaData['petugas_verifikasi_id'] as String);
-            }
-
-            skemaBantuan.value = SkemaBantuanModel.fromJson(sanitizedSkemaData);
-            print(
-                'DetailPenyaluranController - Model skema bantuan: ${skemaBantuan.value?.nama}');
+          // Konversi kuota ke int jika bertipe String
+          if (sanitizedSkemaData['kuota'] is String) {
+            sanitizedSkemaData['kuota'] =
+                int.tryParse(sanitizedSkemaData['kuota'] as String) ?? 0;
           }
+
+          // Konversi petugas_verifikasi_id ke int jika bertipe String
+          if (sanitizedSkemaData['petugas_verifikasi_id'] is String) {
+            sanitizedSkemaData['petugas_verifikasi_id'] = int.tryParse(
+                sanitizedSkemaData['petugas_verifikasi_id'] as String);
+          }
+
+          skemaBantuan.value = SkemaBantuanModel.fromJson(sanitizedSkemaData);
+          print(
+              'DetailPenyaluranController - Model skema bantuan: ${skemaBantuan.value?.nama}');
         }
+      }
 
-        // Ambil data penerima penyaluran
-        final penerimaPenyaluranData = await _supabaseService.client
-            .from('penerima_penyaluran')
-            .select('*, warga:warga_id(*)')
-            .eq('penyaluran_bantuan_id', penyaluranId);
+      // Ambil data penerima penyaluran
+      final penerimaPenyaluranData = await _supabaseService.client
+          .from('penerima_penyaluran')
+          .select('*, warga:warga_id(*)')
+          .eq('penyaluran_bantuan_id', penyaluranId);
 
+      print(
+          'DetailPenyaluranController - Data penerima penyaluran: $penerimaPenyaluranData');
+      if (penerimaPenyaluranData != null) {
+        final List<PenerimaPenyaluranModel> penerima = [];
+        for (var item in penerimaPenyaluranData) {
+          // Pastikan data penerima sesuai dengan tipe data yang diharapkan
+          Map<String, dynamic> sanitizedPenerimaData =
+              Map<String, dynamic>.from(item);
+
+          // Konversi jumlah_bantuan ke double jika bertipe String
+          if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
+            sanitizedPenerimaData['jumlah_bantuan'] = double.tryParse(
+                sanitizedPenerimaData['jumlah_bantuan'] as String);
+          }
+
+          penerima.add(PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData));
+        }
+        penerimaPenyaluran.assignAll(penerima);
         print(
-            'DetailPenyaluranController - Data penerima penyaluran: $penerimaPenyaluranData');
-        if (penerimaPenyaluranData != null) {
-          final List<PenerimaPenyaluranModel> penerima = [];
-          for (var item in penerimaPenyaluranData) {
-            // Pastikan data penerima sesuai dengan tipe data yang diharapkan
-            Map<String, dynamic> sanitizedPenerimaData =
-                Map<String, dynamic>.from(item);
+            'DetailPenyaluranController - Jumlah penerima: ${penerima.length}');
 
-            // Konversi id ke int jika bertipe String
-            if (sanitizedPenerimaData['id'] is String) {
-              sanitizedPenerimaData['id'] =
-                  int.tryParse(sanitizedPenerimaData['id'] as String);
-            }
-
-            // Konversi jumlah_bantuan ke double jika bertipe String
-            if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
-              sanitizedPenerimaData['jumlah_bantuan'] = double.tryParse(
-                  sanitizedPenerimaData['jumlah_bantuan'] as String);
-            }
-
-            penerima
-                .add(PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData));
-          }
-          penerimaPenyaluran.assignAll(penerima);
-          print(
-              'DetailPenyaluranController - Jumlah penerima: ${penerima.length}');
-        }
+        //print id
+        print('DetailPenyaluranController - ID penerima: ${penerima[0].id}');
       }
     } catch (e) {
       print('Error loading penyaluran data: $e');
@@ -165,7 +169,8 @@ class DetailPenyaluranController extends GetxController {
 
   Future<void> refreshData() async {
     if (penyaluran.value?.id != null) {
-      await loadPenyaluranData(penyaluran.value!.id!);
+      // Jika data penyaluran sudah ada, cukup muat detail saja
+      await loadPenyaluranDetails(penyaluran.value!.id!);
     }
   }
 
@@ -178,10 +183,10 @@ class DetailPenyaluranController extends GetxController {
         throw Exception('ID penyaluran tidak ditemukan');
       }
 
-      // Update status penyaluran menjadi "BERLANGSUNG"
+      // Update status penyaluran menjadi "AKTIF"
       await _supabaseService.client
           .from('penyaluran_bantuan')
-          .update({'status': 'BERLANGSUNG'}).eq('id', penyaluran.value!.id!);
+          .update({'status': 'AKTIF'}).eq('id', penyaluran.value!.id!);
 
       await refreshData();
 
@@ -208,7 +213,7 @@ class DetailPenyaluranController extends GetxController {
 
   // Fungsi untuk konfirmasi penerimaan bantuan oleh penerima
   Future<void> konfirmasiPenerimaan(PenerimaPenyaluranModel penerima,
-      {String? buktiPenerimaan}) async {
+      {required String buktiPenerimaan, required String tandaTangan}) async {
     try {
       isProcessing.value = true;
 
@@ -216,39 +221,39 @@ class DetailPenyaluranController extends GetxController {
         throw Exception('ID penerima tidak ditemukan');
       }
 
+      if (buktiPenerimaan.isEmpty) {
+        throw Exception('Bukti penerimaan tidak boleh kosong');
+      }
+
+      if (tandaTangan.isEmpty) {
+        throw Exception('Tanda tangan tidak boleh kosong');
+      }
+
       // Update status penerimaan menjadi "DITERIMA"
       final Map<String, dynamic> updateData = {
         'status_penerimaan': 'DITERIMA',
         'tanggal_penerimaan': DateTime.now().toIso8601String(),
+        'bukti_penerimaan': buktiPenerimaan,
+        'tanda_tangan': tandaTangan,
       };
 
-      if (buktiPenerimaan != null) {
-        updateData['bukti_penerimaan'] = buktiPenerimaan;
-      }
+      print(
+          'DetailPenyaluranController - Updating penerima with ID: ${penerima.id}');
+      print('DetailPenyaluranController - Update data: $updateData');
 
       await _supabaseService.client
           .from('penerima_penyaluran')
           .update(updateData)
           .eq('id', penerima.id!);
 
+      // Refresh data setelah konfirmasi berhasil
       await refreshData();
 
-      Get.snackbar(
-        'Sukses',
-        'Konfirmasi penerimaan bantuan berhasil',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      // Tidak perlu menampilkan snackbar di sini karena sudah ditampilkan di halaman konfirmasi penerima
     } catch (e) {
       print('Error konfirmasi penerimaan: $e');
-      Get.snackbar(
-        'Error',
-        'Terjadi kesalahan saat konfirmasi penerimaan bantuan',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      // Tidak perlu menampilkan snackbar di sini karena sudah ditampilkan di halaman konfirmasi penerima
+      rethrow; // Melempar kembali exception agar dapat ditangkap di _konfirmasiPenerimaan
     } finally {
       isProcessing.value = false;
     }
@@ -331,9 +336,9 @@ class DetailPenyaluranController extends GetxController {
         throw Exception('ID penyaluran tidak ditemukan');
       }
 
-      // Update status penyaluran menjadi "DIBATALKAN"
+      // Update status penyaluran menjadi "BATALTERLAKSANA"
       await _supabaseService.client.from('penyaluran_bantuan').update({
-        'status': 'DIBATALKAN',
+        'status': 'BATALTERLAKSANA',
         'alasan_pembatalan': alasan,
         'tanggal_selesai': DateTime.now().toIso8601String(),
       }).eq('id', penyaluran.value!.id!);
@@ -361,36 +366,140 @@ class DetailPenyaluranController extends GetxController {
     }
   }
 
-  // Fungsi untuk mengupload bukti penerimaan
-  Future<String?> uploadBuktiPenerimaan(String filePath) async {
+  // Fungsi untuk mengupload bukti penerimaan atau tanda tangan
+  Future<String> uploadBuktiPenerimaan(String filePath,
+      {bool isTandaTangan = false}) async {
     try {
-      final fileName =
-          'bukti_penerimaan_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final String folderName =
+          isTandaTangan ? 'tanda_tangan' : 'bukti_penerimaan';
+      final String filePrefix =
+          isTandaTangan ? 'tanda_tangan' : 'bukti_penerimaan';
+      final String fileName =
+          '${filePrefix}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final file = File(filePath);
 
+      print(
+          'Uploading ${isTandaTangan ? "tanda tangan" : "bukti penerimaan"} dari: $filePath');
+      print('File exists: ${file.existsSync()}');
+      print('File size: ${file.lengthSync()} bytes');
+
+      if (!file.existsSync()) {
+        throw Exception('File tidak ditemukan: $filePath');
+      }
+
+      print('Uploading ke bucket: $folderName dengan nama file: $fileName');
       final storageResponse = await _supabaseService.client.storage
-          .from('bukti_penerimaan')
+          .from(folderName)
           .upload(fileName, file);
 
+      print('Storage response: $storageResponse');
       if (storageResponse.isEmpty) {
-        throw Exception('Gagal mengupload bukti penerimaan');
+        throw Exception(
+            'Gagal mengupload ${isTandaTangan ? 'tanda tangan' : 'bukti penerimaan'}');
       }
 
       final fileUrl = _supabaseService.client.storage
-          .from('bukti_penerimaan')
+          .from(folderName)
           .getPublicUrl(fileName);
+
+      print('File URL: $fileUrl');
+      if (fileUrl.isEmpty) {
+        throw Exception(
+            'Gagal mendapatkan URL ${isTandaTangan ? 'tanda tangan' : 'bukti penerimaan'}');
+      }
 
       return fileUrl;
     } catch (e) {
-      print('Error upload bukti penerimaan: $e');
+      print(
+          'Error upload ${isTandaTangan ? 'tanda tangan' : 'bukti penerimaan'}: $e');
+      // Tidak perlu menampilkan snackbar di sini karena sudah ditampilkan di halaman konfirmasi penerima
+      throw Exception(
+          'Gagal mengupload ${isTandaTangan ? 'tanda tangan' : 'bukti penerimaan'}: $e');
+    }
+  }
+
+  // Fungsi untuk memuat detail penyaluran (skema dan penerima) tanpa memuat ulang data penyaluran
+  Future<void> loadPenyaluranDetails(String penyaluranId) async {
+    try {
+      isLoading.value = true;
+      print(
+          'DetailPenyaluranController - Memuat detail penyaluran dengan ID: $penyaluranId');
+
+      // Ambil data skema bantuan jika ada
+      if (penyaluran.value?.skemaId != null &&
+          penyaluran.value!.skemaId!.isNotEmpty) {
+        print(
+            'DetailPenyaluranController - Memuat skema bantuan dengan ID: ${penyaluran.value!.skemaId}');
+        final skemaData = await _supabaseService.client
+            .from('xx02_skema_bantuan')
+            .select('*')
+            .eq('id', penyaluran.value!.skemaId!)
+            .single();
+
+        print('DetailPenyaluranController - Data skema bantuan: $skemaData');
+        if (skemaData != null) {
+          // Pastikan data skema sesuai dengan tipe data yang diharapkan
+          Map<String, dynamic> sanitizedSkemaData =
+              Map<String, dynamic>.from(skemaData);
+
+          // Konversi kuota ke int jika bertipe String
+          if (sanitizedSkemaData['kuota'] is String) {
+            sanitizedSkemaData['kuota'] =
+                int.tryParse(sanitizedSkemaData['kuota'] as String) ?? 0;
+          }
+
+          // Konversi petugas_verifikasi_id ke int jika bertipe String
+          if (sanitizedSkemaData['petugas_verifikasi_id'] is String) {
+            sanitizedSkemaData['petugas_verifikasi_id'] = int.tryParse(
+                sanitizedSkemaData['petugas_verifikasi_id'] as String);
+          }
+
+          skemaBantuan.value = SkemaBantuanModel.fromJson(sanitizedSkemaData);
+          print(
+              'DetailPenyaluranController - Model skema bantuan: ${skemaBantuan.value?.nama}');
+        }
+      }
+
+      // Ambil data penerima penyaluran
+      final penerimaPenyaluranData = await _supabaseService.client
+          .from('penerima_penyaluran')
+          .select('*, warga:warga_id(*)')
+          .eq('penyaluran_bantuan_id', penyaluranId);
+
+      print(
+          'DetailPenyaluranController - Data penerima penyaluran: $penerimaPenyaluranData');
+      if (penerimaPenyaluranData != null) {
+        final List<PenerimaPenyaluranModel> penerima = [];
+        for (var item in penerimaPenyaluranData) {
+          // Pastikan data penerima sesuai dengan tipe data yang diharapkan
+          Map<String, dynamic> sanitizedPenerimaData =
+              Map<String, dynamic>.from(item);
+
+          // Konversi jumlah_bantuan ke double jika bertipe String
+          if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
+            sanitizedPenerimaData['jumlah_bantuan'] = double.tryParse(
+                sanitizedPenerimaData['jumlah_bantuan'] as String);
+          }
+
+          penerima.add(PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData));
+        }
+        penerimaPenyaluran.assignAll(penerima);
+        print(
+            'DetailPenyaluranController - Jumlah penerima: ${penerima.length}');
+
+        if (penerima.isNotEmpty) {
+          print('DetailPenyaluranController - ID penerima: ${penerima[0].id}');
+        }
+      }
+    } catch (e) {
+      print('Error loading penyaluran details: $e');
       Get.snackbar(
         'Error',
-        'Terjadi kesalahan saat mengupload bukti penerimaan',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        'Terjadi kesalahan saat memuat detail penyaluran',
         snackPosition: SnackPosition.BOTTOM,
       );
-      return null;
+    } finally {
+      isLoading.value = false;
     }
   }
 }

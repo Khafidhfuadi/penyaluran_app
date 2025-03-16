@@ -274,15 +274,15 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
 
     switch (item.status) {
       case 'MENUNGGU':
-        statusColor = Colors.orange;
-        statusIcon = Icons.pending_actions;
+        statusColor = AppTheme.warningColor;
+        statusIcon = Icons.pending;
         break;
       case 'TERVERIFIKASI':
-        statusColor = Colors.green;
+        statusColor = AppTheme.successColor;
         statusIcon = Icons.check_circle;
         break;
       case 'DITOLAK':
-        statusColor = Colors.red;
+        statusColor = AppTheme.errorColor;
         statusIcon = Icons.cancel;
         break;
       default:

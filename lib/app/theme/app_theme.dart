@@ -7,11 +7,16 @@ class AppTheme {
   static const Color accentColor = Color(0xFF4A6D8C);
 
   // Warna untuk status
-  static const Color verifiedColor = Color(0xFFACF1C8);
-  static const Color processedColor = Color(0xFFF1C8AC);
-  static const Color rejectedColor = Color(0xFFF1ACAC);
-  static const Color scheduledColor = Color(0xFF2E5077);
-  static const Color completedColor = Color(0xFF6750A4);
+  static const Color verifiedColor =
+      Color(0xFF00C853); // Hijau yang lebih terang dan kontras
+  static const Color processedColor =
+      Color(0xFFFF9800); // Oranye yang lebih terang
+  static const Color rejectedColor =
+      Color(0xFFD32F2F); // Merah yang lebih gelap dan kontras
+  static const Color scheduledColor =
+      Color(0xFF1976D2); // Biru yang lebih terang
+  static const Color completedColor =
+      Color(0xFF4527A0); // Ungu yang lebih gelap dan kontras
 
   static const Color successColor = Colors.green;
   static const Color warningColor = Colors.orange;

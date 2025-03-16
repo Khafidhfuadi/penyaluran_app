@@ -199,7 +199,7 @@ class SupabaseService extends GetxService {
       final response = await client
           .from('penyaluran_bantuan')
           .select('id')
-          .eq('status', 'SELESAI');
+          .eq('status', 'TERLAKSANA');
 
       return response.length;
     } catch (e) {
@@ -282,9 +282,9 @@ class SupabaseService extends GetxService {
       final response = await client
           .from('penyaluran_bantuan')
           .select('*')
-          .eq('status', 'TERLAKSANA')
-          .order('tanggal_penyaluran', ascending: false)
-          .limit(10);
+          .inFilter('status', ['TERLAKSANA', 'BATALTERLAKSANA']).order(
+              'tanggal_penyaluran',
+              ascending: false);
 
       return response;
     } catch (e) {
@@ -298,7 +298,7 @@ class SupabaseService extends GetxService {
       final response = await client
           .from('penyaluran_bantuan')
           .select('*')
-          .eq('status', 'MENUNGGU');
+          .eq('status', 'DIJADWALKAN');
 
       return response;
     } catch (e) {
@@ -310,7 +310,7 @@ class SupabaseService extends GetxService {
   Future<void> approveJadwal(String jadwalId) async {
     try {
       await client.from('penyaluran_bantuan').update({
-        'status': 'DISETUJUI',
+        'status': 'AKTIF',
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', jadwalId);
     } catch (e) {
@@ -322,7 +322,7 @@ class SupabaseService extends GetxService {
   Future<void> rejectJadwal(String jadwalId, String alasan) async {
     try {
       await client.from('penyaluran_bantuan').update({
-        'status': 'DITOLAK',
+        'status': 'BATALTERLAKSANA',
         'alasan_penolakan': alasan,
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', jadwalId);
@@ -335,7 +335,7 @@ class SupabaseService extends GetxService {
   Future<void> completeJadwal(String jadwalId) async {
     try {
       await client.from('penyaluran_bantuan').update({
-        'status': 'SELESAI',
+        'status': 'TERLAKSANA',
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', jadwalId);
     } catch (e) {

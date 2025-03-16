@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:penyaluran_app/app/modules/penyaluran/detail_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'package:penyaluran_app/app/modules/penyaluran/konfirmasi_penerima_page.dart';
+import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 
 class DetailPenyaluranPage extends StatelessWidget {
   final controller = Get.put(DetailPenyaluranController());
@@ -49,11 +49,27 @@ class DetailPenyaluranPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 _buildPenerimaPenyaluranSection(context),
                 const SizedBox(height: 24),
-                Obx(() => _buildActionButtons(context)),
+                // Menampilkan section alasan pembatalan jika status BATALTERLAKSANA
+                if (controller.penyaluran.value?.status?.toUpperCase() ==
+                        'BATALTERLAKSANA' &&
+                    controller.penyaluran.value?.alasanPembatalan != null &&
+                    controller.penyaluran.value!.alasanPembatalan!.isNotEmpty)
+                  _buildPembatalanSection(context),
+                const SizedBox(height: 24),
+                // Tombol aksi akan ditampilkan di bottomNavigationBar
               ],
             ),
           ),
         );
+      }),
+      bottomNavigationBar: Obx(() {
+        final status = controller.penyaluran.value?.status?.toUpperCase() ?? '';
+        if (status == 'AKTIF' ||
+            status == 'DISETUJUI' ||
+            status == 'DIJADWALKAN') {
+          return _buildActionButtons(context);
+        }
+        return const SizedBox.shrink();
       }),
     );
   }
@@ -61,7 +77,6 @@ class DetailPenyaluranPage extends StatelessWidget {
   Widget _buildInfoCard(BuildContext context) {
     final penyaluran = controller.penyaluran.value!;
     final skema = controller.skemaBantuan.value;
-    final dateFormat = DateFormat('dd MMMM yyyy', 'id_ID');
 
     return Card(
       elevation: 2,
@@ -95,8 +110,17 @@ class DetailPenyaluranPage extends StatelessWidget {
             _buildInfoRow(
                 'Tanggal',
                 penyaluran.tanggalPenyaluran != null
-                    ? dateFormat.format(penyaluran.tanggalPenyaluran!)
+                    ? DateFormatter.formatDateTime(
+                        penyaluran.tanggalPenyaluran!)
                     : 'Belum dijadwalkan'),
+            // Tampilkan tanggal selesai jika status TERLAKSANA atau BATALTERLAKSANA
+            if (penyaluran.status == 'TERLAKSANA' ||
+                penyaluran.status == 'BATALTERLAKSANA')
+              _buildInfoRow(
+                  'Tanggal Selesai',
+                  penyaluran.tanggalSelesai != null
+                      ? DateFormatter.formatDateTime(penyaluran.tanggalSelesai!)
+                      : '-'),
             _buildInfoRow(
                 'Jumlah Penerima', '${penyaluran.jumlahPenerima ?? 0} orang'),
 
@@ -128,24 +152,69 @@ class DetailPenyaluranPage extends StatelessWidget {
             ],
 
             // Alasan penolakan jika ada
-            if (penyaluran.alasanPenolakan != null &&
-                penyaluran.alasanPenolakan!.isNotEmpty) ...[
+            if (penyaluran.alasanPembatalan != null &&
+                penyaluran.alasanPembatalan!.isNotEmpty) ...[
               const Divider(height: 24),
-              Text(
-                'Alasan Penolakan:',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red[700],
+              if (penyaluran.status?.toUpperCase() == 'BATALTERLAKSANA') ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppTheme.errorColor.withOpacity(0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.cancel_outlined,
+                            color: AppTheme.errorColor,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Alasan Pembatalan:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.errorColor,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        penyaluran.alasanPembatalan!,
+                        style: TextStyle(
+                          color: Colors.red[700],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                penyaluran.alasanPenolakan!,
-                style: TextStyle(
-                  color: Colors.red[700],
-                  fontStyle: FontStyle.italic,
+              ] else ...[
+                Text(
+                  'Alasan Pembatalan:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red[700],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  penyaluran.alasanPembatalan!,
+                  style: TextStyle(
+                    color: Colors.red[700],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
             ],
           ],
         ),
@@ -345,15 +414,8 @@ class DetailPenyaluranPage extends StatelessWidget {
     String statusText = _getStatusText(status);
 
     switch (status.toUpperCase()) {
-      case 'MENUNGGU':
+      case 'DIJADWALKAN':
         backgroundColor = AppTheme.processedColor;
-        break;
-      case 'DISETUJUI':
-        backgroundColor = AppTheme.verifiedColor;
-        textColor = Colors.black87;
-        break;
-      case 'DITOLAK':
-        backgroundColor = AppTheme.rejectedColor;
         break;
       case 'AKTIF':
         backgroundColor = AppTheme.scheduledColor;
@@ -361,7 +423,7 @@ class DetailPenyaluranPage extends StatelessWidget {
       case 'TERLAKSANA':
         backgroundColor = AppTheme.completedColor;
         break;
-      case 'DIBATALKAN':
+      case 'BATALTERLAKSANA':
         backgroundColor = AppTheme.errorColor;
         break;
       default:
@@ -391,7 +453,7 @@ class DetailPenyaluranPage extends StatelessWidget {
     String statusText = _getStatusPenerimaanText(status);
 
     // Konversi status ke format yang diinginkan
-    if (status.toUpperCase() == 'SUDAHMENERIMA') {
+    if (status.toUpperCase() == 'DITERIMA') {
       backgroundColor = AppTheme.successColor;
       statusText = 'Sudah Menerima';
     } else {
@@ -421,67 +483,71 @@ class DetailPenyaluranPage extends StatelessWidget {
     final status = controller.penyaluran.value?.status?.toUpperCase() ?? '';
 
     if (controller.isProcessing.value) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
+      return Container(
+        padding: const EdgeInsets.all(16.0),
+        child: const Center(
           child: CircularProgressIndicator(),
         ),
       );
     }
 
-    // Jika status DISETUJUI, tampilkan tombol Mulai Penyaluran
-    if (status == 'DISETUJUI') {
-      return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          icon: const Icon(Icons.play_arrow),
-          label: const Text('Mulai Penyaluran'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryColor,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
-          onPressed: controller.mulaiPenyaluran,
+    // Container untuk tombol-tombol
+    Widget buildButtonContainer(List<Widget> children) {
+      return Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.3),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: children,
         ),
       );
     }
 
-    // Jika status AKTIF, tampilkan tombol Selesaikan Penyaluran dan Batalkan
+    // Tombol Batalkan yang digunakan berulang
+    Widget cancelButton = Expanded(
+      child: OutlinedButton.icon(
+        icon: const Icon(Icons.cancel),
+        label: const Text('Batalkan'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppTheme.errorColor,
+          side: const BorderSide(color: AppTheme.errorColor),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        onPressed: () => _showBatalkanDialog(context),
+      ),
+    );
+
     if (status == 'AKTIF') {
-      return Column(
-        children: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.check_circle),
-              label: const Text('Selesaikan Penyaluran'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.successColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              onPressed: controller.selesaikanPenyaluran,
+      return buildButtonContainer([
+        Expanded(
+          child: ElevatedButton.icon(
+            icon: const Icon(Icons.check_circle),
+            label: const Text('Selesaikan'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.successColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
             ),
+            onPressed: controller.selesaikanPenyaluran,
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.cancel),
-              label: const Text('Batalkan Penyaluran'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.errorColor,
-                side: const BorderSide(color: AppTheme.errorColor),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              onPressed: () => _showBatalkanDialog(context),
-            ),
-          ),
-        ],
-      );
+        ),
+        const SizedBox(width: 12),
+        cancelButton,
+      ]);
+    } else if (status == 'DIJADWALKAN') {
+      return buildButtonContainer([cancelButton]);
     }
 
-    // Jika status TERLAKSANA atau DIBATALKAN, tidak perlu menampilkan tombol aksi
+    // Untuk status lainnya tidak menampilkan tombol
     return const SizedBox.shrink();
   }
 
@@ -593,7 +659,6 @@ class DetailPenyaluranPage extends StatelessWidget {
 
   void _showDetailPenerima(
       BuildContext context, PenerimaPenyaluranModel penerima) {
-    final dateFormat = DateFormat('dd MMMM yyyy', 'id_ID');
     final warga = penerima.warga;
 
     showModalBottomSheet(
@@ -646,7 +711,7 @@ class DetailPenyaluranPage extends StatelessWidget {
                     _getStatusPenerimaanText(penerima.statusPenerimaan ?? '-')),
                 if (penerima.tanggalPenerimaan != null)
                   _buildInfoRow('Tanggal Penerimaan',
-                      dateFormat.format(penerima.tanggalPenerimaan!)),
+                      DateFormatter.formatDate(penerima.tanggalPenerimaan!)),
                 if (penerima.jumlahBantuan != null)
                   _buildInfoRow(
                       'Jumlah Bantuan', penerima.jumlahBantuan.toString()),
@@ -688,8 +753,7 @@ class DetailPenyaluranPage extends StatelessWidget {
                 const SizedBox(height: 30),
                 if (controller.penyaluran.value?.status?.toUpperCase() ==
                         'AKTIF' &&
-                    penerima.statusPenerimaan?.toUpperCase() !=
-                        'SUDAHMENERIMA') ...[
+                    penerima.statusPenerimaan?.toUpperCase() != 'DITERIMA') ...[
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
@@ -736,18 +800,14 @@ class DetailPenyaluranPage extends StatelessWidget {
 
   String _getStatusText(String status) {
     switch (status.toUpperCase()) {
-      case 'MENUNGGU':
-        return 'Menunggu Persetujuan';
-      case 'DISETUJUI':
-        return 'Disetujui';
-      case 'DITOLAK':
-        return 'Ditolak';
+      case 'DIJADWALKAN':
+        return 'Terjadwal';
       case 'AKTIF':
-        return 'Sedang AKTIF';
+        return 'Aktif';
       case 'TERLAKSANA':
         return 'Terlaksana';
-      case 'DIBATALKAN':
-        return 'Dibatalkan';
+      case 'BATALTERLAKSANA':
+        return 'Batal Terlaksana';
       default:
         return status;
     }
@@ -755,11 +815,82 @@ class DetailPenyaluranPage extends StatelessWidget {
 
   String _getStatusPenerimaanText(String status) {
     // Konversi status ke format yang diinginkan
-    if (status.toUpperCase() == 'SUDAHMENERIMA') {
+    if (status.toUpperCase() == 'DITERIMA') {
       return 'Sudah Menerima';
     } else {
       // Semua status selain DITERIMA dianggap sebagai BELUMMENERIMA
       return 'Belum Menerima';
     }
+  }
+
+  Widget _buildPembatalanSection(BuildContext context) {
+    final penyaluran = controller.penyaluran.value!;
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: AppTheme.errorColor.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.cancel_outlined,
+                  color: AppTheme.errorColor,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Informasi Pembatalan',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.errorColor,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            _buildInfoRow('Status', 'Batal Terlaksana'),
+            if (penyaluran.tanggalSelesai != null)
+              _buildInfoRow('Tanggal Pembatalan',
+                  DateFormatter.formatDateTime(penyaluran.tanggalSelesai!)),
+            const SizedBox(height: 8),
+            const Text(
+              'Alasan Pembatalan:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                penyaluran.alasanPembatalan!,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.red[700],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

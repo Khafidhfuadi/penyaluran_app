@@ -268,16 +268,16 @@ class PengaduanView extends GetView<PetugasDesaController> {
     IconData statusIcon;
 
     switch (item['status']) {
-      case 'Diproses':
-        statusColor = Colors.orange;
-        statusIcon = Icons.pending_actions;
+      case 'MENUNGGU':
+        statusColor = AppTheme.warningColor;
+        statusIcon = Icons.pending;
         break;
-      case 'Tindakan':
-        statusColor = Colors.blue;
-        statusIcon = Icons.engineering;
+      case 'DIPROSES':
+        statusColor = AppTheme.infoColor;
+        statusIcon = Icons.sync;
         break;
-      case 'Selesai':
-        statusColor = Colors.green;
+      case 'SELESAI':
+        statusColor = AppTheme.successColor;
         statusIcon = Icons.check_circle;
         break;
       default:

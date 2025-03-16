@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/data/models/skema_bantuan_model.dart';
+import 'package:penyaluran_app/app/utils/date_formatter.dart';
 
 class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
   const TambahPenyaluranView({super.key});
@@ -27,8 +27,6 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
     final TextEditingController tanggalPenyaluranController =
         TextEditingController();
     final TextEditingController waktuMulaiController = TextEditingController();
-    final TextEditingController waktuSelesaiController =
-        TextEditingController();
 
     // Variabel untuk menyimpan nilai yang dipilih
     final Rx<String?> selectedSkemaBantuanId = Rx<String?>(null);
@@ -40,7 +38,6 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
     // Tanggal dan waktu penyaluran
     final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
     final Rx<TimeOfDay?> selectedWaktuMulai = Rx<TimeOfDay?>(null);
-    final Rx<TimeOfDay?> selectedWaktuSelesai = Rx<TimeOfDay?>(null);
 
     // Fungsi untuk memuat data pengajuan kelayakan bantuan
     Future<void> loadPengajuanKelayakan(String skemaId) async {
@@ -209,7 +206,7 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                   fontStyle: FontStyle.italic,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               Obx(() => jumlahPenerima.value > 0
                   ? TextButton.icon(
                       onPressed: () async {
@@ -295,7 +292,7 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                       label: const Text('Lihat Daftar Penerima'),
                     )
                   : const SizedBox.shrink()),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
               // Tanggal Penyaluran
               Text(
@@ -330,7 +327,7 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                   if (pickedDate != null) {
                     selectedDate.value = pickedDate;
                     tanggalPenyaluranController.text =
-                        DateFormat('dd MMMM yyyy', 'id_ID').format(pickedDate);
+                        DateFormatter.formatDate(pickedDate);
                   }
                 },
                 validator: (value) {
@@ -372,152 +369,43 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
               ),
               const SizedBox(height: 16),
 
-              // Rentang Waktu Penyaluran
-              Text(
-                'Rentang Waktu Penyaluran',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-
               // Waktu Mulai
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Waktu Mulai'),
-                        const SizedBox(height: 4),
-                        TextFormField(
-                          controller: waktuMulaiController,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            hintText: 'Mulai',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            suffixIcon: const Icon(Icons.access_time),
-                          ),
-                          onTap: () async {
-                            final TimeOfDay? pickedTime = await showTimePicker(
-                              context: context,
-                              initialTime: TimeOfDay.now(),
-                            );
-                            if (pickedTime != null) {
-                              selectedWaktuMulai.value = pickedTime;
-                              waktuMulaiController.text =
-                                  '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}';
-
-                              // Jika waktu selesai belum dipilih atau lebih awal dari waktu mulai
-                              if (selectedWaktuSelesai.value == null ||
-                                  (selectedWaktuSelesai.value != null &&
-                                      (pickedTime.hour >
-                                              selectedWaktuSelesai
-                                                  .value!.hour ||
-                                          (pickedTime.hour ==
-                                                  selectedWaktuSelesai
-                                                      .value!.hour &&
-                                              pickedTime.minute >=
-                                                  selectedWaktuSelesai
-                                                      .value!.minute)))) {
-                                // Set waktu selesai 1 jam setelah waktu mulai
-                                final TimeOfDay defaultSelesai = TimeOfDay(
-                                  hour: (pickedTime.hour + 1) % 24,
-                                  minute: pickedTime.minute,
-                                );
-                                selectedWaktuSelesai.value = defaultSelesai;
-                                waktuSelesaiController.text =
-                                    '${defaultSelesai.hour.toString().padLeft(2, '0')}:${defaultSelesai.minute.toString().padLeft(2, '0')}';
-                              }
-                            }
-                          },
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Waktu mulai harus dipilih';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
+                  const Text('Waktu Mulai'),
+                  const SizedBox(height: 4),
+                  TextFormField(
+                    controller: waktuMulaiController,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      hintText: 'Pilih waktu mulai',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      suffixIcon: const Icon(Icons.access_time),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Waktu Selesai'),
-                        const SizedBox(height: 4),
-                        TextFormField(
-                          controller: waktuSelesaiController,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            hintText: 'Selesai',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            suffixIcon: const Icon(Icons.access_time),
-                          ),
-                          onTap: () async {
-                            // Pastikan waktu mulai sudah dipilih
-                            if (selectedWaktuMulai.value == null) {
-                              Get.snackbar(
-                                'Perhatian',
-                                'Silakan pilih waktu mulai terlebih dahulu',
-                                backgroundColor: Colors.amber,
-                                colorText: Colors.black,
-                              );
-                              return;
-                            }
-
-                            final TimeOfDay? pickedTime = await showTimePicker(
-                              context: context,
-                              initialTime: selectedWaktuSelesai.value ??
-                                  TimeOfDay(
-                                    hour: (selectedWaktuMulai.value!.hour + 1) %
-                                        24,
-                                    minute: selectedWaktuMulai.value!.minute,
-                                  ),
-                            );
-                            if (pickedTime != null) {
-                              // Validasi waktu selesai harus setelah waktu mulai
-                              if (pickedTime.hour <
-                                      selectedWaktuMulai.value!.hour ||
-                                  (pickedTime.hour ==
-                                          selectedWaktuMulai.value!.hour &&
-                                      pickedTime.minute <=
-                                          selectedWaktuMulai.value!.minute)) {
-                                Get.snackbar(
-                                  'Perhatian',
-                                  'Waktu selesai harus setelah waktu mulai',
-                                  backgroundColor: Colors.amber,
-                                  colorText: Colors.black,
-                                );
-                                return;
-                              }
-
-                              selectedWaktuSelesai.value = pickedTime;
-                              waktuSelesaiController.text =
-                                  '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}';
-                            }
-                          },
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Waktu selesai harus dipilih';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
+                    onTap: () async {
+                      final TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.now(),
+                      );
+                      if (pickedTime != null) {
+                        selectedWaktuMulai.value = pickedTime;
+                        waktuMulaiController.text =
+                            '${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}';
+                      }
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Waktu mulai harus dipilih';
+                      }
+                      return null;
+                    },
                   ),
                 ],
               ),
@@ -570,19 +458,6 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                         ).toLocal();
                       }
 
-                      // Gabungkan tanggal dan waktu selesai
-                      DateTime? tanggalWaktuSelesai;
-                      if (selectedDate.value != null &&
-                          selectedWaktuSelesai.value != null) {
-                        tanggalWaktuSelesai = DateTime(
-                          selectedDate.value!.year,
-                          selectedDate.value!.month,
-                          selectedDate.value!.day,
-                          selectedWaktuSelesai.value!.hour,
-                          selectedWaktuSelesai.value!.minute,
-                        ).toLocal();
-                      }
-
                       // Panggil fungsi untuk menambahkan penyaluran
                       controller.tambahPenyaluran(
                         nama: namaController.text,
@@ -591,7 +466,6 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                         lokasiPenyaluranId: selectedLokasiPenyaluranId.value!,
                         jumlahPenerima: jumlahPenerima.value,
                         tanggalPenyaluran: tanggalWaktuMulai,
-                        tanggalWaktuSelesai: tanggalWaktuSelesai,
                         kategoriBantuanId:
                             selectedSkemaBantuan.value!.kategoriBantuanId!,
                       );

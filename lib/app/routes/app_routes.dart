@@ -24,6 +24,7 @@ abstract class Routes {
   static const detailPenerimaPenyaluran = _Paths.detailPenerimaPenyaluran;
   static const laporanPenyaluran = _Paths.laporanPenyaluran;
   static const detailPenyaluran = _Paths.detailPenyaluran;
+  static const riwayatPenyaluran = _Paths.riwayatPenyaluran;
 }
 
 abstract class _Paths {
@@ -50,4 +51,5 @@ abstract class _Paths {
   static const detailPenerimaPenyaluran = '/detail-penerima-penyaluran';
   static const laporanPenyaluran = '/laporan-penyaluran';
   static const detailPenyaluran = '/detail-penyaluran';
+  static const riwayatPenyaluran = '/petugas-desa/riwayat-penyaluran';
 }
