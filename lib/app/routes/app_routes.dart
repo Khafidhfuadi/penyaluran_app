@@ -6,6 +6,8 @@ abstract class Routes {
   static const login = _Paths.login;
   static const register = _Paths.register;
   static const wargaDashboard = _Paths.wargaDashboard;
+  static const wargaPenyaluran = _Paths.wargaPenyaluran;
+  static const wargaPengaduan = _Paths.wargaPengaduan;
   static const petugasVerifikasiDashboard = _Paths.petugasVerifikasiDashboard;
   static const petugasDesaDashboard = _Paths.petugasDesaDashboard;
   static const donaturDashboard = _Paths.donaturDashboard;
@@ -33,6 +35,8 @@ abstract class _Paths {
   static const login = '/login';
   static const register = '/register';
   static const wargaDashboard = '/warga-dashboard';
+  static const wargaPenyaluran = '/warga-penyaluran';
+  static const wargaPengaduan = '/warga-pengaduan';
   static const petugasVerifikasiDashboard = '/petugas-verifikasi-dashboard';
   static const petugasDesaDashboard = '/petugas-desa-dashboard';
   static const donaturDashboard = '/donatur-dashboard';

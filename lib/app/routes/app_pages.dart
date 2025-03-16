@@ -20,6 +20,12 @@ import 'package:penyaluran_app/app/modules/profile/bindings/profile_binding.dart
 import 'package:penyaluran_app/app/modules/profile/views/profile_view.dart';
 import 'package:penyaluran_app/app/modules/splash/bindings/splash_binding.dart';
 import 'package:penyaluran_app/app/modules/splash/views/splash_view.dart';
+import 'package:penyaluran_app/app/modules/warga/bindings/warga_binding.dart';
+import 'package:penyaluran_app/app/modules/warga/views/warga_dashboard_view.dart';
+import 'package:penyaluran_app/app/modules/warga/views/warga_penyaluran_view.dart';
+import 'package:penyaluran_app/app/modules/warga/views/warga_pengaduan_view.dart';
+import 'package:penyaluran_app/app/modules/warga/views/warga_view.dart';
+import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
 
 part 'app_routes.dart';
 
@@ -38,6 +44,29 @@ class AppPages {
       name: _Paths.login,
       page: () => const LoginView(),
       binding: AuthBinding(),
+    ),
+    GetPage(
+      name: _Paths.wargaDashboard,
+      page: () => const WargaView(),
+      binding: WargaBinding(),
+    ),
+    GetPage(
+      name: _Paths.wargaPenyaluran,
+      page: () {
+        final controller = Get.find<WargaDashboardController>();
+        controller.activeTabIndex.value = 1;
+        return const WargaView();
+      },
+      binding: WargaBinding(),
+    ),
+    GetPage(
+      name: _Paths.wargaPengaduan,
+      page: () {
+        final controller = Get.find<WargaDashboardController>();
+        controller.activeTabIndex.value = 2;
+        return const WargaView();
+      },
+      binding: WargaBinding(),
     ),
     GetPage(
       name: _Paths.petugasDesaDashboard,
