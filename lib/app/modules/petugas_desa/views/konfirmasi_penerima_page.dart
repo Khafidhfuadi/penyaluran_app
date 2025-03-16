@@ -8,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:signature/signature.dart';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class KonfirmasiPenerimaPage extends StatefulWidget {

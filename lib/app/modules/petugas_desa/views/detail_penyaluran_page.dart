@@ -474,10 +474,6 @@ class DetailPenyaluranPage extends StatelessWidget {
             ? AppTheme.warningColor
             : AppTheme.errorColor;
 
-    // Tentukan lebar layar untuk responsivitas
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth > 600;
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
