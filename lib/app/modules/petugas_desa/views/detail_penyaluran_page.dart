@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
-import 'package:penyaluran_app/app/modules/penyaluran/detail_penyaluran_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/detail_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerima_page.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerima_page.dart';
 
 class DetailPenyaluranPage extends StatelessWidget {
   final controller = Get.put(DetailPenyaluranController());

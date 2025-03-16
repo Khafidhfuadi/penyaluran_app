@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:penyaluran_app/app/modules/penyaluran/detail_penyaluran_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/detail_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 
 class PenyaluranBinding extends Bindings {
