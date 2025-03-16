@@ -11,8 +11,8 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_donatur_vie
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_penyaluran_view.dart';
-import 'package:penyaluran_app/app/modules/penyaluran/detail_penyaluran_page.dart';
-import 'package:penyaluran_app/app/modules/penyaluran/penyaluran_binding.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_penyaluran_page.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/bindings/penyaluran_binding.dart';
 
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/penerima_binding.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/donatur_binding.dart';

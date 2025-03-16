@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:penyaluran_app/app/data/models/bentuk_bantuan_model.dart';
-import 'package:penyaluran_app/app/modules/penyaluran/detail_penyaluran_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/detail_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:signature/signature.dart';
