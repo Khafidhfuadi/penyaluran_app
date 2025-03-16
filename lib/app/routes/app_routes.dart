@@ -28,6 +28,8 @@ abstract class Routes {
   static const detailPenyaluran = _Paths.detailPenyaluran;
   static const riwayatPenyaluran = _Paths.riwayatPenyaluran;
   static const wargaDetailPenerimaan = _Paths.wargaDetailPenerimaan;
+  static const detailPengaduan = _Paths.detailPengaduan;
+  static const wargaDetailPengaduan = _Paths.wargaDetailPengaduan;
 }
 
 abstract class _Paths {
@@ -58,4 +60,6 @@ abstract class _Paths {
   static const detailPenyaluran = '/detail-penyaluran';
   static const riwayatPenyaluran = '/petugas-desa/riwayat-penyaluran';
   static const wargaDetailPenerimaan = '/warga/detail-penerimaan';
+  static const detailPengaduan = '/detail-pengaduan';
+  static const wargaDetailPengaduan = '/warga/detail-pengaduan';
 }

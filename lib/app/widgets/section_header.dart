@@ -14,7 +14,7 @@ class SectionHeader extends StatelessWidget {
     this.onViewAll,
     this.viewAllText = 'Lihat Semua',
     this.trailing,
-    this.padding = const EdgeInsets.only(bottom: 12),
+    this.padding = const EdgeInsets.only(bottom: 4),
     this.titleStyle,
   }) : super(key: key);
 

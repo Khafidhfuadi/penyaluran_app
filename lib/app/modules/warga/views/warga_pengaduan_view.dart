@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class WargaPengaduanView extends GetView<WargaDashboardController> {
   const WargaPengaduanView({Key? key}) : super(key: key);
@@ -83,11 +84,13 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
         String statusText;
 
         switch (item.status?.toUpperCase()) {
-          case 'PROSES':
-          case 'DIPROSES':
-          case 'TINDAKAN':
+          case 'MENUNGGU':
             statusColor = Colors.orange;
-            statusText = 'Proses';
+            statusText = 'Menunggu';
+            break;
+          case 'TINDAKAN':
+            statusColor = Colors.blue;
+            statusText = 'Tindakan';
             break;
           case 'SELESAI':
             statusColor = Colors.green;
@@ -102,8 +105,6 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
             statusText = item.status ?? 'Tidak Diketahui';
         }
 
-        final isProses = statusText == 'Proses';
-
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
           shape: RoundedRectangleBorder(
@@ -112,7 +113,9 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
           elevation: 2,
           child: InkWell(
             onTap: () {
-              // TODO: Navigasi ke detail pengaduan
+              // Navigasi ke detail pengaduan
+              Get.toNamed('/warga/detail-pengaduan',
+                  arguments: {'id': item.id});
             },
             borderRadius: BorderRadius.circular(12),
             child: Padding(
@@ -158,6 +161,52 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
                     ],
                   ),
                   const SizedBox(height: 12),
+
+                  // Informasi penyaluran bantuan
+                  if (item.penerimaPenyaluran != null)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Penyaluran: ${item.namaPenyaluran}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Jenis: ${item.jenisBantuan}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  'Jumlah: ${item.jumlahBantuan}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
                   if (item.deskripsi != null && item.deskripsi!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -180,8 +229,8 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
                       const SizedBox(width: 8),
                       Text(
                         item.tanggalPengaduan != null
-                            ? DateFormat('dd MMMM yyyy', 'id_ID')
-                                .format(item.tanggalPengaduan!)
+                            ? DateTimeHelper.formatDateTime(
+                                item.tanggalPengaduan!)
                             : '-',
                         style: TextStyle(
                           color: Colors.grey.shade600,
@@ -197,8 +246,8 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
                     children: [
                       TextButton.icon(
                         onPressed: () {
-                          // TODO: Implementasi navigasi ke detail pengaduan
-                          Get.toNamed('/detail-pengaduan',
+                          // Navigasi ke detail pengaduan
+                          Get.toNamed('/warga/detail-pengaduan',
                               arguments: {'id': item.id});
                         },
                         icon: const Icon(Icons.visibility),

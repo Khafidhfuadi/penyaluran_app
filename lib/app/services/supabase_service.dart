@@ -701,6 +701,50 @@ class SupabaseService extends GetxService {
     }
   }
 
+  // Metode untuk mendapatkan pengaduan dengan detail penerima penyaluran
+  Future<List<Map<String, dynamic>>?>
+      getPengaduanWithPenerimaPenyaluran() async {
+    try {
+      final response = await client.from('pengaduan').select('''
+            *,
+            penerima_penyaluran:penerima_penyaluran_id(
+              *,
+              penyaluran_bantuan:penyaluran_bantuan_id(*),
+              stok_bantuan:stok_bantuan_id(*),
+              warga:warga_id(*)
+            ),
+            warga:warga_id(*)
+          ''').order('created_at', ascending: false);
+
+      return response;
+    } catch (e) {
+      print('Error getting pengaduan with penerima penyaluran: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan pengaduan warga tertentu dengan detail penerima penyaluran
+  Future<List<Map<String, dynamic>>?> getPengaduanWargaWithPenerimaPenyaluran(
+      String wargaId) async {
+    try {
+      final response = await client.from('pengaduan').select('''
+            *,
+            penerima_penyaluran:penerima_penyaluran_id(
+              *,
+              penyaluran_bantuan:penyaluran_bantuan_id(*),
+              stok_bantuan:stok_bantuan_id(*),
+              warga:warga_id(*)
+            ),
+            warga:warga_id(*)
+          ''').eq('warga_id', wargaId).order('created_at', ascending: false);
+
+      return response;
+    } catch (e) {
+      print('Error getting warga pengaduan with penerima penyaluran: $e');
+      return null;
+    }
+  }
+
   Future<void> prosesPengaduan(String pengaduanId) async {
     try {
       await client.from('pengaduan').update({
@@ -722,6 +766,19 @@ class SupabaseService extends GetxService {
     }
   }
 
+  Future<void> updateTindakanPengaduan(
+      String tindakanId, Map<String, dynamic> tindakan) async {
+    try {
+      await client
+          .from('tindakan_pengaduan')
+          .update(tindakan)
+          .eq('id', tindakanId);
+    } catch (e) {
+      print('Error updating tindakan pengaduan: $e');
+      throw e.toString();
+    }
+  }
+
   Future<void> updateStatusPengaduan(String pengaduanId, String status) async {
     try {
       await client.from('pengaduan').update({
@@ -739,7 +796,11 @@ class SupabaseService extends GetxService {
     try {
       final response = await client
           .from('tindakan_pengaduan')
-          .select('*')
+          .select('''
+            *,
+            petugas:petugas_id(id, nama, email),
+            verifikator:verifikator_id(id, nama, email)
+          ''')
           .eq('pengaduan_id', pengaduanId)
           .order('created_at', ascending: false);
 

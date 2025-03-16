@@ -48,14 +48,15 @@ class PengaduanController extends GetxController {
   Future<void> loadPengaduanData() async {
     isLoading.value = true;
     try {
-      final pengaduanData = await _supabaseService.getPengaduan();
+      final pengaduanData =
+          await _supabaseService.getPengaduanWithPenerimaPenyaluran();
       if (pengaduanData != null) {
         daftarPengaduan.value =
             pengaduanData.map((data) => PengaduanModel.fromJson(data)).toList();
 
         // Hitung jumlah berdasarkan status
         jumlahDiproses.value =
-            daftarPengaduan.where((item) => item.status == 'DIPROSES').length;
+            daftarPengaduan.where((item) => item.status == 'MENUNGGU').length;
         jumlahTindakan.value =
             daftarPengaduan.where((item) => item.status == 'TINDAKAN').length;
         jumlahSelesai.value =
@@ -138,6 +139,36 @@ class PengaduanController extends GetxController {
     }
   }
 
+  Future<void> updateTindakan(
+      String tindakanId, Map<String, dynamic> data) async {
+    isLoading.value = true;
+    try {
+      await _supabaseService.updateTindakanPengaduan(tindakanId, data);
+
+      Get.snackbar(
+        'Sukses',
+        'Tindakan berhasil diperbarui',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+
+      // Refresh data
+      Get.forceAppUpdate();
+    } catch (e) {
+      print('Error updating tindakan: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal memperbarui tindakan: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   Future<void> selesaikanPengaduan(String pengaduanId) async {
     isLoading.value = true;
     try {
@@ -155,6 +186,25 @@ class PengaduanController extends GetxController {
       Get.snackbar(
         'Error',
         'Gagal menyelesaikan pengaduan: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateStatusPengaduan(String pengaduanId, String status) async {
+    isLoading.value = true;
+    try {
+      await _supabaseService.updateStatusPengaduan(pengaduanId, status);
+      await loadPengaduanData();
+    } catch (e) {
+      print('Error updating pengaduan status: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal mengubah status pengaduan: ${e.toString()}',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -200,7 +250,7 @@ class PengaduanController extends GetxController {
         return daftarPengaduan;
       case 1:
         return daftarPengaduan
-            .where((item) => item.status == 'DIPROSES')
+            .where((item) => item.status == 'MENUNGGU')
             .toList();
       case 2:
         return daftarPengaduan
@@ -221,5 +271,41 @@ class PengaduanController extends GetxController {
       return 'Tindakan tidak boleh kosong';
     }
     return null;
+  }
+
+  Future<Map<String, dynamic>> getDetailPengaduan(String pengaduanId) async {
+    try {
+      // Ambil data pengaduan
+      final pengaduanData =
+          await _supabaseService.client.from('pengaduan').select('''
+            *,
+            penerima_penyaluran:penerima_penyaluran_id(
+              *,
+              penyaluran_bantuan:penyaluran_bantuan_id(*),
+              stok_bantuan:stok_bantuan_id(*),
+              warga:warga_id(*)
+            ),
+            warga:warga_id(*)
+          ''').eq('id', pengaduanId).single();
+
+      // Ambil data tindakan pengaduan
+      final tindakanData =
+          await _supabaseService.getTindakanPengaduan(pengaduanId);
+      print(tindakanData);
+
+      // Gabungkan data
+      final result = {
+        'pengaduan': pengaduanData,
+        'tindakan': tindakanData ?? [],
+      };
+
+      return result;
+    } catch (e) {
+      print('Error getting detail pengaduan: $e');
+      return {
+        'pengaduan': null,
+        'tindakan': [],
+      };
+    }
   }
 }

@@ -5,26 +5,28 @@ class PengaduanModel {
   final String? judul;
   final String? deskripsi;
   final String? status;
-  final String? kategori;
-  final String? pelapor;
-  final String? kontakPelapor;
-  final List<String>? gambarUrls;
+  final String? wargaId;
+  final List<dynamic>? fotoPengaduan;
+  final String? penerimaPenyaluranId;
   final DateTime? tanggalPengaduan;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final Map<String, dynamic>? penerimaPenyaluran;
+  final Map<String, dynamic>? warga;
 
   PengaduanModel({
     this.id,
     this.judul,
     this.deskripsi,
     this.status,
-    this.kategori,
-    this.pelapor,
-    this.kontakPelapor,
-    this.gambarUrls,
+    this.wargaId,
+    this.fotoPengaduan,
+    this.penerimaPenyaluranId,
     this.tanggalPengaduan,
     this.createdAt,
     this.updatedAt,
+    this.penerimaPenyaluran,
+    this.warga,
   });
 
   factory PengaduanModel.fromRawJson(String str) =>
@@ -37,12 +39,9 @@ class PengaduanModel {
         judul: json["judul"],
         deskripsi: json["deskripsi"],
         status: json["status"],
-        kategori: json["kategori"],
-        pelapor: json["pelapor"],
-        kontakPelapor: json["kontak_pelapor"],
-        gambarUrls: json["gambar_urls"] == null
-            ? null
-            : List<String>.from(json["gambar_urls"].map((x) => x)),
+        wargaId: json["warga_id"],
+        fotoPengaduan: json["foto_pengaduan"],
+        penerimaPenyaluranId: json["penerima_penyaluran_id"],
         tanggalPengaduan: json["tanggal_pengaduan"] != null
             ? DateTime.parse(json["tanggal_pengaduan"])
             : null,
@@ -52,6 +51,8 @@ class PengaduanModel {
         updatedAt: json["updated_at"] != null
             ? DateTime.parse(json["updated_at"])
             : null,
+        penerimaPenyaluran: json["penerima_penyaluran"],
+        warga: json["warga"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -59,14 +60,47 @@ class PengaduanModel {
         "judul": judul,
         "deskripsi": deskripsi,
         "status": status,
-        "kategori": kategori,
-        "pelapor": pelapor,
-        "kontak_pelapor": kontakPelapor,
-        "gambar_urls": gambarUrls == null
-            ? null
-            : List<dynamic>.from(gambarUrls!.map((x) => x)),
+        "warga_id": wargaId,
+        "foto_pengaduan": fotoPengaduan,
+        "penerima_penyaluran_id": penerimaPenyaluranId,
         "tanggal_pengaduan": tanggalPengaduan?.toIso8601String(),
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
+        "penerima_penyaluran": penerimaPenyaluran,
+        "warga": warga,
       };
+
+  // Getter untuk mendapatkan informasi penyaluran bantuan
+  Map<String, dynamic>? get penyaluranBantuan {
+    return penerimaPenyaluran?['penyaluran_bantuan'];
+  }
+
+  // Getter untuk mendapatkan informasi stok bantuan
+  Map<String, dynamic>? get stokBantuan {
+    return penerimaPenyaluran?['stok_bantuan'];
+  }
+
+  // Getter untuk mendapatkan nama penyaluran
+  String get namaPenyaluran {
+    return penyaluranBantuan?['nama'] ?? 'Tidak ada data';
+  }
+
+  // Getter untuk mendapatkan deskripsi penyaluran
+  String get deskripsiPenyaluran {
+    return penyaluranBantuan?['deskripsi'] ?? 'Tidak ada deskripsi';
+  }
+
+  // Getter untuk mendapatkan jenis bantuan
+  String get jenisBantuan {
+    return stokBantuan?['kategori_bantuan']?['nama'] ?? 'Tidak diketahui';
+  }
+
+  // Getter untuk mendapatkan jumlah bantuan yang diterima
+  String get jumlahBantuan {
+    final jumlah = penerimaPenyaluran?['jumlah_bantuan'];
+    final satuan = penerimaPenyaluran?['satuan'] ?? '';
+
+    if (jumlah == null) return 'Tidak diketahui';
+    return '$jumlah $satuan';
+  }
 }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/pengaduan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
-class PengaduanView extends GetView<PetugasDesaController> {
+class PengaduanView extends GetView<PengaduanController> {
   const PengaduanView({super.key});
 
   @override
@@ -33,58 +34,60 @@ class PengaduanView extends GetView<PetugasDesaController> {
   }
 
   Widget _buildPengaduanSummary(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Ringkasan Pengaduan',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+    return Obx(() {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: AppTheme.primaryGradient,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Ringkasan Pengaduan',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSummaryItem(
+                    context,
+                    icon: Icons.pending_actions,
+                    title: 'Diproses',
+                    value: controller.jumlahDiproses.toString(),
+                    color: Colors.orange,
+                  ),
                 ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  icon: Icons.pending_actions,
-                  title: 'Diproses',
-                  value: '3',
-                  color: Colors.orange,
+                Expanded(
+                  child: _buildSummaryItem(
+                    context,
+                    icon: Icons.engineering,
+                    title: 'Tindakan',
+                    value: controller.jumlahTindakan.toString(),
+                    color: Colors.blue,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  icon: Icons.engineering,
-                  title: 'Tindakan',
-                  value: '2',
-                  color: Colors.blue,
+                Expanded(
+                  child: _buildSummaryItem(
+                    context,
+                    icon: Icons.check_circle,
+                    title: 'Selesai',
+                    value: controller.jumlahSelesai.toString(),
+                    color: Colors.green,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  icon: Icons.check_circle,
-                  title: 'Selesai',
-                  value: '8',
-                  color: Colors.green,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+              ],
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildSummaryItem(
@@ -133,6 +136,7 @@ class PengaduanView extends GetView<PetugasDesaController> {
       children: [
         Expanded(
           child: TextField(
+            controller: controller.searchController,
             decoration: InputDecoration(
               hintText: 'Cari pengaduan...',
               prefixIcon: const Icon(Icons.search),
@@ -144,6 +148,10 @@ class PengaduanView extends GetView<PetugasDesaController> {
               fillColor: Colors.grey.shade100,
               contentPadding: const EdgeInsets.symmetric(vertical: 0),
             ),
+            onChanged: (value) {
+              // Implementasi pencarian
+              controller.refreshData();
+            },
           ),
         ),
         const SizedBox(width: 12),
@@ -173,21 +181,42 @@ class PengaduanView extends GetView<PetugasDesaController> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CheckboxListTile(
-              title: const Text('Diproses'),
-              value: true,
-              onChanged: (value) {},
-            ),
-            CheckboxListTile(
-              title: const Text('Tindakan'),
-              value: true,
-              onChanged: (value) {},
-            ),
-            CheckboxListTile(
-              title: const Text('Selesai'),
-              value: true,
-              onChanged: (value) {},
-            ),
+            Obx(() => RadioListTile<int>(
+                  title: const Text('Semua'),
+                  value: 0,
+                  groupValue: controller.selectedCategoryIndex.value,
+                  onChanged: (value) {
+                    controller.changeCategory(value!);
+                    Navigator.pop(context);
+                  },
+                )),
+            Obx(() => RadioListTile<int>(
+                  title: const Text('Diproses'),
+                  value: 1,
+                  groupValue: controller.selectedCategoryIndex.value,
+                  onChanged: (value) {
+                    controller.changeCategory(value!);
+                    Navigator.pop(context);
+                  },
+                )),
+            Obx(() => RadioListTile<int>(
+                  title: const Text('Tindakan'),
+                  value: 2,
+                  groupValue: controller.selectedCategoryIndex.value,
+                  onChanged: (value) {
+                    controller.changeCategory(value!);
+                    Navigator.pop(context);
+                  },
+                )),
+            Obx(() => RadioListTile<int>(
+                  title: const Text('Selesai'),
+                  value: 3,
+                  groupValue: controller.selectedCategoryIndex.value,
+                  onChanged: (value) {
+                    controller.changeCategory(value!);
+                    Navigator.pop(context);
+                  },
+                )),
           ],
         ),
         actions: [
@@ -195,84 +224,85 @@ class PengaduanView extends GetView<PetugasDesaController> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Batal'),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Terapkan'),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildPengaduanList(BuildContext context) {
-    final List<Map<String, dynamic>> pengaduanList = [
-      {
-        'id': '1',
-        'nama': 'Budi Santoso',
-        'nik': '3201020107030011',
-        'jenis_pengaduan': 'Bantuan Tidak Diterima',
-        'deskripsi':
-            'Saya belum menerima bantuan beras yang dijadwalkan minggu lalu',
-        'tanggal': '15 April 2023',
-        'status': 'Diproses',
-      },
-      {
-        'id': '2',
-        'nama': 'Siti Rahayu',
-        'nik': '3201020107030010',
-        'jenis_pengaduan': 'Kualitas Bantuan',
-        'deskripsi':
-            'Beras yang diterima berkualitas buruk dan tidak layak konsumsi',
-        'tanggal': '14 April 2023',
-        'status': 'Tindakan',
-      },
-      {
-        'id': '3',
-        'nama': 'Ahmad Fauzi',
-        'nik': '3201020107030013',
-        'jenis_pengaduan': 'Jumlah Bantuan',
-        'deskripsi':
-            'Jumlah bantuan yang diterima tidak sesuai dengan yang dijanjikan',
-        'tanggal': '13 April 2023',
-        'status': 'Tindakan',
-      },
-      {
-        'id': '4',
-        'nama': 'Dewi Lestari',
-        'nik': '3201020107030012',
-        'jenis_pengaduan': 'Jadwal Penyaluran',
-        'deskripsi':
-            'Jadwal penyaluran bantuan sering berubah tanpa pemberitahuan',
-        'tanggal': '10 April 2023',
-        'status': 'Selesai',
-      },
-    ];
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Daftar Pengaduan',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+      final filteredPengaduan = controller.getFilteredPengaduan();
+
+      if (filteredPengaduan.isEmpty) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.inbox_outlined,
+                  size: 80,
+                  color: Colors.grey,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Belum ada pengaduan',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.grey,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Daftar Pengaduan',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
-        ),
-        const SizedBox(height: 12),
-        ...pengaduanList.map((item) => _buildPengaduanItem(context, item)),
-      ],
-    );
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () => controller.refreshData(),
+                tooltip: 'Refresh',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...filteredPengaduan
+              .map((item) => _buildPengaduanItem(context, item)),
+        ],
+      );
+    });
   }
 
-  Widget _buildPengaduanItem(BuildContext context, Map<String, dynamic> item) {
+  Widget _buildPengaduanItem(BuildContext context, dynamic item) {
     Color statusColor;
     IconData statusIcon;
 
-    switch (item['status']) {
+    switch (item.status?.toUpperCase()) {
       case 'MENUNGGU':
         statusColor = AppTheme.warningColor;
         statusIcon = Icons.pending;
         break;
-      case 'DIPROSES':
+      case 'TINDAKAN':
         statusColor = AppTheme.infoColor;
         statusIcon = Icons.sync;
         break;
@@ -283,6 +313,14 @@ class PengaduanView extends GetView<PetugasDesaController> {
       default:
         statusColor = Colors.grey;
         statusIcon = Icons.help_outline;
+    }
+
+    // Format tanggal menggunakan DateTimeHelper
+    String formattedDate = '';
+    if (item.tanggalPengaduan != null) {
+      formattedDate = DateTimeHelper.formatDate(item.tanggalPengaduan);
+    } else if (item.createdAt != null) {
+      formattedDate = DateTimeHelper.formatDate(item.createdAt);
     }
 
     return Container(
@@ -310,7 +348,7 @@ class PengaduanView extends GetView<PetugasDesaController> {
               children: [
                 Expanded(
                   child: Text(
-                    item['nama'] ?? '',
+                    item.warga?['nama'] ?? item.judul ?? '',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -334,7 +372,7 @@ class PengaduanView extends GetView<PetugasDesaController> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        item['status'] ?? '',
+                        item.status ?? '',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: statusColor,
                               fontWeight: FontWeight.bold,
@@ -347,28 +385,64 @@ class PengaduanView extends GetView<PetugasDesaController> {
             ),
             const SizedBox(height: 4),
             Text(
-              'NIK: ${item['nik'] ?? ''}',
+              'NIK: ${item.warga?['nik'] ?? ''}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.grey,
                   ),
             ),
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(4),
+            if (item.penerimaPenyaluran != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'Penyaluran: ${item.namaPenyaluran}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
               ),
-              child: Text(
-                item['jenis_pengaduan'] ?? '',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Jenis: ${item.jenisBantuan}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Jumlah: ${item.jumlahBantuan}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
+            ],
             const SizedBox(height: 8),
             Text(
-              item['deskripsi'] ?? '',
+              item.deskripsi ?? '',
               style: Theme.of(context).textTheme.bodyMedium,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -383,7 +457,7 @@ class PengaduanView extends GetView<PetugasDesaController> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  item['tanggal'] ?? '',
+                  formattedDate,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.grey,
                       ),
@@ -401,11 +475,10 @@ class PengaduanView extends GetView<PetugasDesaController> {
     );
   }
 
-  List<Widget> _buildActionButtons(
-      BuildContext context, Map<String, dynamic> item) {
-    final status = item['status'];
+  List<Widget> _buildActionButtons(BuildContext context, dynamic item) {
+    final status = item.status?.toUpperCase();
 
-    if (status == 'Diproses') {
+    if (status == 'MENUNGGU') {
       return [
         TextButton.icon(
           onPressed: () {
@@ -421,8 +494,8 @@ class PengaduanView extends GetView<PetugasDesaController> {
         ),
         TextButton.icon(
           onPressed: () {
-            // Implementasi untuk melihat detail pengaduan
-            _showDetailDialog(context, item);
+            // Navigasi ke halaman detail pengaduan
+            Get.toNamed('/detail-pengaduan', arguments: {'id': item.id});
           },
           icon: const Icon(Icons.info_outline, size: 18),
           label: const Text('Detail'),
@@ -432,7 +505,7 @@ class PengaduanView extends GetView<PetugasDesaController> {
           ),
         ),
       ];
-    } else if (status == 'Tindakan') {
+    } else if (status == 'TINDAKAN') {
       return [
         TextButton.icon(
           onPressed: () {
@@ -448,8 +521,8 @@ class PengaduanView extends GetView<PetugasDesaController> {
         ),
         TextButton.icon(
           onPressed: () {
-            // Implementasi untuk melihat detail pengaduan
-            _showDetailDialog(context, item);
+            // Navigasi ke halaman detail pengaduan
+            Get.toNamed('/detail-pengaduan', arguments: {'id': item.id});
           },
           icon: const Icon(Icons.info_outline, size: 18),
           label: const Text('Detail'),
@@ -463,8 +536,8 @@ class PengaduanView extends GetView<PetugasDesaController> {
       return [
         TextButton.icon(
           onPressed: () {
-            // Implementasi untuk melihat detail pengaduan
-            _showDetailDialog(context, item);
+            // Navigasi ke halaman detail pengaduan
+            Get.toNamed('/detail-pengaduan', arguments: {'id': item.id});
           },
           icon: const Icon(Icons.info_outline, size: 18),
           label: const Text('Detail'),
@@ -477,103 +550,41 @@ class PengaduanView extends GetView<PetugasDesaController> {
     }
   }
 
-  void _showDetailDialog(BuildContext context, Map<String, dynamic> item) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Detail Pengaduan: ${item['id']}'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDetailItem('Nama', item['nama'] ?? ''),
-              _buildDetailItem('NIK', item['nik'] ?? ''),
-              _buildDetailItem(
-                  'Jenis Pengaduan', item['jenis_pengaduan'] ?? ''),
-              _buildDetailItem('Tanggal', item['tanggal'] ?? ''),
-              _buildDetailItem('Status', item['status'] ?? ''),
-              const SizedBox(height: 8),
-              const Text(
-                'Deskripsi:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(item['deskripsi'] ?? ''),
-              if (item['status'] == 'Tindakan' ||
-                  item['status'] == 'Selesai') ...[
-                const SizedBox(height: 8),
-                const Text(
-                  'Tindakan:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(item['tindakan'] ??
-                    'Pengecekan ke lokasi dan verifikasi data penerima'),
-              ],
-              if (item['status'] == 'Selesai') ...[
-                const SizedBox(height: 8),
-                const Text(
-                  'Hasil:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(item['hasil'] ??
-                    'Pengaduan telah diselesaikan dengan penyaluran ulang bantuan'),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tutup'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
-
-  void _showTindakanDialog(BuildContext context, Map<String, dynamic> item) {
-    final TextEditingController tindakanController = TextEditingController();
+  void _showTindakanDialog(BuildContext context, dynamic item) {
+    controller.tindakanController.clear();
+    controller.catatanController.clear();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Tindakan Pengaduan'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Pengaduan dari: ${item['nama']}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: tindakanController,
-              decoration: const InputDecoration(
-                labelText: 'Tindakan yang dilakukan',
-                border: OutlineInputBorder(),
+        content: Form(
+          key: controller.tindakanFormKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Pengaduan dari: ${item.warga?['nama'] ?? ''}'),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: controller.tindakanController,
+                decoration: const InputDecoration(
+                  labelText: 'Tindakan yang dilakukan',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                validator: controller.validateTindakan,
               ),
-              maxLines: 3,
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: controller.catatanController,
+                decoration: const InputDecoration(
+                  labelText: 'Catatan (opsional)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -582,15 +593,7 @@ class PengaduanView extends GetView<PetugasDesaController> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Implementasi untuk menyimpan tindakan
-              Navigator.pop(context);
-              Get.snackbar(
-                'Berhasil',
-                'Status pengaduan berhasil diubah menjadi Tindakan',
-                snackPosition: SnackPosition.TOP,
-                backgroundColor: Colors.blue,
-                colorText: Colors.white,
-              );
+              controller.tambahTindakan(item.id!);
             },
             child: const Text('Simpan'),
           ),
@@ -599,9 +602,7 @@ class PengaduanView extends GetView<PetugasDesaController> {
     );
   }
 
-  void _showSelesaikanDialog(BuildContext context, Map<String, dynamic> item) {
-    final TextEditingController hasilController = TextEditingController();
-
+  void _showSelesaikanDialog(BuildContext context, dynamic item) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -609,15 +610,11 @@ class PengaduanView extends GetView<PetugasDesaController> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Pengaduan dari: ${item['nama']}'),
+            Text('Pengaduan dari: ${item.warga?['nama'] ?? ''}'),
             const SizedBox(height: 16),
-            TextField(
-              controller: hasilController,
-              decoration: const InputDecoration(
-                labelText: 'Hasil penyelesaian',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
+            const Text(
+              'Apakah Anda yakin ingin menyelesaikan pengaduan ini?',
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -628,15 +625,8 @@ class PengaduanView extends GetView<PetugasDesaController> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Implementasi untuk menyimpan hasil
               Navigator.pop(context);
-              Get.snackbar(
-                'Berhasil',
-                'Status pengaduan berhasil diubah menjadi Selesai',
-                snackPosition: SnackPosition.TOP,
-                backgroundColor: Colors.green,
-                colorText: Colors.white,
-              );
+              controller.selesaikanPengaduan(item.id!);
             },
             child: const Text('Selesaikan'),
           ),

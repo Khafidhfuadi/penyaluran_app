@@ -273,11 +273,15 @@ class WargaDashboardController extends GetxController {
   // Fungsi untuk mengambil data pengaduan
   Future<void> fetchPengaduan() async {
     try {
-      final response = await _supabaseService.client
-          .from('pengaduan')
-          .select('*')
-          .eq('pelapor', user!.id)
-          .order('created_at', ascending: false);
+      final wargaData = await _supabaseService.getWargaByUserId();
+      if (wargaData == null) {
+        print('Data warga tidak ditemukan');
+        return;
+      }
+
+      final String wargaId = wargaData['id'];
+      final response = await _supabaseService
+          .getPengaduanWargaWithPenerimaPenyaluran(wargaId);
 
       if (response != null) {
         final List<PengaduanModel> pengaduanList = [];
@@ -289,7 +293,7 @@ class WargaDashboardController extends GetxController {
         // Hitung jumlah berdasarkan status
         totalPengaduan.value = pengaduanList.length;
         totalPengaduanProses.value = pengaduanList
-            .where((p) => p.status == 'PROSES' || p.status == 'DIPROSES')
+            .where((p) => p.status == 'MENUNGGU' || p.status == 'TINDAKAN')
             .length;
         totalPengaduanSelesai.value =
             pengaduanList.where((p) => p.status == 'SELESAI').length;
@@ -341,5 +345,40 @@ class WargaDashboardController extends GetxController {
   // Fungsi untuk logout
   void logout() {
     _authController.logout();
+  }
+
+  Future<Map<String, dynamic>> getDetailPengaduan(String pengaduanId) async {
+    try {
+      // Ambil data pengaduan
+      final pengaduanData =
+          await _supabaseService.client.from('pengaduan').select('''
+            *,
+            penerima_penyaluran:penerima_penyaluran_id(
+              *,
+              penyaluran_bantuan:penyaluran_bantuan_id(*),
+              stok_bantuan:stok_bantuan_id(*),
+              warga:warga_id(*)
+            ),
+            warga:warga_id(*)
+          ''').eq('id', pengaduanId).single();
+
+      // Ambil data tindakan pengaduan
+      final tindakanData =
+          await _supabaseService.getTindakanPengaduan(pengaduanId);
+
+      // Gabungkan data
+      final result = {
+        'pengaduan': pengaduanData,
+        'tindakan': tindakanData ?? [],
+      };
+
+      return result;
+    } catch (e) {
+      print('Error getting detail pengaduan: $e');
+      return {
+        'pengaduan': null,
+        'tindakan': [],
+      };
+    }
   }
 }

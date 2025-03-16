@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
+import 'package:penyaluran_app/app/routes/app_pages.dart';
 import 'package:penyaluran_app/app/widgets/bantuan_card.dart';
 import 'package:penyaluran_app/app/widgets/section_header.dart';
 
@@ -290,10 +291,9 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
           title: 'Bantuan Terbaru',
           viewAllText: 'Lihat Semua',
           onViewAll: () {
-            Get.toNamed('/warga-penerimaan');
+            Get.toNamed(Routes.wargaPenerimaan);
           },
         ),
-        const SizedBox(height: 16),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),

@@ -27,6 +27,9 @@ import 'package:penyaluran_app/app/modules/warga/views/warga_pengaduan_view.dart
 import 'package:penyaluran_app/app/modules/warga/views/warga_view.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
 import 'package:penyaluran_app/app/modules/warga/views/warga_detail_penerimaan_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_pengaduan_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/bindings/pengaduan_binding.dart';
+import 'package:penyaluran_app/app/modules/warga/views/detail_pengaduan_view.dart';
 
 part 'app_routes.dart';
 
@@ -125,8 +128,18 @@ class AppPages {
       binding: PenyaluranBinding(),
     ),
     GetPage(
+      name: _Paths.detailPengaduan,
+      page: () => const DetailPengaduanView(),
+      binding: PengaduanBinding(),
+    ),
+    GetPage(
       name: Routes.wargaDetailPenerimaan,
       page: () => const WargaDetailPenerimaanView(),
+      binding: WargaBinding(),
+    ),
+    GetPage(
+      name: Routes.wargaDetailPengaduan,
+      page: () => const WargaDetailPengaduanView(),
       binding: WargaBinding(),
     ),
   ];
