@@ -43,7 +43,7 @@ class CalendarViewWidget extends StatelessWidget {
             ),
           ),
           SizedBox(
-            height: 500,
+            height: MediaQuery.of(context).size.height * 0.65,
             child: Obx(() {
               return SfCalendar(
                 view: CalendarView.month,
@@ -52,8 +52,8 @@ class CalendarViewWidget extends StatelessWidget {
                 monthViewSettings: MonthViewSettings(
                   appointmentDisplayMode: MonthAppointmentDisplayMode.indicator,
                   showAgenda: true,
-                  agendaViewHeight: 250,
-                  agendaItemHeight: 70,
+                  agendaViewHeight: MediaQuery.of(context).size.height * 0.3,
+                  agendaItemHeight: 60,
                   dayFormat: 'EEE',
                   numberOfWeeksInView: 6,
                   appointmentDisplayCount: 3,
@@ -119,6 +119,7 @@ class CalendarViewWidget extends StatelessWidget {
                     // }
                   }
                 },
+                appointmentBuilder: _appointmentBuilder,
               );
             }),
           ),
@@ -260,16 +261,23 @@ class CalendarViewWidget extends StatelessWidget {
             jadwalDate.isBefore(lastDayOfMonth.add(const Duration(days: 1)))) {
           Color appointmentColor;
 
-          // Periksa status jadwal
-          if (jadwal.status == 'SELESAI') {
-            appointmentColor = Colors.grey;
-          } else if (jadwal.status == 'BERLANGSUNG') {
-            appointmentColor = Colors.green;
-          } else if (jadwal.status == 'DIJADWALKAN' ||
-              jadwal.status == 'DISETUJUI') {
-            appointmentColor = AppTheme.primaryColor;
-          } else {
-            appointmentColor = Colors.orange;
+          // Periksa status jadwal menggunakan switch-case untuk konsistensi
+          switch (jadwal.status?.toUpperCase()) {
+            case 'DIJADWALKAN':
+            case 'DISETUJUI':
+              appointmentColor = AppTheme.processedColor;
+              break;
+            case 'AKTIF':
+              appointmentColor = AppTheme.scheduledColor;
+              break;
+            case 'TERLAKSANA':
+              appointmentColor = AppTheme.completedColor;
+              break;
+            case 'BATALTERLAKSANA':
+              appointmentColor = AppTheme.errorColor;
+              break;
+            default:
+              appointmentColor = AppTheme.infoColor;
           }
 
           appointments.add(
@@ -296,98 +304,367 @@ class CalendarViewWidget extends StatelessWidget {
     final String formattedDate =
         DateTimeHelper.formatDateIndonesian(appointment.startTime);
 
+    // Dapatkan status dari ID jadwal
+    String? status = _getStatusFromAppointmentId(appointment.id);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              appointment.subject,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.calendar_today, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  formattedDate,
-                  style: const TextStyle(fontSize: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        appointment.subject,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    if (status != null) _buildStatusBadge(status),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.access_time, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  '${appointment.startTime.hour}:${appointment.startTime.minute.toString().padLeft(2, '0')} - ${appointment.endTime.hour}:${appointment.endTime.minute.toString().padLeft(2, '0')} WIB',
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ],
-            ),
-            if (appointment.location != null &&
-                appointment.location!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.location_on, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      appointment.location!,
+                const SizedBox(height: 10),
+                if (status != null) ...[
+                  Row(
+                    children: [
+                      Icon(
+                        _getStatusIcon(status),
+                        size: 16,
+                        color: _getStatusColor(status),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Status: ${_getStatusText(status)}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: _getStatusColor(status),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today, size: 16),
+                    const SizedBox(width: 8),
+                    Text(
+                      formattedDate,
                       style: const TextStyle(fontSize: 16),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 16),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${appointment.startTime.hour}:${appointment.startTime.minute.toString().padLeft(2, '0')} - ${appointment.endTime.hour}:${appointment.endTime.minute.toString().padLeft(2, '0')} WIB',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+                if (appointment.location != null &&
+                    appointment.location!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.location_on, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          appointment.location!,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
-            if (appointment.notes != null && appointment.notes!.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              const Text(
-                'Deskripsi:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                appointment.notes!,
-                style: const TextStyle(fontSize: 16),
-              ),
-            ],
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                if (appointment.notes != null &&
+                    appointment.notes!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Deskripsi:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    appointment.notes!,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Tutup'),
                   ),
                 ),
-                child: const Text('Tutup'),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  // Builder untuk kustomisasi tampilan appointment pada agenda view
+  Widget _appointmentBuilder(
+      BuildContext context, CalendarAppointmentDetails details) {
+    final Appointment appointment = details.appointments.first;
+    String? status = _getStatusFromAppointmentId(appointment.id);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: appointment.color,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  appointment.subject,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (status != null)
+                Icon(
+                  _getStatusIcon(status),
+                  color: Colors.white,
+                  size: 13,
+                ),
+              const SizedBox(width: 4),
+              if (status != null) ...[
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: Text(
+                    _getStatusText(status),
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 3),
+          if (appointment.location != null && appointment.location!.isNotEmpty)
+            Row(
+              children: [
+                const Icon(
+                  Icons.location_on,
+                  color: Colors.white70,
+                  size: 10,
+                ),
+                const SizedBox(width: 3),
+                Expanded(
+                  child: Text(
+                    appointment.location!,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.white70,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: 3),
+          Row(
+            children: [
+              const Icon(
+                Icons.access_time,
+                color: Colors.white70,
+                size: 10,
+              ),
+              const SizedBox(width: 3),
+              Text(
+                '${appointment.startTime.hour}:${appointment.startTime.minute.toString().padLeft(2, '0')} WIB',
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Mendapatkan status jadwal berdasarkan ID
+  String? _getStatusFromAppointmentId(Object? id) {
+    if (id == null) return null;
+
+    String jadwalId = id.toString();
+
+    // Cari jadwal dengan ID yang sesuai
+    for (var jadwal in [
+      ...controller.jadwalHariIni,
+      ...controller.jadwalMendatang,
+      ...controller.jadwalTerlaksana
+    ]) {
+      if (jadwal.id == jadwalId) {
+        return jadwal.status;
+      }
+    }
+
+    return null;
+  }
+
+  // Widget untuk menampilkan badge status
+  Widget _buildStatusBadge(String status) {
+    Color backgroundColor;
+    Color textColor = Colors.white;
+    String statusText = _getStatusText(status);
+
+    switch (status.toUpperCase()) {
+      case 'DIJADWALKAN':
+      case 'DISETUJUI':
+        backgroundColor = AppTheme.processedColor;
+        break;
+      case 'AKTIF':
+        backgroundColor = AppTheme.scheduledColor;
+        break;
+      case 'TERLAKSANA':
+        backgroundColor = AppTheme.completedColor;
+        break;
+      case 'BATALTERLAKSANA':
+        backgroundColor = AppTheme.errorColor;
+        break;
+      default:
+        backgroundColor = AppTheme.infoColor;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            _getStatusIcon(status),
+            color: textColor,
+            size: 12,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            statusText,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Mendapatkan warna status yang sesuai
+  Color _getStatusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'DIJADWALKAN':
+      case 'DISETUJUI':
+        return AppTheme.processedColor;
+      case 'AKTIF':
+        return AppTheme.scheduledColor;
+      case 'TERLAKSANA':
+        return AppTheme.completedColor;
+      case 'BATALTERLAKSANA':
+        return AppTheme.errorColor;
+      default:
+        return AppTheme.infoColor;
+    }
+  }
+
+  // Mendapatkan ikon status yang sesuai
+  IconData _getStatusIcon(String status) {
+    switch (status.toUpperCase()) {
+      case 'DIJADWALKAN':
+      case 'DISETUJUI':
+        return Icons.event_available;
+      case 'AKTIF':
+        return Icons.play_circle_fill;
+      case 'TERLAKSANA':
+        return Icons.check_circle;
+      case 'BATALTERLAKSANA':
+        return Icons.cancel;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
+  // Mendapatkan teks status yang sesuai
+  String _getStatusText(String status) {
+    switch (status.toUpperCase()) {
+      case 'DIJADWALKAN':
+      case 'DISETUJUI':
+        return 'Dijadwalkan';
+      case 'AKTIF':
+        return 'Aktif';
+      case 'TERLAKSANA':
+        return 'Terlaksana';
+      case 'BATALTERLAKSANA':
+        return 'Batal';
+      default:
+        return status;
+    }
   }
 }
 

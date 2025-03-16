@@ -69,6 +69,7 @@ dependencies:
 
   flutter_localizations:
     sdk: flutter
+  flutter_staggered_animations: ^1.1.1
 
 dev_dependencies:
   flutter_test:
