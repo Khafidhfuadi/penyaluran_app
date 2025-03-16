@@ -55,7 +55,7 @@ class DetailPenerimaView extends GetView<PenerimaController> {
             ],
           ),
         ),
-        bottomNavigationBar: _buildBottomButtons(penerima),
+        // bottomNavigationBar: _buildBottomButtons(penerima),
       );
     });
   }
@@ -338,86 +338,6 @@ class DetailPenerimaView extends GetView<PenerimaController> {
                     ),
                   ),
                 ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomButtons(Map<String, dynamic> penerima) {
-    // Jika status sudah selesai, tidak perlu menampilkan tombol
-    if (penerima['status'] == 'Selesai') {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        child: ElevatedButton.icon(
-          onPressed: () {
-            // Implementasi lihat riwayat penyaluran
-          },
-          icon: const Icon(Icons.history),
-          label: const Text('Lihat Riwayat Penyaluran'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryColor,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Jika status belum disalurkan, tampilkan tombol jadwalkan
-    if (penerima['status'] == 'Belum disalurkan') {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // Implementasi jadwalkan penyaluran
-                },
-                icon: const Icon(Icons.event),
-                label: const Text('Jadwalkan Penyaluran'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Jika status terjadwal, tampilkan tombol konfirmasi penyaluran
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () {
-                // Navigasi ke halaman konfirmasi penerima
-                Get.toNamed('/daftar-penerima/konfirmasi',
-                    arguments: penerima['id']);
-              },
-              icon: const Icon(Icons.check_circle),
-              label: const Text('Konfirmasi Penyaluran'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.successColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
               ),
             ),
           ),

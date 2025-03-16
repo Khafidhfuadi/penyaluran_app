@@ -42,86 +42,90 @@ class CalendarViewWidget extends StatelessWidget {
                   ),
             ),
           ),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.65,
-            child: Obx(() {
-              return SfCalendar(
-                view: CalendarView.month,
-                dataSource: _getCalendarDataSource(),
-                timeZone: 'Asia/Jakarta',
-                monthViewSettings: MonthViewSettings(
-                  appointmentDisplayMode: MonthAppointmentDisplayMode.indicator,
-                  showAgenda: true,
-                  agendaViewHeight: MediaQuery.of(context).size.height * 0.3,
-                  agendaItemHeight: 60,
-                  dayFormat: 'EEE',
-                  numberOfWeeksInView: 6,
-                  appointmentDisplayCount: 3,
-                  monthCellStyle: MonthCellStyle(
-                    textStyle: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.black87,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.65,
+              child: Obx(() {
+                return SfCalendar(
+                  view: CalendarView.month,
+                  dataSource: _getCalendarDataSource(),
+                  timeZone: 'Asia/Jakarta',
+                  monthViewSettings: MonthViewSettings(
+                    appointmentDisplayMode:
+                        MonthAppointmentDisplayMode.indicator,
+                    showAgenda: true,
+                    agendaViewHeight: MediaQuery.of(context).size.height * 0.3,
+                    agendaItemHeight: 60,
+                    dayFormat: 'EEE',
+                    numberOfWeeksInView: 6,
+                    appointmentDisplayCount: 3,
+                    monthCellStyle: MonthCellStyle(
+                      textStyle: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black87,
+                      ),
+                      trailingDatesTextStyle: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.withOpacity(0.7),
+                      ),
+                      leadingDatesTextStyle: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.withOpacity(0.7),
+                      ),
                     ),
-                    trailingDatesTextStyle: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.withOpacity(0.7),
-                    ),
-                    leadingDatesTextStyle: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.withOpacity(0.7),
+                    agendaStyle: const AgendaStyle(
+                      backgroundColor: Colors.white,
+                      appointmentTextStyle: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                      dateTextStyle: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.primaryColor,
+                      ),
+                      dayTextStyle: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.primaryColor,
+                      ),
                     ),
                   ),
-                  agendaStyle: const AgendaStyle(
+                  cellBorderColor: Colors.grey.withOpacity(0.2),
+                  todayHighlightColor: AppTheme.primaryColor,
+                  selectionDecoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border.all(color: AppTheme.primaryColor, width: 2),
+                    borderRadius: const BorderRadius.all(Radius.circular(4)),
+                    shape: BoxShape.rectangle,
+                  ),
+                  headerStyle: const CalendarHeaderStyle(
                     backgroundColor: Colors.white,
-                    appointmentTextStyle: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                    dateTextStyle: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.primaryColor,
-                    ),
-                    dayTextStyle: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    textStyle: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                       color: AppTheme.primaryColor,
                     ),
                   ),
-                ),
-                cellBorderColor: Colors.grey.withOpacity(0.2),
-                todayHighlightColor: AppTheme.primaryColor,
-                selectionDecoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: Border.all(color: AppTheme.primaryColor, width: 2),
-                  borderRadius: const BorderRadius.all(Radius.circular(4)),
-                  shape: BoxShape.rectangle,
-                ),
-                headerStyle: const CalendarHeaderStyle(
-                  backgroundColor: Colors.white,
-                  textStyle: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-                monthCellBuilder: _monthCellBuilder,
-                onTap: (CalendarTapDetails details) {
-                  if (details.targetElement == CalendarElement.appointment) {
-                    final Appointment appointment = details.appointments![0];
-                    _showAppointmentDetails(context, appointment);
-                  } else if (details.targetElement ==
-                      CalendarElement.calendarCell) {
-                    // if (appointmentsOnDay.isNotEmpty) {
-                    //   _showAppointmentsOnDay(
-                    //       context, details.date!, appointmentsOnDay);
-                    // }
-                  }
-                },
-                appointmentBuilder: _appointmentBuilder,
-              );
-            }),
+                  monthCellBuilder: _monthCellBuilder,
+                  onTap: (CalendarTapDetails details) {
+                    if (details.targetElement == CalendarElement.appointment) {
+                      final Appointment appointment = details.appointments![0];
+                      _showAppointmentDetails(context, appointment);
+                    } else if (details.targetElement ==
+                        CalendarElement.calendarCell) {
+                      // if (appointmentsOnDay.isNotEmpty) {
+                      //   _showAppointmentsOnDay(
+                      //       context, details.date!, appointmentsOnDay);
+                      // }
+                    }
+                  },
+                  appointmentBuilder: _appointmentBuilder,
+                );
+              }),
+            ),
           ),
         ],
       ),

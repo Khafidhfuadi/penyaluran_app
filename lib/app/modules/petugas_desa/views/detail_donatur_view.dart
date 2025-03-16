@@ -5,7 +5,7 @@ import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/data/models/donatur_model.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
 import 'package:penyaluran_app/app/widgets/detail_penitipan_dialog.dart';
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class DetailDonaturView extends GetView<DonaturController> {
   const DetailDonaturView({super.key});
@@ -207,7 +207,7 @@ class DetailDonaturView extends GetView<DonaturController> {
                     Icons.calendar_today,
                     'Terdaftar Sejak',
                     donatur.createdAt != null
-                        ? DateFormatter.formatDate(donatur.createdAt!)
+                        ? DateTimeHelper.formatDate(donatur.createdAt!)
                         : 'Tidak diketahui',
                   ),
                 ],
@@ -433,7 +433,7 @@ class DetailDonaturView extends GetView<DonaturController> {
   Widget _buildDonasiItem(PenitipanBantuanModel penitipan) {
     final isUang = penitipan.isUang == true;
     final tanggal = penitipan.createdAt != null
-        ? DateFormatter.formatDate(penitipan.createdAt!, format: 'dd MMM yyyy')
+        ? DateTimeHelper.formatDate(penitipan.createdAt!, format: 'dd MMM yyyy')
         : 'Tanggal tidak diketahui';
 
     String nilaiDonasi = '';

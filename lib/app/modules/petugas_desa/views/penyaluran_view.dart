@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/jadwal_section_widget.dart';
-import 'package:penyaluran_app/app/modules/petugas_desa/components/permintaan_penjadwalan_summary_widget.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/calendar_view_widget.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_penyaluran_view.dart';
 
@@ -117,18 +116,7 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
               );
             }
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Ringkasan jadwal
-                _buildJadwalSummary(Get.context!),
-
-                const SizedBox(height: 20),
-
-                // Kalender Penyaluran Bulan Ini
-                CalendarViewWidget(controller: controller),
-              ],
-            );
+            return CalendarViewWidget(controller: controller);
           }),
         ),
       ),

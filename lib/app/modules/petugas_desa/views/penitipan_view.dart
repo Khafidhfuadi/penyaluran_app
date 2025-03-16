@@ -4,7 +4,7 @@ import 'package:penyaluran_app/app/data/models/donatur_model.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penitipan_bantuan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 import 'package:penyaluran_app/app/widgets/detail_penitipan_dialog.dart';
 import 'dart:io';
 
@@ -78,7 +78,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   context,
                   icon: Icons.pending_actions,
                   title: 'Menunggu',
-                  value: DateFormatter.formatNumber(
+                  value: DateTimeHelper.formatNumber(
                       controller.jumlahMenunggu.value),
                   color: Colors.orange,
                 ),
@@ -88,7 +88,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   context,
                   icon: Icons.check_circle,
                   title: 'Terverifikasi',
-                  value: DateFormatter.formatNumber(
+                  value: DateTimeHelper.formatNumber(
                       controller.jumlahTerverifikasi.value),
                   color: Colors.green,
                 ),
@@ -98,7 +98,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   context,
                   icon: Icons.cancel,
                   title: 'Ditolak',
-                  value: DateFormatter.formatNumber(
+                  value: DateTimeHelper.formatNumber(
                       controller.jumlahDitolak.value),
                   color: Colors.red,
                 ),
@@ -225,7 +225,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   ),
             ),
             Text(
-              '${DateFormatter.formatNumber(filteredList.length)} item',
+              '${DateTimeHelper.formatNumber(filteredList.length)} item',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey,
                   ),
@@ -385,8 +385,8 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                         isUang ? Icons.account_balance_wallet : Icons.inventory,
                     label: 'Jumlah',
                     value: isUang
-                        ? 'Rp ${DateFormatter.formatNumber(item.jumlah)}'
-                        : '${DateFormatter.formatNumber(item.jumlah)} $kategoriSatuan',
+                        ? 'Rp ${DateTimeHelper.formatNumber(item.jumlah)}'
+                        : '${DateTimeHelper.formatNumber(item.jumlah)} $kategoriSatuan',
                   ),
                 ),
               ],
@@ -400,7 +400,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                     context,
                     icon: Icons.calendar_today,
                     label: 'Tanggal Dibuat',
-                    value: DateFormatter.formatDateTime(item.createdAt,
+                    value: DateTimeHelper.formatDateTime(item.createdAt,
                         defaultValue: 'Tidak ada tanggal'),
                   ),
                 ),
@@ -1523,7 +1523,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
   Widget _buildLastUpdateInfo(BuildContext context) {
     return Obx(() {
       final lastUpdate = controller.lastUpdateTime.value;
-      final formattedDate = DateFormatter.formatDateTimeWithHour(lastUpdate);
+      final formattedDate = DateTimeHelper.formatDateTimeWithHour(lastUpdate);
 
       return Padding(
         padding: const EdgeInsets.only(top: 8.0),

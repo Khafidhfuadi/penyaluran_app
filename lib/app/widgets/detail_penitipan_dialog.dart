@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 /// Dialog untuk menampilkan detail penitipan bantuan
 ///
@@ -54,20 +54,20 @@ class DetailPenitipanDialog {
               _buildDetailItem(
                   'Jumlah',
                   isUang
-                      ? 'Rp ${DateFormatter.formatNumber(item.jumlah)}'
-                      : '${DateFormatter.formatNumber(item.jumlah)} $kategoriSatuan'),
+                      ? 'Rp ${DateTimeHelper.formatNumber(item.jumlah)}'
+                      : '${DateTimeHelper.formatNumber(item.jumlah)} $kategoriSatuan'),
               if (isUang) _buildDetailItem('Jenis Bantuan', 'Uang (Rupiah)'),
               _buildDetailItem(
                   'Deskripsi', item.deskripsi ?? 'Tidak ada deskripsi'),
               _buildDetailItem(
                 'Tanggal Penitipan',
-                DateFormatter.formatDateTime(item.tanggalPenitipan,
+                DateTimeHelper.formatDateTime(item.tanggalPenitipan,
                     defaultValue: 'Tidak ada tanggal'),
               ),
               if (item.tanggalVerifikasi != null)
                 _buildDetailItem(
                   'Tanggal Verifikasi',
-                  DateFormatter.formatDateTime(item.tanggalVerifikasi),
+                  DateTimeHelper.formatDateTime(item.tanggalVerifikasi),
                 ),
               if (item.status == 'TERVERIFIKASI' && item.petugasDesaId != null)
                 _buildDetailItem(
@@ -75,7 +75,7 @@ class DetailPenitipanDialog {
                   getPetugasDesaNama(item.petugasDesaId),
                 ),
               _buildDetailItem('Tanggal Dibuat',
-                  DateFormatter.formatDateTime(item.createdAt)),
+                  DateTimeHelper.formatDateTime(item.createdAt)),
               if (item.alasanPenolakan != null &&
                   item.alasanPenolakan!.isNotEmpty)
                 _buildDetailItem('Alasan Penolakan', item.alasanPenolakan!),

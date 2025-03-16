@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penitipan_bantuan_controller.dart';
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
@@ -47,7 +47,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
         final kategoriNama = item.kategoriBantuan?.nama?.toLowerCase() ?? '';
         final deskripsi = item.deskripsi?.toLowerCase() ?? '';
         final tanggal =
-            DateFormatter.formatDateTime(item.tanggalPenitipan).toLowerCase();
+            DateTimeHelper.formatDateTime(item.tanggalPenitipan).toLowerCase();
 
         return donaturNama.contains(searchText) ||
             kategoriNama.contains(searchText) ||
@@ -99,7 +99,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                                   ),
                         ),
                         Text(
-                          '${DateFormatter.formatNumber(filteredList.length)} item',
+                          '${DateTimeHelper.formatNumber(filteredList.length)} item',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey,
@@ -113,7 +113,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Total: ${DateFormatter.formatNumber(filteredList.length)} item',
+                          'Total: ${DateTimeHelper.formatNumber(filteredList.length)} item',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey,
@@ -126,7 +126,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                                 size: 16, color: Colors.grey[600]),
                             const SizedBox(width: 4),
                             Text(
-                              'Update: ${DateFormatter.formatDateTimeWithHour(controller.lastUpdateTime.value)}',
+                              'Update: ${DateTimeHelper.formatDateTimeWithHour(controller.lastUpdateTime.value)}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
@@ -284,8 +284,8 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                         isUang ? Icons.account_balance_wallet : Icons.inventory,
                     label: 'Jumlah',
                     value: isUang
-                        ? 'Rp ${DateFormatter.formatNumber(item.jumlah)}'
-                        : '${DateFormatter.formatNumber(item.jumlah)} $kategoriSatuan',
+                        ? 'Rp ${DateTimeHelper.formatNumber(item.jumlah)}'
+                        : '${DateTimeHelper.formatNumber(item.jumlah)} $kategoriSatuan',
                   ),
                 ),
               ],
@@ -300,7 +300,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                     label: item.status == 'TERVERIFIKASI'
                         ? 'Tanggal Verifikasi'
                         : 'Tanggal Penolakan',
-                    value: DateFormatter.formatDateTime(
+                    value: DateTimeHelper.formatDateTime(
                         item.status == 'TERVERIFIKASI'
                             ? item.tanggalVerifikasi
                             : item.updatedAt,
@@ -414,20 +414,20 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
               _buildDetailItem(
                   'Jumlah',
                   isUang
-                      ? 'Rp ${DateFormatter.formatNumber(item.jumlah)}'
-                      : '${DateFormatter.formatNumber(item.jumlah)} $kategoriSatuan'),
+                      ? 'Rp ${DateTimeHelper.formatNumber(item.jumlah)}'
+                      : '${DateTimeHelper.formatNumber(item.jumlah)} $kategoriSatuan'),
               if (isUang) _buildDetailItem('Jenis Bantuan', 'Uang (Rupiah)'),
               _buildDetailItem(
                   'Deskripsi', item.deskripsi ?? 'Tidak ada deskripsi'),
               _buildDetailItem(
                 'Tanggal Penitipan',
-                DateFormatter.formatDateTime(item.tanggalPenitipan,
+                DateTimeHelper.formatDateTime(item.tanggalPenitipan,
                     defaultValue: 'Tidak ada tanggal'),
               ),
               if (item.tanggalVerifikasi != null)
                 _buildDetailItem(
                   'Tanggal Verifikasi',
-                  DateFormatter.formatDateTime(item.tanggalVerifikasi),
+                  DateTimeHelper.formatDateTime(item.tanggalVerifikasi),
                 ),
               if (item.status == 'TERVERIFIKASI' && item.petugasDesaId != null)
                 _buildDetailItem(
@@ -435,7 +435,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                   controller.getPetugasDesaNama(item.petugasDesaId),
                 ),
               _buildDetailItem('Tanggal Dibuat',
-                  DateFormatter.formatDateTime(item.createdAt)),
+                  DateTimeHelper.formatDateTime(item.createdAt)),
               if (item.alasanPenolakan != null &&
                   item.alasanPenolakan!.isNotEmpty)
                 _buildDetailItem('Alasan Penolakan', item.alasanPenolakan!),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
@@ -52,7 +52,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
             .getKategoriBantuanName(item.kategoriBantuanId)
             .toLowerCase();
         final tanggal =
-            DateFormatter.formatDateTime(item.tanggalPenyaluran).toLowerCase();
+            DateTimeHelper.formatDateTime(item.tanggalPenyaluran).toLowerCase();
 
         return nama.contains(searchText) ||
             deskripsi.contains(searchText) ||
@@ -105,7 +105,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
                                   ),
                         ),
                         Text(
-                          '${DateFormatter.formatNumber(filteredList.length)} item',
+                          '${DateTimeHelper.formatNumber(filteredList.length)} item',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey,
@@ -119,7 +119,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Total: ${DateFormatter.formatNumber(filteredList.length)} item',
+                          'Total: ${DateTimeHelper.formatNumber(filteredList.length)} item',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey,
@@ -132,7 +132,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
                                 size: 16, color: Colors.grey[600]),
                             const SizedBox(width: 4),
                             Text(
-                              'Update: ${DateFormatter.formatDateTimeWithHour(DateTime.now())}',
+                              'Update: ${DateTimeHelper.formatDateTimeWithHour(DateTime.now())}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
@@ -305,8 +305,8 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
                     child: _buildInfoItem(
                       Icons.event,
                       'Tanggal',
-                      DateFormatter.formatDateTime(item.tanggalPenyaluran,
-                          defaultValue: 'Tidak ada tanggal'),
+                      DateTimeHelper.formatDateTime(item.tanggalPenyaluran,
+                          format: 'dd MMM yyyy HH:mm'),
                       Theme.of(context).textTheme,
                     ),
                   ),
@@ -316,7 +316,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
               _buildInfoItem(
                 Icons.people_outline,
                 'Jumlah Penerima',
-                '${DateFormatter.formatNumber(item.jumlahPenerima ?? 0)} orang',
+                '${DateTimeHelper.formatNumber(item.jumlahPenerima ?? 0)} orang',
                 Theme.of(context).textTheme,
               ),
               if (item.alasanPembatalan != null &&

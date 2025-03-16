@@ -9,7 +9,7 @@ import 'package:signature/signature.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class KonfirmasiPenerimaPage extends StatefulWidget {
   final PenerimaPenyaluranModel penerima;
@@ -187,7 +187,7 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
                 'Tempat, Tanggal Lahir',
                 warga?['tempat_lahir'] != null &&
                         warga?['tanggal_lahir'] != null
-                    ? '${warga!['tempat_lahir']}, ${DateFormatter.formatDate(DateTime.parse(warga['tanggal_lahir']), format: 'd MMMM yyyy')}'
+                    ? '${warga!['tempat_lahir']}, ${DateTimeHelper.formatDate(DateTime.parse(warga['tanggal_lahir']), format: 'd MMMM yyyy')}'
                     : 'Bogor, 2 Juni 1990'),
             const Divider(),
 
@@ -223,9 +223,9 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
 
     String tanggalWaktuPenyaluran = '';
     if (widget.tanggalPenyaluran != null) {
-      final tanggal = DateFormatter.formatDate(widget.tanggalPenyaluran!);
-      final waktuMulai = DateFormatter.formatTime(widget.tanggalPenyaluran!);
-      final waktuSelesai = DateFormatter.formatTime(
+      final tanggal = DateTimeHelper.formatDate(widget.tanggalPenyaluran!);
+      final waktuMulai = DateTimeHelper.formatTime(widget.tanggalPenyaluran!);
+      final waktuSelesai = DateTimeHelper.formatTime(
           widget.tanggalPenyaluran!.add(const Duration(hours: 1)));
       tanggalWaktuPenyaluran = '$tanggal $waktuMulai-$waktuSelesai';
     } else {

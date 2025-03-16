@@ -1,5 +1,4 @@
 import 'package:intl/intl.dart';
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
 
 class DateTimeHelper {
   /// Mengkonversi DateTime dari UTC ke timezone lokal
@@ -8,31 +7,57 @@ class DateTimeHelper {
   }
 
   /// Format tanggal ke format Indonesia (dd MMM yyyy)
-  static String formatDate(DateTime? dateTime) {
-    if (dateTime == null) return 'Belum ditentukan';
+  static String formatDate(DateTime? dateTime,
+      {String format = 'dd MMM yyyy',
+      String locale = 'id_ID',
+      String defaultValue = 'Belum ditentukan'}) {
+    if (dateTime == null) return defaultValue;
 
     // Pastikan tanggal dalam timezone lokal
     final localDateTime = toLocalDateTime(dateTime);
-    return DateFormatter.formatDate(localDateTime, format: 'dd MMM yyyy');
+    try {
+      return DateFormat(format, locale).format(localDateTime);
+    } catch (e) {
+      print('Error formatting date: $e');
+      return localDateTime.toString().split(' ')[0]; // Fallback to basic format
+    }
   }
 
   /// Format waktu ke format 24 jam (HH:mm)
-  static String formatTime(DateTime? dateTime) {
-    if (dateTime == null) return 'Belum ditentukan';
+  static String formatTime(DateTime? dateTime,
+      {String format = 'HH:mm',
+      String locale = 'id_ID',
+      String defaultValue = 'Belum ditentukan'}) {
+    if (dateTime == null) return defaultValue;
 
     // Pastikan waktu dalam timezone lokal
     final localDateTime = toLocalDateTime(dateTime);
-    return DateFormatter.formatTime(localDateTime);
+    try {
+      return DateFormat(format, locale).format(localDateTime);
+    } catch (e) {
+      print('Error formatting time: $e');
+      return localDateTime
+          .toString()
+          .split(' ')[1]
+          .substring(0, 5); // Fallback to basic format
+    }
   }
 
   /// Format tanggal dan waktu (dd MMM yyyy HH:mm)
-  static String formatDateTime(DateTime? dateTime) {
-    if (dateTime == null) return 'Belum ditentukan';
+  static String formatDateTime(DateTime? dateTime,
+      {String format = 'dd MMM yyyy HH:mm',
+      String locale = 'id_ID',
+      String defaultValue = 'Belum ditentukan'}) {
+    if (dateTime == null) return defaultValue;
 
     // Pastikan tanggal dan waktu dalam timezone lokal
     final localDateTime = toLocalDateTime(dateTime);
-    return DateFormatter.formatDateTime(localDateTime,
-        format: 'dd MMM yyyy HH:mm');
+    try {
+      return DateFormat(format, locale).format(localDateTime);
+    } catch (e) {
+      print('Error formatting date time: $e');
+      return localDateTime.toString().split('.')[0]; // Fallback to basic format
+    }
   }
 
   /// Format tanggal lengkap dalam bahasa Indonesia (Senin, 01 Januari 2023)
@@ -73,5 +98,24 @@ class DateTimeHelper {
     final String tahun = localDateTime.year.toString();
 
     return '$hari, $tanggal $bulan $tahun';
+  }
+
+  /// Format angka dengan pemisah ribuan
+  static String formatNumber(num? number,
+      {String locale = 'id_ID', String defaultValue = '0'}) {
+    if (number == null) return defaultValue;
+    try {
+      return NumberFormat("#,##0.##", locale).format(number);
+    } catch (e) {
+      print('Error formatting number: $e');
+      return number.toString(); // Fallback to basic format
+    }
+  }
+
+  /// Format tanggal dan waktu dengan jam (dd MMMM yyyy HH:mm)
+  static String formatDateTimeWithHour(DateTime? dateTime) {
+    if (dateTime == null) return 'Belum ditentukan';
+    final localDateTime = toLocalDateTime(dateTime);
+    return DateFormat('dd MMMM yyyy HH:mm', 'id_ID').format(localDateTime);
   }
 }

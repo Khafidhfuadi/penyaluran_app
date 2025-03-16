@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/stok_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/stok_bantuan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class StokBantuanView extends GetView<StokBantuanController> {
   const StokBantuanView({super.key});
@@ -154,7 +154,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                                   ),
                         ),
                         Text(
-                          'Rp ${DateFormatter.formatNumber(controller.totalDanaBantuan.value)}',
+                          'Rp ${DateTimeHelper.formatNumber(controller.totalDanaBantuan.value)}',
                           style:
                               Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -417,8 +417,8 @@ class StokBantuanView extends GetView<StokBantuanController> {
                         : Icons.inventory,
                     label: item.isUang == true ? 'Total Dana' : 'Total Stok',
                     value: item.isUang == true
-                        ? 'Rp ${DateFormatter.formatNumber(item.totalStok)}'
-                        : '${DateFormatter.formatNumber(item.totalStok)} ${item.satuan ?? ''}',
+                        ? 'Rp ${DateTimeHelper.formatNumber(item.totalStok)}'
+                        : '${DateTimeHelper.formatNumber(item.totalStok)} ${item.satuan ?? ''}',
                   ),
                 ),
                 Expanded(
@@ -426,7 +426,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     context,
                     icon: Icons.access_time,
                     label: 'Terakhir Diperbarui',
-                    value: DateFormatter.formatDateTime(item.updatedAt),
+                    value: DateTimeHelper.formatDateTime(item.updatedAt),
                   ),
                 ),
               ],
@@ -873,8 +873,8 @@ class StokBantuanView extends GetView<StokBantuanController> {
                           const SizedBox(width: 8),
                           Text(
                             isUang
-                                ? 'Rp ${DateFormatter.formatNumber(stok.totalStok)}'
-                                : '${DateFormatter.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
+                                ? 'Rp ${DateTimeHelper.formatNumber(stok.totalStok)}'
+                                : '${DateTimeHelper.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ],
@@ -1064,8 +1064,8 @@ class StokBantuanView extends GetView<StokBantuanController> {
                         SizedBox(width: 4),
                         Text(
                           stok.isUang == true
-                              ? 'Rp ${DateFormatter.formatNumber(stok.totalStok)}'
-                              : '${DateFormatter.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
+                              ? 'Rp ${DateTimeHelper.formatNumber(stok.totalStok)}'
+                              : '${DateTimeHelper.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -1129,7 +1129,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
   Widget _buildLastUpdateInfo(BuildContext context) {
     return Obx(() {
       final lastUpdate = controller.lastUpdateTime.value;
-      final formattedDate = DateFormatter.formatDateTimeWithHour(lastUpdate);
+      final formattedDate = DateTimeHelper.formatDateTimeWithHour(lastUpdate);
 
       return Padding(
         padding: const EdgeInsets.only(top: 8.0),

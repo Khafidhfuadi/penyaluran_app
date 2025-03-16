@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class PenerimaController extends GetxController {
   final RxList<Map<String, dynamic>> daftarPenerima =
@@ -190,7 +190,7 @@ class PenerimaController extends GetxController {
     );
 
     if (picked != null) {
-      tanggalPenyaluran.value = DateFormatter.formatDate(picked);
+      tanggalPenyaluran.value = DateTimeHelper.formatDate(picked);
     }
   }
 

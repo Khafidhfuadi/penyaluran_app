@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/data/models/skema_bantuan_model.dart';
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
   const TambahPenyaluranView({super.key});
@@ -327,7 +327,7 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                   if (pickedDate != null) {
                     selectedDate.value = pickedDate;
                     tanggalPenyaluranController.text =
-                        DateFormatter.formatDate(pickedDate);
+                        DateTimeHelper.formatDate(pickedDate);
                   }
                 },
                 validator: (value) {

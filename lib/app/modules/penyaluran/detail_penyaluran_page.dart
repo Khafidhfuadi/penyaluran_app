@@ -3,15 +3,12 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:penyaluran_app/app/modules/penyaluran/detail_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:penyaluran_app/app/modules/penyaluran/konfirmasi_penerima_page.dart';
-import 'package:penyaluran_app/app/utils/date_formatter.dart';
-import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class DetailPenyaluranPage extends StatelessWidget {
   final controller = Get.put(DetailPenyaluranController());
-  final ImagePicker _picker = ImagePicker();
   final searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
   final RxString statusFilter = 'SEMUA'.obs;
@@ -65,16 +62,14 @@ class DetailPenyaluranPage extends StatelessWidget {
               children: [
                 _buildInfoCard(context),
                 const SizedBox(height: 16),
-                _buildPenerimaPenyaluranSection(context),
-                const SizedBox(height: 24),
-                // Menampilkan section alasan pembatalan jika status BATALTERLAKSANA
                 if (controller.penyaluran.value?.status?.toUpperCase() ==
                         'BATALTERLAKSANA' &&
                     controller.penyaluran.value?.alasanPembatalan != null &&
                     controller.penyaluran.value!.alasanPembatalan!.isNotEmpty)
                   _buildPembatalanSection(context),
+                const SizedBox(height: 16),
+                _buildPenerimaPenyaluranSection(context),
                 const SizedBox(height: 24),
-                // Tombol aksi akan ditampilkan di bottomNavigationBar
               ],
             ),
           ),
@@ -161,7 +156,7 @@ class DetailPenyaluranPage extends StatelessWidget {
             _buildInfoRow(
                 'Tanggal',
                 penyaluran.tanggalPenyaluran != null
-                    ? DateFormatter.formatDateTime(
+                    ? DateTimeHelper.formatDateTime(
                         penyaluran.tanggalPenyaluran!)
                     : 'Belum dijadwalkan'),
             // Tampilkan tanggal selesai jika status TERLAKSANA atau BATALTERLAKSANA
@@ -170,7 +165,8 @@ class DetailPenyaluranPage extends StatelessWidget {
               _buildInfoRow(
                   'Tanggal Selesai',
                   penyaluran.tanggalSelesai != null
-                      ? DateFormatter.formatDateTime(penyaluran.tanggalSelesai!)
+                      ? DateTimeHelper.formatDateTime(
+                          penyaluran.tanggalSelesai!)
                       : '-'),
             _buildInfoRow(
                 'Jumlah Penerima', '${penyaluran.jumlahPenerima ?? 0} orang'),
@@ -200,72 +196,6 @@ class DetailPenyaluranPage extends StatelessWidget {
                   color: Colors.grey[600],
                 ),
               ),
-            ],
-
-            // Alasan penolakan jika ada
-            if (penyaluran.alasanPembatalan != null &&
-                penyaluran.alasanPembatalan!.isNotEmpty) ...[
-              const Divider(height: 24),
-              if (penyaluran.status?.toUpperCase() == 'BATALTERLAKSANA') ...[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.errorColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppTheme.errorColor.withOpacity(0.5),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.cancel_outlined,
-                            color: AppTheme.errorColor,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Alasan Pembatalan:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.errorColor,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        penyaluran.alasanPembatalan!,
-                        style: TextStyle(
-                          color: Colors.red[700],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ] else ...[
-                Text(
-                  'Alasan Pembatalan:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red[700],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  penyaluran.alasanPembatalan!,
-                  style: TextStyle(
-                    color: Colors.red[700],
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
             ],
           ],
         ),
@@ -1339,7 +1269,7 @@ class DetailPenyaluranPage extends StatelessWidget {
                       if (penerima.tanggalPenerimaan != null)
                         _buildInfoRow(
                             'Tanggal Penerimaan',
-                            DateFormatter.formatDate(
+                            DateTimeHelper.formatDate(
                                 penerima.tanggalPenerimaan!)),
                       if (penerima.jumlahBantuan != null)
                         _buildInfoRow('Jumlah Bantuan',
@@ -1440,26 +1370,25 @@ class DetailPenyaluranPage extends StatelessWidget {
 
                 // Tombol tutup
                 SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade200,
-                      foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Tutup',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      child: const Text(
+                        'Tutup',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ),
-                ),
+                    )),
               ],
             ),
           ),
@@ -1532,7 +1461,7 @@ class DetailPenyaluranPage extends StatelessWidget {
             _buildInfoRow('Status', 'Batal Terlaksana'),
             if (penyaluran.tanggalSelesai != null)
               _buildInfoRow('Tanggal Pembatalan',
-                  DateFormatter.formatDateTime(penyaluran.tanggalSelesai!)),
+                  DateTimeHelper.formatDateTime(penyaluran.tanggalSelesai!)),
             const SizedBox(height: 8),
             const Text(
               'Alasan Pembatalan:',
