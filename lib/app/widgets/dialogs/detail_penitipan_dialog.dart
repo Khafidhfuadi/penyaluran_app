@@ -1,0 +1,215 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'package:penyaluran_app/app/theme/app_colors.dart';
+
+/// Dialog untuk menampilkan detail penitipan bantuan
+///
+/// Dialog ini menampilkan informasi lengkap tentang penitipan bantuan.
+class DetailPenitipanDialog {
+  /// Menampilkan dialog detail penitipan
+  ///
+  /// [context] adalah BuildContext
+  /// [item] adalah model penitipan bantuan
+  /// [donaturNama] adalah nama donatur
+  /// [kategoriNama] adalah nama kategori bantuan
+  /// [kategoriSatuan] adalah satuan kategori bantuan
+  /// [getPetugasDesaNama] adalah fungsi untuk mendapatkan nama petugas desa
+  /// [showFullScreenImage] adalah fungsi untuk menampilkan gambar layar penuh
+  static void show({
+    required BuildContext context,
+    required PenitipanBantuanModel item,
+    required String donaturNama,
+    required String kategoriNama,
+    required String kategoriSatuan,
+    required String Function(String?) getPetugasDesaNama,
+    required Function(String) showFullScreenImage,
+  }) {
+    // Cek apakah penitipan berbentuk uang
+    final isUang = item.isUang ?? false;
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Detail Penitipan'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoRow('ID', item.id ?? '-'),
+              _buildInfoRow('Donatur', donaturNama),
+              _buildInfoRow('Kategori', kategoriNama),
+              _buildInfoRow(
+                'Jumlah',
+                isUang
+                    ? 'Rp ${item.jumlah?.toStringAsFixed(0) ?? '0'}'
+                    : '${item.jumlah?.toString() ?? '0'} $kategoriSatuan',
+              ),
+              _buildInfoRow(
+                'Tanggal Penitipan',
+                DateTimeHelper.formatDateTime(
+                    item.tanggalPenitipan ?? item.createdAt),
+              ),
+              _buildInfoRow(
+                'Status',
+                item.status ?? 'Belum diproses',
+              ),
+              if (item.petugasDesaId != null)
+                _buildInfoRow(
+                  'Petugas Desa',
+                  getPetugasDesaNama(item.petugasDesaId),
+                ),
+              if (item.tanggalVerifikasi != null)
+                _buildInfoRow(
+                  'Tanggal Verifikasi',
+                  DateTimeHelper.formatDateTime(item.tanggalVerifikasi),
+                ),
+              if (item.deskripsi != null && item.deskripsi!.isNotEmpty)
+                _buildInfoRow('Deskripsi', item.deskripsi!),
+
+              // Gambar bukti penitipan
+              if (item.fotoBantuan != null && item.fotoBantuan!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'Bukti Penitipan',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => showFullScreenImage(item.fotoBantuan!.first),
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      image: DecorationImage(
+                        image: NetworkImage(item.fotoBantuan!.first),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
+              // Bukti serah terima
+              if (item.fotoBuktiSerahTerima != null &&
+                  item.fotoBuktiSerahTerima!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'Bukti Serah Terima',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => showFullScreenImage(item.fotoBuktiSerahTerima!),
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      image: DecorationImage(
+                        image: NetworkImage(item.fotoBuktiSerahTerima!),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              'Tutup',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Menampilkan gambar dalam layar penuh
+  static void showFullScreenImage(BuildContext context, String imageUrl) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: Container(
+            color: Colors.black,
+            child: Center(
+              child: InteractiveViewer(
+                panEnabled: true,
+                boundaryMargin: const EdgeInsets.all(20),
+                minScale: 0.5,
+                maxScale: 4,
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(
+                      child: Text(
+                        'Gagal memuat gambar',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Membangun baris informasi
+  static Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+}

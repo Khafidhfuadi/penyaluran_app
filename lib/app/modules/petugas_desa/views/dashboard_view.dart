@@ -5,7 +5,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/components/progress_sect
 import 'package:penyaluran_app/app/modules/petugas_desa/components/schedule_card.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
-import 'package:penyaluran_app/app/widgets/statistic_card.dart';
+import 'package:penyaluran_app/app/widgets/cards/statistic_card.dart';
 
 class DashboardView extends GetView<PetugasDesaController> {
   const DashboardView({super.key});
