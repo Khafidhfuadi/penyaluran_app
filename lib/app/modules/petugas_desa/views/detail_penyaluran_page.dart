@@ -35,7 +35,7 @@ class DetailPenyaluranPage extends StatelessWidget {
         title: const Text('Detail Penyaluran'),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Get.back(),
         ),
       ),

@@ -77,7 +77,32 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
       itemCount: controller.pengaduan.length,
       itemBuilder: (context, index) {
         final item = controller.pengaduan[index];
-        final isProses = item.status == 'PROSES';
+
+        // Tentukan status dan warna berdasarkan status pengaduan
+        Color statusColor;
+        String statusText;
+
+        switch (item.status?.toUpperCase()) {
+          case 'PROSES':
+          case 'DIPROSES':
+          case 'TINDAKAN':
+            statusColor = Colors.orange;
+            statusText = 'Proses';
+            break;
+          case 'SELESAI':
+            statusColor = Colors.green;
+            statusText = 'Selesai';
+            break;
+          case 'DITOLAK':
+            statusColor = Colors.red;
+            statusText = 'Ditolak';
+            break;
+          default:
+            statusColor = Colors.grey;
+            statusText = item.status ?? 'Tidak Diketahui';
+        }
+
+        final isProses = statusText == 'Proses';
 
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
@@ -115,18 +140,16 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: isProses
-                              ? Colors.orange.withOpacity(0.1)
-                              : Colors.green.withOpacity(0.1),
+                          color: statusColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: isProses ? Colors.orange : Colors.green,
+                            color: statusColor,
                           ),
                         ),
                         child: Text(
-                          isProses ? 'Proses' : 'Selesai',
+                          statusText,
                           style: TextStyle(
-                            color: isProses ? Colors.orange : Colors.green,
+                            color: statusColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),

@@ -6,7 +6,7 @@ abstract class Routes {
   static const login = _Paths.login;
   static const register = _Paths.register;
   static const wargaDashboard = _Paths.wargaDashboard;
-  static const wargaPenyaluran = _Paths.wargaPenyaluran;
+  static const wargaPenerimaan = _Paths.wargaPenerimaan;
   static const wargaPengaduan = _Paths.wargaPengaduan;
   static const petugasVerifikasiDashboard = _Paths.petugasVerifikasiDashboard;
   static const petugasDesaDashboard = _Paths.petugasDesaDashboard;
@@ -27,6 +27,7 @@ abstract class Routes {
   static const laporanPenyaluran = _Paths.laporanPenyaluran;
   static const detailPenyaluran = _Paths.detailPenyaluran;
   static const riwayatPenyaluran = _Paths.riwayatPenyaluran;
+  static const wargaDetailPenerimaan = _Paths.wargaDetailPenerimaan;
 }
 
 abstract class _Paths {
@@ -35,7 +36,7 @@ abstract class _Paths {
   static const login = '/login';
   static const register = '/register';
   static const wargaDashboard = '/warga-dashboard';
-  static const wargaPenyaluran = '/warga-penyaluran';
+  static const wargaPenerimaan = '/warga-penerimaan';
   static const wargaPengaduan = '/warga-pengaduan';
   static const petugasVerifikasiDashboard = '/petugas-verifikasi-dashboard';
   static const petugasDesaDashboard = '/petugas-desa-dashboard';
@@ -56,4 +57,5 @@ abstract class _Paths {
   static const laporanPenyaluran = '/laporan-penyaluran';
   static const detailPenyaluran = '/detail-penyaluran';
   static const riwayatPenyaluran = '/petugas-desa/riwayat-penyaluran';
+  static const wargaDetailPenerimaan = '/warga/detail-penerimaan';
 }

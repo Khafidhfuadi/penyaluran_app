@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
 import 'package:penyaluran_app/app/modules/warga/views/warga_dashboard_view.dart';
-import 'package:penyaluran_app/app/modules/warga/views/warga_penyaluran_view.dart';
+import 'package:penyaluran_app/app/modules/warga/views/warga_penerimaan_view.dart';
 import 'package:penyaluran_app/app/modules/warga/views/warga_pengaduan_view.dart';
 import 'package:penyaluran_app/app/widgets/app_drawer.dart';
 import 'package:penyaluran_app/app/widgets/app_bottom_navigation_bar.dart';
@@ -23,7 +23,7 @@ class WargaView extends GetView<WargaDashboardController> {
             case 0:
               return const Text('Dashboard Warga');
             case 1:
-              return const Text('Penyaluran Bantuan');
+              return const Text('Penerimaan Bantuan');
             case 2:
               return const Text('Pengaduan');
             default:
@@ -96,7 +96,7 @@ class WargaView extends GetView<WargaDashboardController> {
               ),
               DrawerMenuItem(
                 icon: Icons.volunteer_activism_outlined,
-                title: 'Penyaluran',
+                title: 'Penerimaan',
                 isSelected: controller.activeTabIndex.value == 1,
                 onTap: () => controller.changeTab(1),
               ),
@@ -125,7 +125,7 @@ class WargaView extends GetView<WargaDashboardController> {
           case 0:
             return const WargaDashboardView();
           case 1:
-            return const WargaPenyaluranView();
+            return const WargaPenerimaanView();
           case 2:
             return const WargaPengaduanView();
           default:
@@ -144,7 +144,7 @@ class WargaView extends GetView<WargaDashboardController> {
               AppBottomNavigationBarItem(
                 icon: Icons.volunteer_activism_outlined,
                 activeIcon: Icons.volunteer_activism,
-                label: 'Penyaluran',
+                label: 'Penerimaan',
                 badgeCount: controller.totalPenyaluranDiterima.value > 0
                     ? controller.totalPenyaluranDiterima.value
                     : null,
