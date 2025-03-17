@@ -5,6 +5,7 @@ import 'package:penyaluran_app/app/data/models/pengajuan_kelayakan_bantuan_model
 import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
+import 'package:flutter/material.dart';
 
 class WargaDashboardController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
@@ -86,9 +87,6 @@ class WargaDashboardController extends GetxController {
   // Fungsi untuk mengambil data penerima penyaluran
   Future<void> fetchPenerimaPenyaluran() async {
     try {
-      print('Memulai fetchPenerimaPenyaluran()');
-      print('User ID: ${user?.id}');
-
       // Pertama, cari warga_id berdasarkan user_id
       final wargaResponse = await _supabaseService.client
           .from('warga')
@@ -96,15 +94,7 @@ class WargaDashboardController extends GetxController {
           .eq('user_id', user!.id)
           .single();
 
-      print('Warga response: $wargaResponse');
-
-      if (wargaResponse == null) {
-        print('Tidak ditemukan data warga untuk user_id: ${user!.id}');
-        return;
-      }
-
       final wargaId = wargaResponse['id'];
-      print('Warga ID: $wargaId');
 
       // Ambil data penerima penyaluran dengan join ke warga, stok bantuan, dan penyaluran bantuan
       final response =
@@ -121,30 +111,20 @@ class WargaDashboardController extends GetxController {
             )
           ''').eq('warga_id', wargaId).order('created_at', ascending: false);
 
-      print('Response dari API: $response');
-
       if (response != null) {
         final List<PenerimaPenyaluranModel> penerima = [];
         for (var item in response) {
-          print('Memproses item: $item');
-
           Map<String, dynamic> sanitizedPenerimaData =
               Map<String, dynamic>.from(item);
-
-          print('Data yang disanitasi: $sanitizedPenerimaData');
 
           if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
             var jumlahBantuan = double.tryParse(
                 sanitizedPenerimaData['jumlah_bantuan'] as String);
-            print(
-                'Konversi jumlah_bantuan dari String ke double: $jumlahBantuan');
             sanitizedPenerimaData['jumlah_bantuan'] = jumlahBantuan;
           }
 
           // Tambahkan informasi apakah bantuan uang atau bukan dan satuan
           if (sanitizedPenerimaData['stok_bantuan'] != null) {
-            print('Stok bantuan: ${sanitizedPenerimaData['stok_bantuan']}');
-
             // Cek apakah bantuan uang
             final isUang =
                 sanitizedPenerimaData['stok_bantuan']['is_uang'] ?? false;
@@ -163,15 +143,10 @@ class WargaDashboardController extends GetxController {
                   '';
               sanitizedPenerimaData['kategori_nama'] = kategoriNama;
             }
-
-            print('Is Uang: $isUang, Satuan: $satuan');
           }
 
           // Tambahkan informasi dari penyaluran bantuan
           if (sanitizedPenerimaData['penyaluran_bantuan'] != null) {
-            print(
-                'Penyaluran bantuan: ${sanitizedPenerimaData['penyaluran_bantuan']}');
-
             // Ambil nama penyaluran
             final namaPenyaluran =
                 sanitizedPenerimaData['penyaluran_bantuan']['nama'] ?? '';
@@ -196,26 +171,20 @@ class WargaDashboardController extends GetxController {
                   '';
               sanitizedPenerimaData['lokasi_penyaluran_alamat'] = lokasiAlamat;
             }
-
-            print('Nama Penyaluran: $namaPenyaluran');
           }
 
           var model = PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData);
-          print('Model yang dibuat: $model');
           penerima.add(model);
         }
 
-        print('Total data yang diproses: ${penerima.length}');
         penerimaPenyaluran.assignAll(penerima);
 
         var diterima =
             penerima.where((p) => p.statusPenerimaan == 'DITERIMA').length;
-        print('Total penyaluran diterima: $diterima');
         totalPenyaluranDiterima.value = diterima;
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       print('Error fetchPenerimaPenyaluran: $e');
-      print('Stack trace: $stackTrace');
     }
   }
 
@@ -230,12 +199,10 @@ class WargaDashboardController extends GetxController {
           .single();
 
       if (wargaResponse == null) {
-        print('Tidak ditemukan data warga untuk user_id: ${user!.id}');
         return;
       }
 
       final wargaId = wargaResponse['id'];
-      print('Warga ID untuk pengajuan kelayakan: $wargaId');
 
       final response = await _supabaseService.client
           .from('xx02_pengajuan_kelayakan_bantuan')
@@ -275,7 +242,6 @@ class WargaDashboardController extends GetxController {
     try {
       final wargaData = await _supabaseService.getWargaByUserId();
       if (wargaData == null) {
-        print('Data warga tidak ditemukan');
         return;
       }
 
@@ -315,7 +281,6 @@ class WargaDashboardController extends GetxController {
 
       jumlahNotifikasiBelumDibaca.value = response.count;
     } catch (e) {
-      print('Error fetching notifikasi: $e');
       jumlahNotifikasiBelumDibaca.value = 0;
     }
   }
@@ -326,7 +291,6 @@ class WargaDashboardController extends GetxController {
   }
 
   void goToPengajuanDetail() {
-    // TODO: Implementasi navigasi ke halaman detail pengajuan
     // Untuk saat ini, belum ada halaman detail pengajuan
   }
 
@@ -374,11 +338,60 @@ class WargaDashboardController extends GetxController {
 
       return result;
     } catch (e) {
-      print('Error getting detail pengaduan: $e');
       return {
         'pengaduan': null,
         'tindakan': [],
       };
+    }
+  }
+
+  // Metode untuk menambahkan feedback dan rating pengaduan
+  Future<void> addPengaduanFeedback(
+      String pengaduanId, String feedback, int rating) async {
+    try {
+      await _supabaseService.addPengaduanFeedback(
+          pengaduanId, feedback, rating);
+      fetchData(); // Refresh data
+      Get.snackbar(
+        'Berhasil',
+        'Feedback berhasil dikirim',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal mengirim feedback: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Metode untuk memperbarui feedback dan rating pengaduan
+  Future<void> updatePengaduanFeedback(
+      String pengaduanId, String feedback, int rating) async {
+    try {
+      await _supabaseService.updatePengaduanFeedback(
+          pengaduanId, feedback, rating);
+      fetchData(); // Refresh data
+      Get.snackbar(
+        'Berhasil',
+        'Feedback berhasil diperbarui',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal memperbarui feedback: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 }

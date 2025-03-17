@@ -188,6 +188,14 @@ class DetailPengaduanView extends GetView<PengaduanController> {
 
           const SizedBox(height: 24),
 
+          // Feedback warga jika status SELESAI
+          if (pengaduan.status?.toUpperCase() == 'SELESAI' &&
+              (pengaduan.feedbackWarga != null ||
+                  pengaduan.ratingWarga != null))
+            _buildFeedbackSection(context, pengaduan),
+
+          const SizedBox(height: 24),
+
           // Timeline tindakan
           _buildTindakanTimeline(context, tindakanList),
         ],
@@ -450,6 +458,75 @@ class DetailPengaduanView extends GetView<PengaduanController> {
             const SizedBox(height: 16),
             // Panel status pengaduan
             _buildStatusPanel(context, pengaduan),
+
+            // Tampilkan feedback dan rating warga jika ada
+            if (pengaduan.status?.toUpperCase() == 'SELESAI' &&
+                (pengaduan.feedbackWarga != null ||
+                    pengaduan.ratingWarga != null))
+              Column(
+                children: [
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Feedback Warga',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Colors.amber,
+                              ),
+                            ),
+                            if (pengaduan.ratingWarga != null)
+                              Row(
+                                children: List.generate(5, (index) {
+                                  return Icon(
+                                    index < (pengaduan.ratingWarga ?? 0)
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                    color: Colors.amber,
+                                    size: 16,
+                                  );
+                                }),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (pengaduan.feedbackWarga != null &&
+                            pengaduan.feedbackWarga!.isNotEmpty)
+                          Text(
+                            pengaduan.feedbackWarga!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.amber.shade900,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          )
+                        else
+                          Text(
+                            'Warga belum memberikan komentar',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
@@ -1118,66 +1195,6 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                     ),
                   ),
                 ],
-              ),
-            ],
-
-            // Feedback warga (jika ada)
-            if (tindakan.feedbackWarga != null &&
-                tindakan.feedbackWarga!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.amber.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.comment,
-                          size: 16,
-                          color: Colors.amber.shade800,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Feedback Warga:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: Colors.amber.shade800,
-                          ),
-                        ),
-                        const Spacer(),
-                        if (tindakan.ratingWarga != null) ...[
-                          Row(
-                            children: List.generate(5, (index) {
-                              return Icon(
-                                index < (tindakan.ratingWarga ?? 0)
-                                    ? Icons.star
-                                    : Icons.star_border,
-                                color: Colors.amber,
-                                size: 16,
-                              );
-                            }),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      tindakan.feedbackWarga!,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.amber.shade900,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
 
@@ -2187,6 +2204,86 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget untuk menampilkan feedback dan rating warga
+  Widget _buildFeedbackSection(BuildContext context, PengaduanModel pengaduan) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Feedback Warga',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            const Divider(height: 24),
+            if (pengaduan.ratingWarga != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Rating: ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Row(
+                      children: List.generate(5, (index) {
+                        return Icon(
+                          index < (pengaduan.ratingWarga ?? 0)
+                              ? Icons.star
+                              : Icons.star_border,
+                          color: Colors.amber,
+                          size: 20,
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+            if (pengaduan.feedbackWarga != null &&
+                pengaduan.feedbackWarga!.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Text(
+                  pengaduan.feedbackWarga!,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.amber.shade900,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              )
+            else
+              Text(
+                'Warga belum memberikan komentar',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
           ],
         ),
       ),

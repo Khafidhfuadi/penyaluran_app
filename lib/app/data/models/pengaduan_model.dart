@@ -13,6 +13,8 @@ class PengaduanModel {
   final DateTime? updatedAt;
   final Map<String, dynamic>? penerimaPenyaluran;
   final Map<String, dynamic>? warga;
+  final String? feedbackWarga;
+  final int? ratingWarga;
 
   PengaduanModel({
     this.id,
@@ -27,6 +29,8 @@ class PengaduanModel {
     this.updatedAt,
     this.penerimaPenyaluran,
     this.warga,
+    this.feedbackWarga,
+    this.ratingWarga,
   });
 
   factory PengaduanModel.fromRawJson(String str) =>
@@ -53,6 +57,8 @@ class PengaduanModel {
             : null,
         penerimaPenyaluran: json["penerima_penyaluran"],
         warga: json["warga"],
+        feedbackWarga: json["feedback_warga"],
+        ratingWarga: json["rating_warga"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -68,6 +74,8 @@ class PengaduanModel {
         "updated_at": updatedAt?.toIso8601String(),
         "penerima_penyaluran": penerimaPenyaluran,
         "warga": warga,
+        "feedback_warga": feedbackWarga,
+        "rating_warga": ratingWarga,
       };
 
   // Getter untuk mendapatkan informasi penyaluran bantuan

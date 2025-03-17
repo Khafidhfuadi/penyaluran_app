@@ -7,6 +7,9 @@ import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_con
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:penyaluran_app/app/widgets/indicators/status_pill.dart';
+import 'package:penyaluran_app/app/widgets/section_header.dart';
+import 'package:penyaluran_app/app/widgets/cards/info_card.dart';
 import 'dart:io';
 
 class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
@@ -62,6 +65,36 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
           return _buildDetailContent(context, pengaduan, tindakanList);
         },
       ),
+      floatingActionButton: FutureBuilder<Map<String, dynamic>>(
+        future: controller.getDetailPengaduan(pengaduanId),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const SizedBox();
+
+          final data = snapshot.data;
+          if (data == null || data['pengaduan'] == null)
+            return const SizedBox();
+
+          final pengaduan = PengaduanModel.fromJson(data['pengaduan']);
+
+          // Tampilkan tombol feedback hanya jika status pengaduan SELESAI
+          // dan belum ada feedback atau rating
+          if (pengaduan.status?.toUpperCase() == 'SELESAI' &&
+              (pengaduan.feedbackWarga == null ||
+                  pengaduan.ratingWarga == null)) {
+            return FloatingActionButton.extended(
+              onPressed: () {
+                _showFeedbackDialog(context, pengaduan);
+              },
+              backgroundColor: AppTheme.primaryColor,
+              icon: const Icon(Icons.star, color: Colors.white),
+              label: const Text('Beri Rating',
+                  style: TextStyle(color: Colors.white)),
+            );
+          }
+
+          return const SizedBox();
+        },
+      ),
     );
   }
 
@@ -108,9 +141,217 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
 
           const SizedBox(height: 24),
 
+          // Tampilkan feedback dan rating jika sudah ada
+          if (pengaduan.status?.toUpperCase() == 'SELESAI' &&
+              (pengaduan.feedbackWarga != null ||
+                  pengaduan.ratingWarga != null))
+            _buildFeedbackSection(context, pengaduan),
+
+          const SizedBox(height: 24),
+
           // Timeline tindakan
           _buildTindakanTimeline(context, tindakanList),
         ],
+      ),
+    );
+  }
+
+  // Widget untuk menampilkan feedback dan rating
+  Widget _buildFeedbackSection(BuildContext context, PengaduanModel pengaduan) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Feedback Anda',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+                if (pengaduan.ratingWarga != null)
+                  Row(
+                    children: List.generate(5, (index) {
+                      return Icon(
+                        index < (pengaduan.ratingWarga ?? 0)
+                            ? Icons.star
+                            : Icons.star_border,
+                        color: Colors.amber,
+                        size: 20,
+                      );
+                    }),
+                  ),
+              ],
+            ),
+            const Divider(height: 24),
+            if (pengaduan.feedbackWarga != null &&
+                pengaduan.feedbackWarga!.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Text(
+                  pengaduan.feedbackWarga!,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.amber.shade900,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              )
+            else
+              Text(
+                'Anda belum memberikan komentar',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Dialog untuk menambahkan atau mengedit feedback
+  void _showFeedbackDialog(BuildContext context, PengaduanModel pengaduan,
+      {bool isEdit = false}) {
+    final formKey = GlobalKey<FormState>();
+    final feedbackController =
+        TextEditingController(text: pengaduan.feedbackWarga);
+    int selectedRating = pengaduan.ratingWarga ?? 0;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(
+              'Beri Feedback Pelayanan',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Rating',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(5, (index) {
+                          return IconButton(
+                            onPressed: () {
+                              setState(() {
+                                selectedRating = index + 1;
+                              });
+                            },
+                            icon: Icon(
+                              index < selectedRating
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              color: Colors.amber,
+                              size: 30,
+                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: BoxConstraints(),
+                          );
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Komentar',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: feedbackController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: 'Tulis komentar Anda di sini...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (selectedRating > 0 &&
+                            (value == null || value.isEmpty)) {
+                          return 'Mohon berikan komentar';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (selectedRating == 0) {
+                    Get.snackbar(
+                      'Peringatan',
+                      'Mohon berikan rating terlebih dahulu',
+                      snackPosition: SnackPosition.TOP,
+                      backgroundColor: Colors.orange,
+                      colorText: Colors.white,
+                    );
+                    return;
+                  }
+
+                  if (formKey.currentState!.validate()) {
+                    Navigator.pop(context);
+
+                    await controller.addPengaduanFeedback(
+                      pengaduan.id!,
+                      feedbackController.text,
+                      selectedRating,
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                ),
+                child: Text('Kirim'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -143,27 +384,7 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: statusColor,
-                    ),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
+                _getStatusPill(pengaduan.status),
               ],
             ),
             const SizedBox(height: 12),
@@ -194,10 +415,174 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            // Panel status pengaduan
+            _buildStatusPanel(context, pengaduan),
           ],
         ),
       ),
     );
+  }
+
+  // Helper method untuk mendapatkan StatusPill berdasarkan status
+  StatusPill _getStatusPill(String? status) {
+    switch (status?.toUpperCase()) {
+      case 'MENUNGGU':
+        return StatusPill(
+          status: 'Menunggu',
+          backgroundColor: Colors.orange,
+          textColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        );
+      case 'TINDAKAN':
+        return StatusPill(
+          status: 'Tindakan',
+          backgroundColor: Colors.blue,
+          textColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        );
+      case 'SELESAI':
+        return StatusPill.completed(status: 'Selesai');
+      default:
+        return StatusPill(
+          status: status ?? 'Tidak Diketahui',
+          backgroundColor: Colors.grey,
+          textColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        );
+    }
+  }
+
+  Widget _buildStatusPanel(BuildContext context, PengaduanModel pengaduan) {
+    final status = pengaduan.status?.toUpperCase() ?? '';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Status Pengaduan',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildStatusGuideItem(
+            status,
+            _getStatusDescription(status),
+            _getStatusColor(status),
+            _getStatusIcon(status),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusGuideItem(
+    String status,
+    String description,
+    Color color,
+    IconData icon,
+  ) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Icon(
+              icon,
+              color: color,
+              size: 18,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StatusPill(
+                status: _getStatusText(status),
+                backgroundColor: color,
+                textColor: Colors.white,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'MENUNGGU':
+        return 'Menunggu';
+      case 'TINDAKAN':
+        return 'Tindakan';
+      case 'SELESAI':
+        return 'Selesai';
+      default:
+        return status;
+    }
+  }
+
+  String _getStatusDescription(String status) {
+    switch (status) {
+      case 'MENUNGGU':
+        return 'Pengaduan Anda sedang menunggu tindakan dari petugas';
+      case 'TINDAKAN':
+        return 'Pengaduan Anda sedang dalam proses penanganan';
+      case 'SELESAI':
+        return 'Pengaduan Anda telah selesai ditangani';
+      default:
+        return 'Status pengaduan tidak diketahui';
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'MENUNGGU':
+        return Colors.orange;
+      case 'TINDAKAN':
+        return Colors.blue;
+      case 'SELESAI':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'MENUNGGU':
+        return Icons.hourglass_empty;
+      case 'TINDAKAN':
+        return Icons.engineering;
+      case 'SELESAI':
+        return Icons.check_circle;
+      default:
+        return Icons.help_outline;
+    }
   }
 
   Widget _buildPenyaluranInfo(BuildContext context, PengaduanModel pengaduan) {
@@ -211,14 +596,24 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Informasi Penyaluran',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Informasi Penyaluran',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+                Icon(
+                  Icons.inventory,
+                  color: AppTheme.primaryColor,
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const Divider(height: 24),
             _buildInfoRow('Nama Penyaluran', pengaduan.namaPenyaluran),
             _buildInfoRow('Jenis Bantuan', pengaduan.jenisBantuan),
             _buildInfoRow('Jumlah Bantuan', pengaduan.jumlahBantuan),
@@ -229,29 +624,47 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
     );
   }
 
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTindakanTimeline(
     BuildContext context,
     List<TindakanPengaduanModel> tindakanList,
   ) {
     if (tindakanList.isEmpty) {
-      return Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Padding(
-          padding: EdgeInsets.all(16),
-          child: Center(
-            child: Text(
-              'Pengaduan Anda sedang menunggu tindakan dari petugas',
-              style: TextStyle(
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-        ),
+      return InfoCard(
+        title: 'Belum Ada Tindakan',
+        description: 'Pengaduan Anda sedang menunggu tindakan dari petugas',
+        icon: Icons.info_outline,
+        backgroundColor: Colors.grey.shade50,
       );
     }
 
@@ -265,12 +678,9 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Riwayat Tindakan',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+            SectionHeader(
+              title: 'Riwayat Tindakan',
+              padding: EdgeInsets.zero,
             ),
             const SizedBox(height: 16),
             ListView.builder(
@@ -345,53 +755,145 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header dengan kategori dan status
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  tindakan.kategoriTindakanText,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: dotColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                Expanded(
                   child: Text(
-                    tindakan.statusTindakanText,
-                    style: TextStyle(
-                      color: dotColor,
-                      fontSize: 12,
+                    tindakan.kategoriTindakanText,
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
+                ),
+                Row(
+                  children: [
+                    // Menggunakan StatusPill untuk status tindakan
+                    StatusPill(
+                      status: tindakan.statusTindakanText,
+                      backgroundColor: dotColor,
+                      textColor: Colors.white,
+                    ),
+                  ],
                 ),
               ],
             ),
             const SizedBox(height: 8),
+
+            // Deskripsi tindakan
             Text(
               tindakan.tindakan ?? '',
               style: const TextStyle(fontSize: 14),
             ),
-            if (tindakan.hasilTindakan != null &&
-                tindakan.hasilTindakan!.isNotEmpty) ...[
+
+            // Catatan tindakan (jika ada)
+            if (tindakan.catatan != null && tindakan.catatan!.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                'Hasil: ${tindakan.hasilTindakan}',
+                'Catatan: ${tindakan.catatan}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade700,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
             ],
+
+            // Hasil tindakan (jika ada)
+            if (tindakan.hasilTindakan != null &&
+                tindakan.hasilTindakan!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.blue.shade100),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 16,
+                          color: Colors.blue.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Hasil Tindakan:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      tindakan.hasilTindakan!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue.shade900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Bukti tindakan (jika ada)
+            if (tindakan.buktiTindakan != null &&
+                tindakan.buktiTindakan!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bukti Tindakan:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: tindakan.buktiTindakan!.map((bukti) {
+                        return GestureDetector(
+                          onTap: () => showFullScreenImage(context, bukti),
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(8),
+                              image: DecorationImage(
+                                image: bukti.startsWith('http')
+                                    ? NetworkImage(bukti)
+                                    : FileImage(File(bukti)) as ImageProvider,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
             const SizedBox(height: 8),
+
+            // Footer dengan info petugas dan tanggal
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -404,7 +906,7 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
                 ),
                 Text(
                   tindakan.tanggalTindakan != null
-                      ? DateFormat('dd MMM yyyy', 'id_ID')
+                      ? DateFormat('dd MMM yyyy HH:mm', 'id_ID')
                           .format(tindakan.tanggalTindakan!)
                       : '-',
                   style: TextStyle(
@@ -414,37 +916,166 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
                 ),
               ],
             ),
+
+            // Prioritas tindakan (jika ada)
+            if (tindakan.prioritas != null) ...[
+              const SizedBox(height: 8),
+              // Menggunakan StatusPill untuk prioritas tindakan
+              StatusPill(
+                status: tindakan.prioritasText,
+                backgroundColor: _getPriorityColor(tindakan.prioritas),
+                textColor: Colors.white,
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade700,
+  Color _getPriorityColor(String? priority) {
+    switch (priority) {
+      case 'TINGGI':
+        return Colors.red;
+      case 'SEDANG':
+        return Colors.orange;
+      case 'RENDAH':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void showFullScreenImage(BuildContext context, String imageUrl) {
+    // Buat controller untuk InteractiveViewer
+    final TransformationController transformationController =
+        TransformationController();
+
+    Get.dialog(
+      Dialog(
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4,
+              transformationController: transformationController,
+              child: imageUrl.startsWith('http')
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey.shade300,
+                          child: const Center(
+                            child: Icon(
+                              Icons.error,
+                              size: 50,
+                              color: Colors.red,
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Image.file(
+                      File(imageUrl),
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey.shade300,
+                          child: const Center(
+                            child: Icon(
+                              Icons.error,
+                              size: 50,
+                              color: Colors.red,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            Positioned(
+              top: 20,
+              right: 20,
+              child: GestureDetector(
+                onTap: () => Get.back(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: Colors.black87,
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      // Zoom in
+                      final Matrix4 matrix =
+                          transformationController.value.clone();
+                      matrix.scale(1.5);
+                      transformationController.value = matrix;
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.zoom_in,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      // Zoom out
+                      final Matrix4 matrix =
+                          transformationController.value.clone();
+                      matrix.scale(0.75);
+                      transformationController.value = matrix;
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.zoom_out,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -898,55 +1529,8 @@ class _TambahTindakanPengaduanViewState
   }
 
   void _showFullScreenImage(BuildContext context, String imagePath) {
-    Get.dialog(
-      Dialog(
-        insetPadding: EdgeInsets.zero,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            InteractiveViewer(
-              panEnabled: true,
-              minScale: 0.5,
-              maxScale: 4,
-              child: Image.file(
-                File(imagePath),
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey.shade300,
-                    child: const Center(
-                      child: Icon(
-                        Icons.error,
-                        size: 50,
-                        color: Colors.red,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Positioned(
-              top: 20,
-              right: 20,
-              child: GestureDetector(
-                onTap: () => Get.back(),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    final wargaDetailView = Get.find<WargaDetailPengaduanView>();
+    wargaDetailView.showFullScreenImage(context, imagePath);
   }
 
   Future<void> _simpanTindakan() async {

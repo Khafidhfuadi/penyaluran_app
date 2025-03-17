@@ -18,8 +18,6 @@ class TindakanPengaduanModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final double? biayaTindakan;
-  final String? feedbackWarga;
-  final int? ratingWarga;
   final Map<String, dynamic>? petugas; // Data petugas yang melakukan tindakan
   final Map<String, dynamic>? verifikator; // Data petugas yang memverifikasi
 
@@ -41,8 +39,6 @@ class TindakanPengaduanModel {
     this.createdAt,
     this.updatedAt,
     this.biayaTindakan,
-    this.feedbackWarga,
-    this.ratingWarga,
     this.petugas,
     this.verifikator,
   });
@@ -83,8 +79,6 @@ class TindakanPengaduanModel {
         biayaTindakan: json["biaya_tindakan"] != null
             ? double.parse(json["biaya_tindakan"].toString())
             : null,
-        feedbackWarga: json["feedback_warga"],
-        ratingWarga: json["rating_warga"],
         petugas: json["petugas"],
         verifikator: json["verifikator"],
       );
@@ -107,8 +101,6 @@ class TindakanPengaduanModel {
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
         "biaya_tindakan": biayaTindakan,
-        "feedback_warga": feedbackWarga,
-        "rating_warga": ratingWarga,
         "petugas": petugas,
         "verifikator": verifikator,
       };

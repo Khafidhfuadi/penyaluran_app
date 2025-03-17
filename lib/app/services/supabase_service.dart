@@ -811,6 +811,36 @@ class SupabaseService extends GetxService {
     }
   }
 
+  // Metode untuk menambahkan feedback dan rating pengaduan
+  Future<void> addPengaduanFeedback(
+      String pengaduanId, String feedback, int rating) async {
+    try {
+      await client.from('pengaduan').update({
+        'feedback_warga': feedback,
+        'rating_warga': rating,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', pengaduanId);
+    } catch (e) {
+      print('Error adding pengaduan feedback: $e');
+      throw e.toString();
+    }
+  }
+
+  // Metode untuk memperbarui feedback dan rating pengaduan
+  Future<void> updatePengaduanFeedback(
+      String pengaduanId, String feedback, int rating) async {
+    try {
+      await client.from('pengaduan').update({
+        'feedback_warga': feedback,
+        'rating_warga': rating,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', pengaduanId);
+    } catch (e) {
+      print('Error updating pengaduan feedback: $e');
+      throw e.toString();
+    }
+  }
+
   // Penerima bantuan methods
   Future<List<Map<String, dynamic>>?> getPenerimaBantuan() async {
     try {
