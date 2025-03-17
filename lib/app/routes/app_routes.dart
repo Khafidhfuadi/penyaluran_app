@@ -30,6 +30,7 @@ abstract class Routes {
   static const wargaDetailPenerimaan = _Paths.wargaDetailPenerimaan;
   static const detailPengaduan = _Paths.detailPengaduan;
   static const wargaDetailPengaduan = _Paths.wargaDetailPengaduan;
+  static const riwayatPengaduan = _Paths.riwayatPengaduan;
 }
 
 abstract class _Paths {
@@ -62,4 +63,5 @@ abstract class _Paths {
   static const wargaDetailPenerimaan = '/warga/detail-penerimaan';
   static const detailPengaduan = '/detail-pengaduan';
   static const wargaDetailPengaduan = '/warga/detail-pengaduan';
+  static const riwayatPengaduan = '/petugas-desa/riwayat-pengaduan';
 }

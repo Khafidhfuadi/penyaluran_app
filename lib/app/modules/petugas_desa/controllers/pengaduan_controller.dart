@@ -15,7 +15,7 @@ class PengaduanController extends GetxController {
   final RxBool isUploading = false.obs;
 
   // Indeks kategori yang dipilih untuk filter
-  final RxInt selectedCategoryIndex = 0.obs;
+  final RxInt selectedCategoryIndex = 4.obs;
 
   // Data untuk pengaduan
   final RxList<PengaduanModel> daftarPengaduan = <PengaduanModel>[].obs;
@@ -345,6 +345,10 @@ class PengaduanController extends GetxController {
       case 3:
         return daftarPengaduan
             .where((item) => item.status == 'SELESAI')
+            .toList();
+      case 4:
+        return daftarPengaduan
+            .where((item) => item.status != 'SELESAI')
             .toList();
       default:
         return daftarPengaduan;

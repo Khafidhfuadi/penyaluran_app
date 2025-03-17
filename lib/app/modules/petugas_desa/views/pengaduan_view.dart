@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/pengaduan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'package:penyaluran_app/app/routes/app_pages.dart';
 
 class PengaduanView extends GetView<PengaduanController> {
   const PengaduanView({super.key});
@@ -67,57 +68,61 @@ class PengaduanView extends GetView<PengaduanController> {
 
   Widget _buildPengaduanSummary(BuildContext context) {
     return Obx(() {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: AppTheme.primaryGradient,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Ringkasan Pengaduan',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+      return Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 16),
-            Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _buildSummaryItem(
-                    context,
-                    icon: Icons.pending_actions,
-                    title: 'Diproses',
-                    value: controller.jumlahDiproses.toString(),
-                    color: Colors.orange,
-                  ),
+                Text(
+                  'Ringkasan Pengaduan',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                 ),
-                Expanded(
-                  child: _buildSummaryItem(
-                    context,
-                    icon: Icons.engineering,
-                    title: 'Tindakan',
-                    value: controller.jumlahTindakan.toString(),
-                    color: Colors.blue,
-                  ),
-                ),
-                Expanded(
-                  child: _buildSummaryItem(
-                    context,
-                    icon: Icons.check_circle,
-                    title: 'Selesai',
-                    value: controller.jumlahSelesai.toString(),
-                    color: Colors.green,
-                  ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSummaryItem(
+                        context,
+                        icon: Icons.pending_actions,
+                        title: 'Diproses',
+                        value: controller.jumlahDiproses.toString(),
+                        color: Colors.orange,
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildSummaryItem(
+                        context,
+                        icon: Icons.engineering,
+                        title: 'Tindakan',
+                        value: controller.jumlahTindakan.toString(),
+                        color: Colors.blue,
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildSummaryItem(
+                        context,
+                        icon: Icons.check_circle,
+                        title: 'Selesai',
+                        value: controller.jumlahSelesai.toString(),
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       );
     });
   }
@@ -214,6 +219,10 @@ class PengaduanView extends GetView<PengaduanController> {
               const PopupMenuItem(
                 value: 3,
                 child: Text('Selesai'),
+              ),
+              const PopupMenuItem(
+                value: 4,
+                child: Text('Semua Kecuali Selesai'),
               ),
             ],
           ),

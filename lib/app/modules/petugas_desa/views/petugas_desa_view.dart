@@ -125,6 +125,21 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               );
             }
 
+            // if 3
+            if (activeTab == 3) {
+              return Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      Get.toNamed('/petugas-desa/riwayat-pengaduan');
+                    },
+                    icon: const Icon(Icons.history),
+                    tooltip: 'Riwayat Pengaduan',
+                  ),
+                  notificationButton,
+                ],
+              );
+            }
             return notificationButton;
           }),
         ],
