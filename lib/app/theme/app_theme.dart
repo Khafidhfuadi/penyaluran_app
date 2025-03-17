@@ -49,7 +49,6 @@ class AppTheme {
       foregroundColor: primaryColor,
       elevation: 0,
       centerTitle: true,
-      iconTheme: IconThemeData(color: primaryColor),
     ),
 
     // Tombol
@@ -131,7 +130,6 @@ class AppTheme {
       foregroundColor: Colors.white,
       elevation: 0,
       centerTitle: true,
-      iconTheme: IconThemeData(color: Colors.white),
     ),
 
     // Tombol

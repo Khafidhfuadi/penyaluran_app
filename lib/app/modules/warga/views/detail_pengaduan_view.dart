@@ -6,6 +6,8 @@ import 'package:penyaluran_app/app/data/models/tindakan_pengaduan_model.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:timeline_tile/timeline_tile.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
   const WargaDetailPengaduanView({Key? key}) : super(key: key);
@@ -445,5 +447,565 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
         ],
       ),
     );
+  }
+}
+
+class TambahTindakanPengaduanView extends StatefulWidget {
+  final String pengaduanId;
+
+  const TambahTindakanPengaduanView({Key? key, required this.pengaduanId})
+      : super(key: key);
+
+  @override
+  State<TambahTindakanPengaduanView> createState() =>
+      _TambahTindakanPengaduanViewState();
+}
+
+class _TambahTindakanPengaduanViewState
+    extends State<TambahTindakanPengaduanView> {
+  final formKey = GlobalKey<FormState>();
+  final tindakanController = TextEditingController();
+  final catatanController = TextEditingController();
+  String? selectedKategori;
+  String? selectedPrioritas;
+
+  // List untuk menyimpan path file lokal
+  final List<String> buktiTindakanPaths = [];
+  bool isUploading = false;
+
+  final List<String> kategoriOptions = [
+    'VERIFIKASI_DATA',
+    'KUNJUNGAN_LAPANGAN',
+    'KOORDINASI_LINTAS_INSTANSI',
+    'PERBAIKAN_DATA_PENERIMA',
+    'PENYALURAN_ULANG',
+    'PENGGANTIAN_BANTUAN',
+    'MEDIASI',
+    'KLARIFIKASI',
+    'PENYESUAIAN_JUMLAH_BANTUAN',
+    'PEMERIKSAAN_KUALITAS_BANTUAN',
+    'PERBAIKAN_PROSES_DISTRIBUSI',
+    'EDUKASI_PENERIMA',
+    'PENYELESAIAN_ADMINISTRATIF',
+    'INVESTIGASI_PENYALAHGUNAAN',
+    'PELAPORAN_KE_PIHAK_BERWENANG',
+  ];
+
+  final List<String> prioritasOptions = [
+    'RENDAH',
+    'SEDANG',
+    'TINGGI',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Tambah Tindakan Pengaduan'),
+        elevation: 0,
+      ),
+      body: Form(
+        key: formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Kategori Tindakan
+              Text(
+                'Kategori Tindakan',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                hint: const Text('Pilih kategori tindakan'),
+                value: selectedKategori,
+                items: kategoriOptions.map((kategori) {
+                  return DropdownMenuItem<String>(
+                    value: kategori,
+                    child: Text(
+                      kategori
+                          .split('_')
+                          .map((word) =>
+                              word[0].toUpperCase() +
+                              word.substring(1).toLowerCase())
+                          .join(' '),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedKategori = value;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Pilih kategori tindakan';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Prioritas
+              Text(
+                'Prioritas',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                hint: const Text('Pilih prioritas'),
+                value: selectedPrioritas,
+                items: prioritasOptions.map((prioritas) {
+                  return DropdownMenuItem<String>(
+                    value: prioritas,
+                    child: Text(
+                      prioritas[0].toUpperCase() +
+                          prioritas.substring(1).toLowerCase(),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedPrioritas = value;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Pilih prioritas tindakan';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Deskripsi Tindakan
+              Text(
+                'Deskripsi Tindakan',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: tindakanController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  hintText: 'Jelaskan tindakan yang dilakukan',
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Deskripsi tindakan tidak boleh kosong';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Catatan (opsional)
+              Text(
+                'Catatan (opsional)',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: catatanController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  hintText: 'Tambahkan catatan jika diperlukan',
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                maxLines: 2,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Bukti Tindakan
+              Text(
+                'Bukti Tindakan',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+
+              // Area upload bukti tindakan
+              if (buktiTindakanPaths.isEmpty)
+                InkWell(
+                  onTap: () => _showPilihSumberFoto(context),
+                  child: Container(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade400),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.camera_alt,
+                          size: 48,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Tambah Bukti Tindakan',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 100,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: buktiTindakanPaths.length +
+                            1, // +1 untuk tombol tambah
+                        itemBuilder: (context, index) {
+                          if (index == buktiTindakanPaths.length) {
+                            // Tombol tambah foto
+                            return InkWell(
+                              onTap: () => _showPilihSumberFoto(context),
+                              child: Container(
+                                width: 100,
+                                margin: const EdgeInsets.only(right: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border:
+                                      Border.all(color: Colors.grey.shade400),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_photo_alternate,
+                                      size: 32,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Tambah',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+
+                          // Tampilkan foto yang sudah diambil
+                          return Stack(
+                            children: [
+                              GestureDetector(
+                                onTap: () => _showFullScreenImage(
+                                    context, buktiTindakanPaths[index]),
+                                child: Container(
+                                  width: 100,
+                                  height: 100,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    image: DecorationImage(
+                                      image: FileImage(
+                                          File(buktiTindakanPaths[index])),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 4,
+                                right: 12,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      buktiTindakanPaths.removeAt(index);
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.5),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, -1),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () => Get.back(),
+                child: const Text('Batal'),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: isUploading ? null : _simpanTindakan,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: isUploading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Simpan'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPilihSumberFoto(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Pilih Sumber Foto',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Kamera'),
+              onTap: () {
+                Get.back();
+                _pickBuktiTindakan(true);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galeri'),
+              onTap: () {
+                Get.back();
+                _pickBuktiTindakan(false);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickBuktiTindakan(bool fromCamera) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+        imageQuality: 70,
+        maxWidth: 1000,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          buktiTindakanPaths.add(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal mengambil gambar: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  void _showFullScreenImage(BuildContext context, String imagePath) {
+    Get.dialog(
+      Dialog(
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4,
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey.shade300,
+                    child: const Center(
+                      child: Icon(
+                        Icons.error,
+                        size: 50,
+                        color: Colors.red,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Positioned(
+              top: 20,
+              right: 20,
+              child: GestureDetector(
+                onTap: () => Get.back(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _simpanTindakan() async {
+    if (formKey.currentState!.validate()) {
+      if (buktiTindakanPaths.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'Bukti tindakan harus diupload',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      setState(() {
+        isUploading = true;
+      });
+
+      try {
+        // Di sini kita baru melakukan upload file ke server
+        // Contoh implementasi:
+
+        // 1. Upload semua file bukti tindakan
+        // final List<String> buktiTindakanUrls = await uploadMultipleFiles(buktiTindakanPaths);
+
+        // 2. Simpan data tindakan ke database
+        // await saveTindakanPengaduan(
+        //   pengaduanId: widget.pengaduanId,
+        //   kategoriTindakan: selectedKategori!,
+        //   prioritas: selectedPrioritas!,
+        //   tindakan: tindakanController.text,
+        //   catatan: catatanController.text,
+        //   buktiTindakanUrls: buktiTindakanUrls,
+        // );
+
+        // Tampilkan pesan sukses
+        Get.back(); // Kembali ke halaman sebelumnya
+        Get.snackbar(
+          'Sukses',
+          'Tindakan berhasil disimpan',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } catch (e) {
+        print('Error saving tindakan: $e');
+        Get.snackbar(
+          'Error',
+          'Gagal menyimpan tindakan: ${e.toString()}',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      } finally {
+        setState(() {
+          isUploading = false;
+        });
+      }
+    }
   }
 }

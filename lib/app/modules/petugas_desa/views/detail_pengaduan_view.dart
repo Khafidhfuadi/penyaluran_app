@@ -13,6 +13,8 @@ import 'package:timeline_tile/timeline_tile.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
+import 'package:penyaluran_app/app/widgets/inputs/dropdown_input.dart';
+import 'package:penyaluran_app/app/widgets/inputs/text_input.dart';
 
 class DetailPengaduanView extends GetView<PengaduanController> {
   const DetailPengaduanView({Key? key}) : super(key: key);
@@ -111,12 +113,29 @@ class DetailPengaduanView extends GetView<PengaduanController> {
           return _buildDetailContent(context, pengaduan, tindakanList);
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showTambahTindakanDialog(context, pengaduanId);
+      floatingActionButton: FutureBuilder<Map<String, dynamic>>(
+        future: controller.getDetailPengaduan(pengaduanId),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const SizedBox();
+
+          final data = snapshot.data;
+          if (data == null || data['pengaduan'] == null)
+            return const SizedBox();
+
+          final pengaduan = PengaduanModel.fromJson(data['pengaduan']);
+
+          if (pengaduan.status?.toUpperCase() == 'SELESAI') {
+            return const SizedBox();
+          }
+
+          return FloatingActionButton(
+            onPressed: () {
+              _showTambahTindakanDialog(context, pengaduanId);
+            },
+            backgroundColor: AppTheme.primaryColor,
+            child: const Icon(Icons.add, color: Colors.white),
+          );
         },
-        backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -669,33 +688,77 @@ class DetailPengaduanView extends GetView<PengaduanController> {
     );
   }
 
-  void _showKonfirmasiSelesai(BuildContext context, String pengaduanId) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi'),
-        content: const Text(
-          'Apakah Anda yakin ingin menyelesaikan pengaduan ini? Status pengaduan akan berubah menjadi SELESAI.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
+  void _showKonfirmasiSelesai(BuildContext context, String pengaduanId) async {
+    // Cek status tindakan
+    bool allTindakanSelesai = true;
+
+    try {
+      // Cek status tindakan dari Supabase
+      final tindakanList =
+          await SupabaseService.to.getTindakanPengaduan(pengaduanId);
+
+      if (tindakanList != null) {
+        allTindakanSelesai = tindakanList.every((t) {
+          return t['status_tindakan'] == 'SELESAI';
+        });
+      }
+
+      if (!allTindakanSelesai) {
+        Get.snackbar(
+          'Peringatan',
+          'Semua tindakan harus diselesaikan terlebih dahulu sebelum menyelesaikan pengaduan',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Konfirmasi'),
+          content: const Text(
+            'Apakah Anda yakin ingin menyelesaikan pengaduan ini? Status pengaduan akan berubah menjadi SELESAI.',
           ),
-          ElevatedButton(
-            onPressed: () async {
-              await controller.selesaikanPengaduan(pengaduanId);
-              Navigator.pop(context);
-              Get.forceAppUpdate();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
             ),
-            child: const Text('Ya, Selesaikan'),
-          ),
-        ],
-      ),
-    );
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await controller.selesaikanPengaduan(pengaduanId);
+                  Navigator.pop(context);
+                  Get.forceAppUpdate();
+                } catch (e) {
+                  Get.snackbar(
+                    'Error',
+                    'Gagal menyelesaikan pengaduan: $e',
+                    snackPosition: SnackPosition.TOP,
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+              child: const Text('Ya, Selesaikan'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Gagal memeriksa status tindakan: $e',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   Widget _buildPengaduanInfo(BuildContext context, PengaduanModel pengaduan) {
@@ -780,10 +843,10 @@ class DetailPengaduanView extends GetView<PengaduanController> {
             const Divider(height: 24),
 
             // Informasi penyaluran
-            _buildInfoRow('Nama Penyaluran', pengaduan.namaPenyaluran ?? '-'),
-            _buildInfoRow('Jenis Bantuan', pengaduan.jenisBantuan ?? '-'),
-            _buildInfoRow('Jumlah Bantuan', pengaduan.jumlahBantuan ?? '-'),
-            _buildInfoRow('Deskripsi', pengaduan.deskripsiPenyaluran ?? '-'),
+            _buildInfoRow('Nama Penyaluran', pengaduan.namaPenyaluran),
+            _buildInfoRow('Jenis Bantuan', pengaduan.jenisBantuan),
+            _buildInfoRow('Jumlah Bantuan', pengaduan.jumlahBantuan),
+            _buildInfoRow('Deskripsi', pengaduan.deskripsiPenyaluran),
           ],
         ),
       ),
@@ -943,25 +1006,6 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                       backgroundColor: dotColor,
                       textColor: Colors.white,
                     ),
-                    const SizedBox(width: 8),
-                    // Tombol edit
-                    InkWell(
-                      onTap: () {
-                        _showEditTindakanDialog(context, tindakan);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Icon(
-                          Icons.edit,
-                          size: 16,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ],
@@ -1042,9 +1086,9 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                   Text(
                     'Bukti Tindakan:',
                     style: TextStyle(
-                      fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade700,
+                      fontSize: 14,
+                      color: Colors.grey.shade800,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1052,44 +1096,22 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: tindakan.buktiTindakan!.map((bukti) {
-                        return Container(
-                          width: 60,
-                          height: 60,
-                          margin: const EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Stack(
-                            children: [
-                              Center(
-                                child: Icon(
-                                  Icons.insert_drive_file,
-                                  color: Colors.blue.shade700,
-                                ),
+                        return GestureDetector(
+                          onTap: () => showFullScreenImage(context, bukti),
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(8),
+                              image: DecorationImage(
+                                image: bukti.startsWith('http')
+                                    ? NetworkImage(bukti)
+                                    : FileImage(File(bukti)) as ImageProvider,
+                                fit: BoxFit.cover,
                               ),
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: InkWell(
-                                  onTap: () {
-                                    tindakan.buktiTindakan!.remove(bukti);
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                      size: 14,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         );
                       }).toList(),
@@ -1195,6 +1217,43 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                 textColor: Colors.white,
               ),
             ],
+            // Tampilkan tombol edit jika status PROSES
+            if (tindakan.statusTindakan == 'PROSES') ...[
+              const SizedBox(height: 8),
+              //divider
+              Divider(
+                color: Colors.grey.shade400,
+                thickness: 1,
+              ),
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(color: Colors.blue),
+                  ),
+                  minimumSize: Size(double.infinity, 36),
+                ),
+                onPressed: () {
+                  _showEditTindakanDialog(context, tindakan);
+                },
+                icon: Icon(
+                  Icons.update,
+                  size: 18,
+                  color: Colors.blue,
+                ),
+                label: Text(
+                  'Input Hasil Tindakan',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -1217,13 +1276,9 @@ class DetailPengaduanView extends GetView<PengaduanController> {
   void _showTambahTindakanDialog(BuildContext context, String pengaduanId) {
     final formKey = GlobalKey<FormState>();
     final tindakanController = TextEditingController();
-    final catatanController = TextEditingController();
     String? selectedKategori;
     String? selectedPrioritas;
-
-    // Gunakan RxList untuk bukti tindakan
-    final buktiTindakanList = <String>[].obs;
-    final isUploading = false.obs;
+    String selectedStatus = 'PROSES';
 
     final List<String> kategoriOptions = [
       'VERIFIKASI_DATA',
@@ -1249,73 +1304,27 @@ class DetailPengaduanView extends GetView<PengaduanController> {
       'TINGGI',
     ];
 
-    // Fungsi untuk mengunggah bukti tindakan
-    Future<void> uploadBukti() async {
-      try {
-        isUploading.value = true;
+    // Konversi ke format DropdownItem
+    final List<DropdownItem<String>> kategoriItems = kategoriOptions
+        .map((kategori) => DropdownItem<String>(
+              value: kategori,
+              label: kategori.replaceAll('_', ' '),
+            ))
+        .toList();
 
-        // Buka image picker untuk memilih file
-        final ImagePicker picker = ImagePicker();
-        final XFile? pickedFile = await picker.pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 70,
-        );
-
-        if (pickedFile == null) {
-          isUploading.value = false;
-          return;
-        }
-
-        // Upload file ke Supabase Storage
-        final String filePath = pickedFile.path;
-        final String fileName = filePath.split('/').last;
-        final String fileExt = fileName.split('.').last;
-        final String fileKey =
-            'bukti_tindakan_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-
-        // Upload ke bucket tindakan_pengaduan
-        await SupabaseService.to.client.storage
-            .from('tindakan_pengaduan')
-            .upload(
-              fileKey,
-              File(filePath),
-              fileOptions:
-                  const FileOptions(cacheControl: '3600', upsert: true),
-            );
-
-        // Dapatkan URL publik
-        final String fileUrl = SupabaseService.to.client.storage
-            .from('tindakan_pengaduan')
-            .getPublicUrl(fileKey);
-
-        // Tambahkan URL ke list bukti
-        buktiTindakanList.add(fileUrl);
-
-        Get.snackbar(
-          'Berhasil',
-          'Bukti berhasil diunggah',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-      } catch (e) {
-        print('Error uploading bukti: $e');
-        Get.snackbar(
-          'Error',
-          'Gagal mengunggah bukti: ${e.toString()}',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      } finally {
-        isUploading.value = false;
-      }
-    }
+    // Konversi ke format DropdownItem untuk prioritas
+    final List<DropdownItem<String>> prioritasItems = prioritasOptions
+        .map((prioritas) => DropdownItem<String>(
+              value: prioritas,
+              label: prioritas[0].toUpperCase() +
+                  prioritas.substring(1).toLowerCase(),
+            ))
+        .toList();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Tambah Tindakan'),
+        title: const Text('Tindakan Baru'),
         content: Form(
           key: formKey,
           child: SingleChildScrollView(
@@ -1323,29 +1332,16 @@ class DetailPengaduanView extends GetView<PengaduanController> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Kategori Tindakan',
-                    border: OutlineInputBorder(),
-                  ),
+                // Kategori tindakan menggunakan DropdownInput
+                DropdownInput<String>(
+                  label: 'Kategori Tindakan',
+                  hint: 'Pilih kategori tindakan',
+                  items: kategoriItems,
                   value: selectedKategori,
-                  items: kategoriOptions.map((kategori) {
-                    return DropdownMenuItem<String>(
-                      value: kategori,
-                      child: Text(
-                        kategori
-                            .split('_')
-                            .map((word) =>
-                                word[0].toUpperCase() +
-                                word.substring(1).toLowerCase())
-                            .join(' '),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    );
-                  }).toList(),
                   onChanged: (value) {
                     selectedKategori = value;
                   },
+                  required: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Pilih kategori tindakan';
@@ -1353,26 +1349,19 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Prioritas',
-                    border: OutlineInputBorder(),
-                  ),
+
+                // Prioritas menggunakan DropdownInput
+                DropdownInput<String>(
+                  label: 'Prioritas',
+                  hint: 'Pilih prioritas tindakan',
+                  items: prioritasItems,
                   value: selectedPrioritas,
-                  items: prioritasOptions.map((prioritas) {
-                    return DropdownMenuItem<String>(
-                      value: prioritas,
-                      child: Text(
-                        prioritas[0].toUpperCase() +
-                            prioritas.substring(1).toLowerCase(),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    );
-                  }).toList(),
                   onChanged: (value) {
                     selectedPrioritas = value;
                   },
+                  required: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Pilih prioritas tindakan';
@@ -1380,139 +1369,22 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 16),
-                TextFormField(
+
+                // Deskripsi tindakan menggunakan TextInput
+                TextInput(
+                  label: 'Deskripsi Tindakan',
+                  hint: 'Masukkan deskripsi tindakan',
                   controller: tindakanController,
-                  decoration: const InputDecoration(
-                    labelText: 'Tindakan',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
+                  maxLines: 2,
+                  required: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Tindakan tidak boleh kosong';
                     }
                     return null;
                   },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: catatanController,
-                  decoration: const InputDecoration(
-                    labelText: 'Catatan (opsional)',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 16),
-                // Bukti tindakan
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bukti Tindakan:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Obx(() {
-                            if (buktiTindakanList.isEmpty) {
-                              return const Text(
-                                'Belum ada bukti tindakan',
-                                style: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.grey,
-                                ),
-                              );
-                            } else {
-                              return Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: buktiTindakanList.map((bukti) {
-                                  return Container(
-                                    width: 80,
-                                    height: 80,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        Center(
-                                          child: Icon(
-                                            Icons.insert_drive_file,
-                                            color: Colors.blue.shade700,
-                                            size: 36,
-                                          ),
-                                        ),
-                                        Positioned(
-                                          top: 0,
-                                          right: 0,
-                                          child: InkWell(
-                                            onTap: () {
-                                              buktiTindakanList.remove(bukti);
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(2),
-                                              decoration: BoxDecoration(
-                                                color: Colors.red,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Icon(
-                                                Icons.close,
-                                                color: Colors.white,
-                                                size: 14,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                              );
-                            }
-                          }),
-                          const SizedBox(height: 12),
-                          Obx(() => ElevatedButton.icon(
-                                onPressed:
-                                    isUploading.value ? null : uploadBukti,
-                                icon: isUploading.value
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Icon(Icons.upload_file),
-                                label: Text(isUploading.value
-                                    ? 'Mengunggah...'
-                                    : 'Tambah Bukti'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(double.infinity, 40),
-                                ),
-                              )),
-                        ],
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -1524,59 +1396,35 @@ class DetailPengaduanView extends GetView<PengaduanController> {
             child: const Text('Batal'),
           ),
           ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                try {
-                  // Buat objek tindakan
-                  final Map<String, dynamic> tindakanData = {
-                    'pengaduan_id': pengaduanId,
-                    'tindakan': tindakanController.text,
-                    'catatan': catatanController.text,
-                    'status_tindakan': 'PROSES',
-                    'prioritas': selectedPrioritas,
-                    'kategori_tindakan': selectedKategori,
-                    'tanggal_tindakan': DateTime.now().toIso8601String(),
-                    'petugas_id': controller.user?.id,
-                    'bukti_tindakan': buktiTindakanList.toList(),
-                    'created_at': DateTime.now().toIso8601String(),
-                    'updated_at': DateTime.now().toIso8601String(),
-                  };
-
-                  // Simpan tindakan langsung ke Supabase
-                  await SupabaseService.to
-                      .tambahTindakanPengaduan(tindakanData);
-
-                  // Update status pengaduan
-                  await SupabaseService.to
-                      .updateStatusPengaduan(pengaduanId, 'TINDAKAN');
-
-                  // Tutup dialog
-                  Navigator.pop(context);
-
-                  // Refresh halaman
-                  Get.forceAppUpdate();
-
-                  // Tampilkan snackbar
-                  Get.snackbar(
-                    'Berhasil',
-                    'Tindakan berhasil ditambahkan',
-                    snackPosition: SnackPosition.TOP,
-                    backgroundColor: Colors.green,
-                    colorText: Colors.white,
-                  );
-                } catch (e) {
-                  print('Error adding tindakan: $e');
-                  Get.snackbar(
-                    'Error',
-                    'Gagal menambahkan tindakan: ${e.toString()}',
-                    snackPosition: SnackPosition.TOP,
-                    backgroundColor: Colors.red,
-                    colorText: Colors.white,
-                  );
-                }
-              }
-            },
-            child: const Text('Simpan'),
+            onPressed: controller.isUploading.value
+                ? null
+                : () {
+                    if (formKey.currentState!.validate()) {
+                      controller.tambahTindakanPengaduan(
+                        pengaduanId: pengaduanId,
+                        tindakan: tindakanController.text,
+                        kategoriTindakan: selectedKategori ?? '',
+                        statusTindakan: selectedStatus,
+                        prioritas: selectedPrioritas ?? '',
+                        catatan: null,
+                        hasilTindakan: null,
+                        buktiTindakanPaths: [],
+                      );
+                    }
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+            ),
+            child: controller.isUploading.value
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Simpan'),
           ),
         ],
       ),
@@ -1586,461 +1434,129 @@ class DetailPengaduanView extends GetView<PengaduanController> {
   void _showEditTindakanDialog(
       BuildContext context, TindakanPengaduanModel tindakan) {
     final formKey = GlobalKey<FormState>();
-    final tindakanController = TextEditingController(text: tindakan.tindakan);
     final catatanController = TextEditingController(text: tindakan.catatan);
     final hasilTindakanController =
         TextEditingController(text: tindakan.hasilTindakan);
     String? selectedKategori = tindakan.kategoriTindakan;
     String? selectedPrioritas = tindakan.prioritas;
-    String? selectedStatus = tindakan.statusTindakan;
+    String selectedStatus = 'SELESAI';
 
-    // Gunakan RxList untuk bukti tindakan
-    final buktiTindakanList = (tindakan.buktiTindakan ?? []).obs;
-    final isUploading = false.obs;
+    // Gunakan List untuk bukti tindakan paths
+    final List<String> buktiTindakanPaths = tindakan.buktiTindakan != null
+        ? List<String>.from(tindakan.buktiTindakan!)
+        : [];
 
-    final List<String> kategoriOptions = [
-      'VERIFIKASI_DATA',
-      'KUNJUNGAN_LAPANGAN',
-      'KOORDINASI_LINTAS_INSTANSI',
-      'PERBAIKAN_DATA_PENERIMA',
-      'PENYALURAN_ULANG',
-      'PENGGANTIAN_BANTUAN',
-      'MEDIASI',
-      'KLARIFIKASI',
-      'PENYESUAIAN_JUMLAH_BANTUAN',
-      'PEMERIKSAAN_KUALITAS_BANTUAN',
-      'PERBAIKAN_PROSES_DISTRIBUSI',
-      'EDUKASI_PENERIMA',
-      'PENYELESAIAN_ADMINISTRATIF',
-      'INVESTIGASI_PENYALAHGUNAAN',
-      'PELAPORAN_KE_PIHAK_BERWENANG',
-    ];
-
-    final List<String> prioritasOptions = [
-      'RENDAH',
-      'SEDANG',
-      'TINGGI',
-    ];
-
-    final List<String> statusOptions = [
-      'PROSES',
-      'SELESAI',
-    ];
-
-    // Fungsi untuk mengunggah bukti tindakan
-    Future<void> uploadBukti() async {
+    // Fungsi untuk memilih bukti tindakan
+    Future<void> pickBuktiTindakan(
+        BuildContext dialogContext, bool fromCamera) async {
       try {
-        isUploading.value = true;
-
-        // Buka image picker untuk memilih file
         final ImagePicker picker = ImagePicker();
         final XFile? pickedFile = await picker.pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 70,
+          source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+          imageQuality: 80,
+          maxWidth: 1200,
+          maxHeight: 1200,
+          preferredCameraDevice:
+              fromCamera ? CameraDevice.rear : CameraDevice.front,
         );
 
-        if (pickedFile == null) {
-          isUploading.value = false;
-          return;
+        if (pickedFile != null) {
+          // Tampilkan loading dialog
+          showDialog(
+            context: dialogContext,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            },
+          );
+
+          try {
+            // Tambahkan gambar ke daftar
+            buktiTindakanPaths.add(pickedFile.path);
+
+            // Tutup loading dialog
+            Navigator.of(dialogContext, rootNavigator: true).pop();
+
+            // Tutup dialog pilih sumber foto
+            Navigator.of(dialogContext).pop();
+          } catch (e) {
+            // Tutup loading dialog jika terjadi error
+            Navigator.of(dialogContext, rootNavigator: true).pop();
+            throw e;
+          }
         }
-
-        // Upload file ke Supabase Storage
-        final String filePath = pickedFile.path;
-        final String fileName = filePath.split('/').last;
-        final String fileExt = fileName.split('.').last;
-        final String fileKey =
-            'bukti_tindakan_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-
-        // Upload ke bucket tindakan_pengaduan
-        await SupabaseService.to.client.storage
-            .from('tindakan_pengaduan')
-            .upload(
-              fileKey,
-              File(filePath),
-              fileOptions:
-                  const FileOptions(cacheControl: '3600', upsert: true),
-            );
-
-        // Dapatkan URL publik
-        final String fileUrl = SupabaseService.to.client.storage
-            .from('tindakan_pengaduan')
-            .getPublicUrl(fileKey);
-
-        // Tambahkan URL ke list bukti
-        buktiTindakanList.add(fileUrl);
-
-        Get.snackbar(
-          'Berhasil',
-          'Bukti berhasil diunggah',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
       } catch (e) {
-        print('Error uploading bukti: $e');
+        print('Error picking image: $e');
         Get.snackbar(
           'Error',
-          'Gagal mengunggah bukti: ${e.toString()}',
+          'Gagal mengambil gambar: ${e.toString()}',
           snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
-      } finally {
-        isUploading.value = false;
       }
+    }
+
+    // Fungsi untuk menampilkan dialog pilih sumber foto
+    void showPilihSumberFoto(BuildContext dialogContext) {
+      showDialog(
+        context: dialogContext,
+        builder: (innerContext) => AlertDialog(
+          title: const Text('Pilih Sumber Foto'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Kamera'),
+                onTap: () => pickBuktiTindakan(innerContext, true),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galeri'),
+                onTap: () => pickBuktiTindakan(innerContext, false),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              Icons.edit,
-              color: Colors.blue,
-              size: 24,
-            ),
-            const SizedBox(width: 8),
-            const Text('Edit Tindakan'),
-          ],
-        ),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Panel informasi status
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade100),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Status Tindakan',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: Colors.blue.shade800,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Status tindakan menentukan apakah tindakan ini masih dalam proses atau sudah selesai. Jika semua tindakan selesai, pengaduan dapat diselesaikan.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+      builder: (dialogContext) =>
+          StatefulBuilder(builder: (stateContext, setState) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.update,
+                color: Colors.blue,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              const Text('Input Hasil Tindakan'),
+            ],
+          ),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
 
-                // Status tindakan
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Status Tindakan',
-                    border: const OutlineInputBorder(),
-                    filled: true,
-                    fillColor: selectedStatus == 'SELESAI'
-                        ? Colors.green.shade50
-                        : Colors.blue.shade50,
-                  ),
-                  value: selectedStatus,
-                  items: statusOptions.map((status) {
-                    return DropdownMenuItem<String>(
-                      value: status,
-                      child: Row(
-                        children: [
-                          Icon(
-                            status == 'PROSES'
-                                ? Icons.sync
-                                : Icons.check_circle,
-                            color:
-                                status == 'PROSES' ? Colors.blue : Colors.green,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            status == 'PROSES' ? 'Dalam Proses' : 'Selesai',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    selectedStatus = value;
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Pilih status tindakan';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Kategori tindakan
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Kategori Tindakan',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: selectedKategori,
-                  items: kategoriOptions.map((kategori) {
-                    return DropdownMenuItem<String>(
-                      value: kategori,
-                      child: Text(
-                        kategori
-                            .split('_')
-                            .map((word) =>
-                                word[0].toUpperCase() +
-                                word.substring(1).toLowerCase())
-                            .join(' '),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    selectedKategori = value;
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Pilih kategori tindakan';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Prioritas tindakan
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Prioritas',
-                    border: const OutlineInputBorder(),
-                    filled: true,
-                    fillColor: selectedPrioritas == 'TINGGI'
-                        ? Colors.red.shade50
-                        : (selectedPrioritas == 'SEDANG'
-                            ? Colors.orange.shade50
-                            : Colors.green.shade50),
-                  ),
-                  value: selectedPrioritas,
-                  items: prioritasOptions.map((prioritas) {
-                    Color priorityColor = prioritas == 'TINGGI'
-                        ? Colors.red
-                        : (prioritas == 'SEDANG'
-                            ? Colors.orange
-                            : Colors.green);
-
-                    return DropdownMenuItem<String>(
-                      value: prioritas,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.flag,
-                            color: priorityColor,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            prioritas[0].toUpperCase() +
-                                prioritas.substring(1).toLowerCase(),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: priorityColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    selectedPrioritas = value;
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Pilih prioritas tindakan';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Deskripsi tindakan
-                TextFormField(
-                  controller: tindakanController,
-                  decoration: const InputDecoration(
-                    labelText: 'Deskripsi Tindakan',
-                    border: OutlineInputBorder(),
-                    hintText: 'Jelaskan tindakan yang dilakukan',
-                  ),
-                  maxLines: 3,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Tindakan tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Catatan tindakan
-                TextFormField(
-                  controller: catatanController,
-                  decoration: const InputDecoration(
-                    labelText: 'Catatan (opsional)',
-                    border: OutlineInputBorder(),
-                    hintText: 'Tambahkan catatan jika diperlukan',
-                  ),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 16),
-
-                // Hasil tindakan
-                TextFormField(
-                  controller: hasilTindakanController,
-                  decoration: InputDecoration(
-                    labelText: 'Hasil Tindakan',
-                    border: const OutlineInputBorder(),
-                    hintText: 'Jelaskan hasil dari tindakan yang dilakukan',
-                    filled: true,
-                    fillColor: Colors.blue.shade50,
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-
-                // Bukti tindakan
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bukti Tindakan:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Obx(() {
-                            if (buktiTindakanList.isEmpty) {
-                              return const Text(
-                                'Belum ada bukti tindakan',
-                                style: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.grey,
-                                ),
-                              );
-                            } else {
-                              return Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: buktiTindakanList.map((bukti) {
-                                  return Container(
-                                    width: 80,
-                                    height: 80,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        Center(
-                                          child: Icon(
-                                            Icons.insert_drive_file,
-                                            color: Colors.blue.shade700,
-                                            size: 36,
-                                          ),
-                                        ),
-                                        Positioned(
-                                          top: 0,
-                                          right: 0,
-                                          child: InkWell(
-                                            onTap: () {
-                                              buktiTindakanList.remove(bukti);
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(2),
-                                              decoration: BoxDecoration(
-                                                color: Colors.red,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Icon(
-                                                Icons.close,
-                                                color: Colors.white,
-                                                size: 14,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                              );
-                            }
-                          }),
-                          const SizedBox(height: 12),
-                          Obx(() => ElevatedButton.icon(
-                                onPressed:
-                                    isUploading.value ? null : uploadBukti,
-                                icon: isUploading.value
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Icon(Icons.upload_file),
-                                label: Text(isUploading.value
-                                    ? 'Mengunggah...'
-                                    : 'Tambah Bukti'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(double.infinity, 40),
-                                ),
-                              )),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Informasi tentang feedback warga
-                if (tindakan.feedbackWarga != null &&
-                    tindakan.feedbackWarga!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
                   Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: Colors.amber.shade50,
+                      color: Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.amber.shade200),
+                      border: Border.all(color: Colors.blue.shade200),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2048,128 +1564,321 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                         Row(
                           children: [
                             Icon(
-                              Icons.comment,
-                              color: Colors.amber.shade800,
+                              Icons.info_outline,
+                              color: Colors.blue.shade800,
                               size: 18,
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Feedback dari Warga',
+                              'Informasi',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
-                                color: Colors.amber.shade800,
+                                color: Colors.blue.shade800,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
-                        if (tindakan.ratingWarga != null) ...[
-                          Row(
-                            children: [
-                              Text(
-                                'Rating: ',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.amber.shade800,
-                                ),
-                              ),
-                              Row(
-                                children: List.generate(5, (index) {
-                                  return Icon(
-                                    index < (tindakan.ratingWarga ?? 0)
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                    color: Colors.amber,
-                                    size: 16,
-                                  );
-                                }),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                        ],
                         Text(
-                          tindakan.feedbackWarga!,
+                          'Dengan mengirimkan form ini, status tindakan akan berubah menjadi SELESAI dan tidak dapat diubah kembali.',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.amber.shade900,
-                            fontStyle: FontStyle.italic,
+                            fontSize: 12,
+                            color: Colors.blue.shade700,
                           ),
                         ),
                       ],
                     ),
                   ),
+                  TextInput(
+                    label: 'Hasil Tindakan',
+                    hint: 'Jelaskan hasil dari tindakan yang dilakukan',
+                    controller: hasilTindakanController,
+                    maxLines: 3,
+                    required: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Hasil tindakan wajib diisi';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  TextInput(
+                    label: 'Catatan',
+                    hint: 'Tambahkan catatan jika diperlukan',
+                    controller: catatanController,
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 8),
+                  // Bukti tindakan - wajib
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Bukti Tindakan',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (buktiTindakanPaths.isEmpty)
+                              InkWell(
+                                onTap: () => showPilihSumberFoto(stateContext),
+                                child: Container(
+                                  height: 150,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border:
+                                        Border.all(color: Colors.grey.shade400),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.camera_alt,
+                                        size: 48,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Tambah Bukti Tindakan',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    height: 100,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: buktiTindakanPaths
+                                          .length, //tombol tambah jika tidak selesai
+                                      itemBuilder: (context, index) {
+                                        if (index ==
+                                            buktiTindakanPaths.length) {
+                                          // Tombol tambah foto
+                                          return InkWell(
+                                            onTap: () => showPilihSumberFoto(
+                                                stateContext),
+                                            child: Container(
+                                              width: 100,
+                                              margin: const EdgeInsets.only(
+                                                  right: 8),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.shade200,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                border: Border.all(
+                                                    color:
+                                                        Colors.grey.shade400),
+                                              ),
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.add_photo_alternate,
+                                                    size: 32,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    'Tambah',
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.grey.shade600,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }
+
+                                        // Tampilkan foto yang sudah diambil
+                                        return Stack(
+                                          children: [
+                                            GestureDetector(
+                                              onTap: () => showFullScreenImage(
+                                                  stateContext,
+                                                  buktiTindakanPaths[index]),
+                                              child: Container(
+                                                width: 100,
+                                                height: 100,
+                                                margin: const EdgeInsets.only(
+                                                    right: 8),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  image: DecorationImage(
+                                                    image: buktiTindakanPaths[
+                                                                index]
+                                                            .startsWith('http')
+                                                        ? NetworkImage(
+                                                            buktiTindakanPaths[
+                                                                index])
+                                                        : FileImage(File(
+                                                                buktiTindakanPaths[
+                                                                    index]))
+                                                            as ImageProvider,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            Positioned(
+                                              top: 4,
+                                              right: 12,
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  setState(() {
+                                                    buktiTindakanPaths
+                                                        .removeAt(index);
+                                                  });
+                                                },
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.all(4),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black
+                                                        .withOpacity(0.5),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.close,
+                                                    color: Colors.white,
+                                                    size: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
-              ],
+              ),
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                try {
-                  // Buat data update
-                  final Map<String, dynamic> updateData = {
-                    'tindakan': tindakanController.text,
-                    'catatan': catatanController.text,
-                    'hasil_tindakan': hasilTindakanController.text,
-                    'status_tindakan': selectedStatus,
-                    'prioritas': selectedPrioritas,
-                    'kategori_tindakan': selectedKategori,
-                    'bukti_tindakan': buktiTindakanList.toList(),
-                    'updated_at': DateTime.now().toIso8601String(),
-                  };
-
-                  // Jika status berubah menjadi SELESAI, tambahkan tanggal verifikasi
-                  if (selectedStatus == 'SELESAI' &&
-                      tindakan.statusTindakan != 'SELESAI') {
-                    updateData['tanggal_verifikasi'] =
-                        DateTime.now().toIso8601String();
-                  }
-
-                  // Update tindakan
-                  await SupabaseService.to
-                      .updateTindakanPengaduan(tindakan.id!, updateData);
-
-                  // Tutup dialog
-                  Navigator.pop(context);
-
-                  // Refresh halaman
-                  Get.forceAppUpdate();
-
-                  // Tampilkan snackbar
-                  Get.snackbar(
-                    'Berhasil',
-                    'Tindakan berhasil diperbarui',
-                    snackPosition: SnackPosition.TOP,
-                    backgroundColor: Colors.green,
-                    colorText: Colors.white,
-                  );
-                } catch (e) {
-                  print('Error updating tindakan: $e');
-                  Get.snackbar(
-                    'Error',
-                    'Gagal memperbarui tindakan: ${e.toString()}',
-                    snackPosition: SnackPosition.TOP,
-                    backgroundColor: Colors.red,
-                    colorText: Colors.white,
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Batal'),
             ),
-            child: const Text('Simpan Perubahan'),
-          ),
-        ],
-      ),
+            ElevatedButton(
+              onPressed: controller.isUploading.value
+                  ? null
+                  : () async {
+                      if (formKey.currentState!.validate()) {
+                        // Validasi bukti tindakan
+                        if (buktiTindakanPaths.isEmpty) {
+                          Get.snackbar(
+                            'Error',
+                            'Bukti tindakan wajib diisi',
+                            snackPosition: SnackPosition.TOP,
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
+
+                        try {
+                          Navigator.pop(dialogContext); // Tutup dialog form
+
+                          // Tampilkan loading dialog
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (BuildContext context) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            },
+                          );
+
+                          // Panggil fungsi update tindakan dengan upload file
+                          await controller.updateTindakanPengaduan(
+                            tindakanId: tindakan.id!,
+                            pengaduanId: tindakan.pengaduanId!,
+                            tindakan: tindakan
+                                .tindakan!, // Gunakan tindakan yang sudah ada
+                            kategoriTindakan: selectedKategori ??
+                                '', // Gunakan kategori yang sudah ada
+                            statusTindakan: selectedStatus,
+                            prioritas: selectedPrioritas ??
+                                '', // Gunakan prioritas yang sudah ada
+                            catatan: catatanController.text.isEmpty
+                                ? null
+                                : catatanController.text,
+                            hasilTindakan: hasilTindakanController.text.isEmpty
+                                ? null
+                                : hasilTindakanController.text,
+                            buktiTindakanPaths: buktiTindakanPaths,
+                          );
+                        } catch (e) {
+                          // Tutup loading dialog jika terjadi error
+                          Navigator.of(context, rootNavigator: true).pop();
+
+                          print('Error updating tindakan: $e');
+                          Get.snackbar(
+                            'Error',
+                            'Gagal memperbarui tindakan: ${e.toString()}',
+                            snackPosition: SnackPosition.TOP,
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+              ),
+              child: controller.isUploading.value
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Simpan Perubahan'),
+            ),
+          ],
+        );
+      }),
     );
   }
 
@@ -2212,7 +1921,9 @@ class DetailPengaduanView extends GetView<PengaduanController> {
               ),
             ),
             const SizedBox(height: 8),
-            ...statusOptions.map((status) => RadioListTile<String>(
+            Column(
+              children: statusOptions.map((status) {
+                return RadioListTile<String>(
                   title: Text(
                     status == 'MENUNGGU'
                         ? 'Menunggu'
@@ -2239,7 +1950,9 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                         ? Colors.orange
                         : (status == 'TINDAKAN' ? Colors.blue : Colors.green),
                   ),
-                )),
+                );
+              }).toList(),
+            ),
           ],
         ),
         actions: [
@@ -2342,6 +2055,140 @@ class DetailPengaduanView extends GetView<PengaduanController> {
             child: const Text('Ya, Ubah Status'),
           ),
         ],
+      ),
+    );
+  }
+
+  void showFullScreenImage(BuildContext context, String imageUrl) {
+    // Buat controller untuk InteractiveViewer
+    final TransformationController transformationController =
+        TransformationController();
+
+    Get.dialog(
+      Dialog(
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4,
+              transformationController: transformationController,
+              child: imageUrl.startsWith('http')
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey.shade300,
+                          child: const Center(
+                            child: Icon(
+                              Icons.error,
+                              size: 50,
+                              color: Colors.red,
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Image.file(
+                      File(imageUrl),
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey.shade300,
+                          child: const Center(
+                            child: Icon(
+                              Icons.error,
+                              size: 50,
+                              color: Colors.red,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            Positioned(
+              top: 20,
+              right: 20,
+              child: GestureDetector(
+                onTap: () => Get.back(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      // Zoom in
+                      final Matrix4 matrix =
+                          transformationController.value.clone();
+                      matrix.scale(1.5);
+                      transformationController.value = matrix;
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.zoom_in,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      // Zoom out
+                      final Matrix4 matrix =
+                          transformationController.value.clone();
+                      matrix.scale(0.75);
+                      transformationController.value = matrix;
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.zoom_out,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

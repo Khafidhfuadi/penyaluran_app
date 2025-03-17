@@ -5,12 +5,14 @@ import 'package:penyaluran_app/app/data/models/tindakan_pengaduan_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
+import 'package:image_picker/image_picker.dart';
 
 class PengaduanController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   final SupabaseService _supabaseService = SupabaseService.to;
 
   final RxBool isLoading = false.obs;
+  final RxBool isUploading = false.obs;
 
   // Indeks kategori yang dipilih untuk filter
   final RxInt selectedCategoryIndex = 0.obs;
@@ -28,6 +30,12 @@ class PengaduanController extends GetxController {
 
   // Form key
   final GlobalKey<FormState> tindakanFormKey = GlobalKey<FormState>();
+
+  // List untuk menyimpan path file bukti tindakan
+  final RxList<String> buktiTindakanPaths = <String>[].obs;
+
+  // Image picker
+  final ImagePicker _imagePicker = ImagePicker();
 
   UserModel? get user => _authController.user;
 
@@ -95,31 +103,66 @@ class PengaduanController extends GetxController {
     }
   }
 
-  Future<void> tambahTindakan(String pengaduanId) async {
-    if (!tindakanFormKey.currentState!.validate()) return;
-
-    isLoading.value = true;
+  Future<void> tambahTindakanPengaduan({
+    required String pengaduanId,
+    required String tindakan,
+    required String kategoriTindakan,
+    required String statusTindakan,
+    required String prioritas,
+    String? catatan,
+    String? hasilTindakan,
+    required List<String> buktiTindakanPaths,
+  }) async {
     try {
-      final tindakan = TindakanPengaduanModel(
-        pengaduanId: pengaduanId,
-        tindakan: tindakanController.text,
-        catatan: catatanController.text,
-        tanggalTindakan: DateTime.now(),
-        petugasId: user?.id,
-      );
+      isLoading.value = true;
 
-      await _supabaseService.tambahTindakanPengaduan(tindakan.toJson());
-      await _supabaseService.updateStatusPengaduan(pengaduanId, 'TINDAKAN');
+      // Upload bukti tindakan jika ada
+      List<String> buktiTindakanUrls = [];
+      if (buktiTindakanPaths.isNotEmpty) {
+        for (var path in buktiTindakanPaths) {
+          final String? fileUrl = await SupabaseService.to
+              .uploadFile(path, 'tindakan_pengaduan', 'bukti_tindakan');
+          if (fileUrl != null) {
+            buktiTindakanUrls.add(fileUrl);
+          }
+        }
+      }
 
-      // Clear form
-      tindakanController.clear();
-      catatanController.clear();
+      // Buat objek tindakan
+      final Map<String, dynamic> tindakanData = {
+        'pengaduan_id': pengaduanId,
+        'tindakan': tindakan,
+        'catatan': catatan,
+        'status_tindakan': statusTindakan,
+        'prioritas': prioritas,
+        'kategori_tindakan': kategoriTindakan,
+        'hasil_tindakan': hasilTindakan,
+        'tanggal_tindakan': DateTime.now().toIso8601String(),
+        'petugas_id': user?.id,
+        'bukti_tindakan': buktiTindakanUrls,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
 
-      await loadPengaduanData();
-      Get.back(); // Close dialog
+      // Simpan tindakan ke Supabase
+      await SupabaseService.to.tambahTindakanPengaduan(tindakanData);
+
+      // Update status pengaduan jika perlu
+      if (statusTindakan == 'SELESAI') {
+        await SupabaseService.to.updateStatusPengaduan(pengaduanId, 'SELESAI');
+      } else {
+        await SupabaseService.to.updateStatusPengaduan(pengaduanId, 'TINDAKAN');
+      }
+
+      // Reset paths setelah berhasil
+      buktiTindakanPaths.clear();
+
+      //refresh page
+      Get.forceAppUpdate();
+      Get.back(); // Tutup dialog
 
       Get.snackbar(
-        'Sukses',
+        'Berhasil',
         'Tindakan berhasil ditambahkan',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
@@ -139,22 +182,65 @@ class PengaduanController extends GetxController {
     }
   }
 
-  Future<void> updateTindakan(
-      String tindakanId, Map<String, dynamic> data) async {
-    isLoading.value = true;
+  Future<void> updateTindakanPengaduan({
+    required String tindakanId,
+    required String pengaduanId,
+    required String tindakan,
+    required String kategoriTindakan,
+    required String statusTindakan,
+    required String prioritas,
+    String? catatan,
+    String? hasilTindakan,
+    required List<String> buktiTindakanPaths,
+  }) async {
     try {
-      await _supabaseService.updateTindakanPengaduan(tindakanId, data);
+      isLoading.value = true;
 
+      // Upload bukti tindakan jika ada file baru (yang belum diupload)
+      List<String> buktiTindakanUrls = [];
+      for (var path in buktiTindakanPaths) {
+        // Jika path sudah berupa URL, tambahkan langsung
+        if (path.startsWith('http')) {
+          buktiTindakanUrls.add(path);
+        } else {
+          // Jika path adalah file lokal, upload dulu
+          final String? fileUrl = await SupabaseService.to
+              .uploadFile(path, 'tindakan_pengaduan', 'bukti_tindakan');
+          if (fileUrl != null) {
+            buktiTindakanUrls.add(fileUrl);
+          }
+        }
+      }
+
+      // Buat objek tindakan
+      final Map<String, dynamic> tindakanData = {
+        'tindakan': tindakan,
+        'catatan': catatan,
+        'status_tindakan': statusTindakan,
+        'prioritas': prioritas,
+        'kategori_tindakan': kategoriTindakan,
+        'hasil_tindakan': hasilTindakan,
+        'bukti_tindakan': buktiTindakanUrls,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      // Update tindakan di Supabase
+      await SupabaseService.to
+          .updateTindakanPengaduan(tindakanId, tindakanData);
+
+      // Reset paths setelah berhasil
+      buktiTindakanPaths.clear();
+
+      //refresh page
+      Get.forceAppUpdate();
+      Get.back(); // Tutup dialog
       Get.snackbar(
-        'Sukses',
+        'Berhasil',
         'Tindakan berhasil diperbarui',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
-
-      // Refresh data
-      Get.forceAppUpdate();
     } catch (e) {
       print('Error updating tindakan: $e');
       Get.snackbar(
@@ -306,6 +392,37 @@ class PengaduanController extends GetxController {
         'pengaduan': null,
         'tindakan': [],
       };
+    }
+  }
+
+  // Fungsi untuk memilih bukti tindakan
+  Future<void> pickBuktiTindakan({bool fromCamera = true}) async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+        imageQuality: 70,
+        maxWidth: 1000,
+      );
+
+      if (pickedFile != null) {
+        buktiTindakanPaths.add(pickedFile.path);
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal mengambil gambar: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Fungsi untuk menghapus bukti tindakan
+  void removeBuktiTindakan(int index) {
+    if (index >= 0 && index < buktiTindakanPaths.length) {
+      buktiTindakanPaths.removeAt(index);
     }
   }
 }

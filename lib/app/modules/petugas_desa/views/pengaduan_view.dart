@@ -593,7 +593,20 @@ class PengaduanView extends GetView<PengaduanController> {
           ),
           ElevatedButton(
             onPressed: () {
-              controller.tambahTindakan(item.id!);
+              if (controller.tindakanFormKey.currentState!.validate()) {
+                Navigator.pop(context);
+                controller.tambahTindakanPengaduan(
+                  pengaduanId: item.id!,
+                  tindakan: controller.tindakanController.text,
+                  kategoriTindakan: 'VERIFIKASI_DATA',
+                  statusTindakan: 'PROSES',
+                  prioritas: 'SEDANG',
+                  catatan: controller.catatanController.text.isEmpty
+                      ? null
+                      : controller.catatanController.text,
+                  buktiTindakanPaths: [],
+                );
+              }
             },
             child: const Text('Simpan'),
           ),
