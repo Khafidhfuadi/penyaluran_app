@@ -19,6 +19,11 @@ import 'package:penyaluran_app/app/widgets/inputs/text_input.dart';
 class DetailPengaduanView extends GetView<PengaduanController> {
   const DetailPengaduanView({Key? key}) : super(key: key);
 
+  // Definisi konstanta warna status untuk konsistensi
+  static const Color statusMenungguColor = Colors.orange;
+  static const Color statusTindakanColor = Colors.blue;
+  static const Color statusSelesaiColor = Colors.green;
+
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> args = Get.arguments ?? {};
@@ -151,15 +156,15 @@ class DetailPengaduanView extends GetView<PengaduanController> {
 
     switch (pengaduan.status?.toUpperCase()) {
       case 'MENUNGGU':
-        statusColor = Colors.orange;
+        statusColor = statusMenungguColor;
         statusText = 'Menunggu';
         break;
       case 'TINDAKAN':
-        statusColor = Colors.blue;
+        statusColor = statusTindakanColor;
         statusText = 'Tindakan';
         break;
       case 'SELESAI':
-        statusColor = Colors.green;
+        statusColor = statusSelesaiColor;
         statusText = 'Selesai';
         break;
       default:
@@ -236,21 +241,21 @@ class DetailPengaduanView extends GetView<PengaduanController> {
               _buildStatusGuideItem(
                 'MENUNGGU',
                 'Pengaduan baru yang belum ditindaklanjuti',
-                Colors.orange,
+                statusMenungguColor,
                 Icons.hourglass_empty,
               ),
               const SizedBox(height: 8),
               _buildStatusGuideItem(
                 'TINDAKAN',
                 'Pengaduan sedang dalam proses penanganan',
-                Colors.blue,
+                statusTindakanColor,
                 Icons.engineering,
               ),
               const SizedBox(height: 8),
               _buildStatusGuideItem(
                 'SELESAI',
                 'Pengaduan telah selesai ditangani',
-                Colors.green,
+                statusSelesaiColor,
                 Icons.check_circle,
               ),
             ],
@@ -283,7 +288,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
               'PROSES',
               'Dalam Proses',
               'Tindakan sedang dilakukan',
-              Colors.blue,
+              statusTindakanColor,
               Icons.sync,
             ),
             const SizedBox(height: 8),
@@ -291,7 +296,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
               'SELESAI',
               'Selesai',
               'Tindakan telah selesai',
-              Colors.green,
+              statusSelesaiColor,
               Icons.check_circle,
             ),
           ],
@@ -539,19 +544,24 @@ class DetailPengaduanView extends GetView<PengaduanController> {
       case 'MENUNGGU':
         return StatusPill(
           status: 'Menunggu',
-          backgroundColor: Colors.orange,
+          backgroundColor: statusMenungguColor,
           textColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         );
       case 'TINDAKAN':
         return StatusPill(
           status: 'Tindakan',
-          backgroundColor: Colors.blue,
+          backgroundColor: statusTindakanColor,
           textColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         );
       case 'SELESAI':
-        return StatusPill.completed(status: 'Selesai');
+        return StatusPill(
+          status: 'Selesai',
+          backgroundColor: statusSelesaiColor,
+          textColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        );
       default:
         return StatusPill(
           status: status ?? 'Tidak Diketahui',
@@ -613,7 +623,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                   status == 'MENUNGGU' ||
                       status == 'TINDAKAN' ||
                       status == 'SELESAI',
-                  Colors.orange,
+                  statusMenungguColor,
                 ),
               ),
               Expanded(
@@ -622,7 +632,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                   'Tindakan',
                   status == 'TINDAKAN',
                   status == 'TINDAKAN' || status == 'SELESAI',
-                  Colors.blue,
+                  statusTindakanColor,
                 ),
               ),
               Expanded(
@@ -631,7 +641,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                   'Selesai',
                   status == 'SELESAI',
                   status == 'SELESAI',
-                  Colors.green,
+                  statusSelesaiColor,
                 ),
               ),
             ],
@@ -646,7 +656,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
               icon: const Icon(Icons.engineering),
               label: const Text('Tambah Tindakan'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: statusTindakanColor,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 40),
               ),
@@ -662,7 +672,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                     icon: const Icon(Icons.add),
                     label: const Text('Tambah Tindakan'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: statusTindakanColor,
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -676,7 +686,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                     icon: const Icon(Icons.check_circle),
                     label: const Text('Selesaikan'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: statusSelesaiColor,
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -687,15 +697,15 @@ class DetailPengaduanView extends GetView<PengaduanController> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
+                color: statusSelesaiColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.shade200),
+                border: Border.all(color: statusSelesaiColor.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.check_circle,
-                    color: Colors.green,
+                    color: statusSelesaiColor,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -703,7 +713,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                     child: Text(
                       'Pengaduan telah selesai ditangani',
                       style: TextStyle(
-                        color: Colors.green.shade800,
+                        color: statusSelesaiColor,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -921,8 +931,9 @@ class DetailPengaduanView extends GetView<PengaduanController> {
 
             // Informasi penyaluran
             _buildInfoRow('Nama Penyaluran', pengaduan.namaPenyaluran),
-            _buildInfoRow('Jenis Bantuan', pengaduan.jenisBantuan),
-            _buildInfoRow('Jumlah Bantuan', pengaduan.jumlahBantuan),
+            _buildInfoRow('Stok Bantuan', pengaduan.stokBantuan!['nama']),
+            _buildInfoRow('Jumlah Bantuan',
+                '${pengaduan.jumlahBantuan} ${pengaduan.stokBantuan!['satuan']}'),
             _buildInfoRow('Deskripsi', pengaduan.deskripsiPenyaluran),
           ],
         ),
@@ -1022,10 +1033,10 @@ class DetailPengaduanView extends GetView<PengaduanController> {
     Color dotColor;
     switch (tindakan.statusTindakan) {
       case 'SELESAI':
-        dotColor = Colors.green;
+        dotColor = statusSelesaiColor;
         break;
       case 'PROSES':
-        dotColor = Colors.blue;
+        dotColor = statusTindakanColor;
         break;
       default:
         dotColor = Colors.grey;
@@ -1989,8 +2000,8 @@ class DetailPengaduanView extends GetView<PengaduanController> {
         : (newStatus == 'TINDAKAN' ? 'Tindakan' : 'Selesai');
 
     Color statusColor = newStatus == 'MENUNGGU'
-        ? Colors.orange
-        : (newStatus == 'TINDAKAN' ? Colors.blue : Colors.green);
+        ? statusMenungguColor
+        : (newStatus == 'TINDAKAN' ? statusTindakanColor : statusSelesaiColor);
 
     showDialog(
       context: context,

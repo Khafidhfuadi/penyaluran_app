@@ -9,32 +9,28 @@ class PengaduanView extends GetView<PengaduanController> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: controller.refreshData,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Ringkasan pengaduan
-              _buildPengaduanSummary(context),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Ringkasan pengaduan
+            _buildPengaduanSummary(context),
 
-              const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-              // Filter dan pencarian
-              _buildFilterSearch(context),
+            // Filter dan pencarian
+            _buildFilterSearch(context),
 
-              // Informasi terakhir update
-              _buildLastUpdateInfo(context),
+            // Informasi terakhir update
+            _buildLastUpdateInfo(context),
 
-              const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-              // Daftar pengaduan
-              _buildPengaduanList(context),
-            ],
-          ),
+            // Daftar pengaduan
+            _buildPengaduanList(context),
+          ],
         ),
       ),
     );
@@ -42,27 +38,29 @@ class PengaduanView extends GetView<PengaduanController> {
 
   // Tambahkan widget untuk menampilkan waktu terakhir update
   Widget _buildLastUpdateInfo(BuildContext context) {
-    final lastUpdate = DateTime
-        .now(); // Gunakan waktu saat ini atau dari controller jika tersedia
-    final formattedDate = DateTimeHelper.formatDateTimeWithHour(lastUpdate);
+    return Obx(() {
+      final lastUpdate = DateTime
+          .now(); // Gunakan waktu saat ini atau dari controller jika tersedia
+      final formattedDate = DateTimeHelper.formatDateTimeWithHour(lastUpdate);
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: Row(
-        children: [
-          Icon(Icons.update, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 4),
-          Text(
-            'Data terupdate: $formattedDate',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-              fontStyle: FontStyle.italic,
+      return Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Row(
+          children: [
+            Icon(Icons.update, size: 16, color: Colors.grey[600]),
+            const SizedBox(width: 4),
+            Text(
+              'Data terupdate: $formattedDate',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildPengaduanSummary(BuildContext context) {
@@ -271,11 +269,20 @@ class PengaduanView extends GetView<PengaduanController> {
                       fontWeight: FontWeight.bold,
                     ),
               ),
-              Text(
-                '${DateTimeHelper.formatNumber(filteredPengaduan.length)} item',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey,
-                    ),
+              Row(
+                children: [
+                  Text(
+                    '${DateTimeHelper.formatNumber(filteredPengaduan.length)} item',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey,
+                        ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () => controller.refreshData(),
+                    tooltip: 'Refresh',
+                  ),
+                ],
               ),
             ],
           ),
@@ -338,7 +345,6 @@ class PengaduanView extends GetView<PengaduanController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
@@ -347,10 +353,9 @@ class PengaduanView extends GetView<PengaduanController> {
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
-                    // overflow: TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 12),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -379,6 +384,43 @@ class PengaduanView extends GetView<PengaduanController> {
                 ),
               ],
             ),
+            const SizedBox(height: 4),
+            _buildItemDetail(
+              context,
+              icon: Icons.person,
+              label: 'NIK',
+              value: item.warga?['nik'] ?? '',
+            ),
+            const SizedBox(height: 12),
+            if (item.penerimaPenyaluran != null) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildItemDetail(
+                      context,
+                      icon: Icons.category,
+                      label: 'Penyaluran',
+                      value: item.namaPenyaluran ?? '',
+                    ),
+                  ),
+                  Expanded(
+                    child: _buildItemDetail(
+                      context,
+                      icon: Icons.inventory,
+                      label: 'Jenis',
+                      value: item.jenisBantuan ?? '',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              _buildItemDetail(
+                context,
+                icon: Icons.shopping_bag,
+                label: 'Jumlah',
+                value: item.jumlahBantuan ?? '',
+              ),
+            ],
             const SizedBox(height: 8),
             Text(
               item.deskripsi ?? '',
@@ -386,71 +428,13 @@ class PengaduanView extends GetView<PengaduanController> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon: Icons.person,
-                    label: 'Pelapor',
-                    value: item.warga?['nama_lengkap'] ?? '',
-                  ),
-                ),
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon: Icons.numbers,
-                    label: 'NIK',
-                    value: item.warga?['nik'] ?? '',
-                  ),
-                ),
-              ],
+            const SizedBox(height: 8),
+            _buildItemDetail(
+              context,
+              icon: Icons.calendar_today,
+              label: 'Tanggal',
+              value: formattedDate,
             ),
-            const SizedBox(height: 12),
-            if (item.penerimaPenyaluran != null) ...[
-              Row(
-                children: [
-                  Expanded(
-                      child: _buildItemDetail(
-                    context,
-                    icon: Icons.shopping_bag,
-                    label: 'Jumlah',
-                    value:
-                        '${item.jumlahBantuan} ${item.stokBantuan['satuan']}',
-                  )),
-                  Expanded(
-                    child: _buildItemDetail(
-                      context,
-                      icon: Icons.inventory,
-                      label: 'Stok Bantuan',
-                      value: item.stokBantuan['nama'] ?? '',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildItemDetail(
-                      context,
-                      icon: Icons.category,
-                      label: 'Nama Penyaluran',
-                      value: item.namaPenyaluran ?? '',
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildItemDetail(
-                      context,
-                      icon: Icons.calendar_today,
-                      label: 'Tanggal',
-                      value: formattedDate,
-                    ),
-                  ),
-                ],
-              ),
-            ],
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
