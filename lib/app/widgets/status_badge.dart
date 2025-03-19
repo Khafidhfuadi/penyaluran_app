@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class StatusBadge extends StatelessWidget {
   final String status;
@@ -20,20 +21,22 @@ class StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final String statusUpper = status.toUpperCase();
 
-    // Default colors for common statuses
+    // Default colors for common statuses menggunakan AppTheme
     final Map<String, Color> defaultColors = {
-      'DITERIMA': Colors.green,
-      'MENUNGGU': Colors.orange,
-      'DITOLAK': Colors.red,
-      'PROSES': Colors.orange,
-      'DIPROSES': Colors.orange,
-      'TINDAKAN': Colors.orange,
-      'SELESAI': Colors.green,
-      'TERVERIFIKASI': Colors.green,
-      'BELUMMENERIMA': Colors.orange,
-      'DIJADWALKAN': Colors.blue,
-      'TERLAKSANA': Colors.purple,
-      'AKTIF': Colors.green,
+      'DITERIMA': AppTheme.verifiedColor,
+      'MENUNGGU': AppTheme.processedColor,
+      'DITOLAK': AppTheme.rejectedColor,
+      'PROSES': AppTheme.processedColor,
+      'DIPROSES': AppTheme.processedColor,
+      'TINDAKAN': AppTheme.processedColor,
+      'SELESAI': AppTheme.completedColor,
+      'TERVERIFIKASI': AppTheme.verifiedColor,
+      'BELUMMENERIMA': AppTheme.processedColor,
+      'DIJADWALKAN': AppTheme.scheduledColor,
+      'TERLAKSANA': AppTheme.completedColor,
+      'AKTIF': AppTheme.verifiedColor,
+      'DRAFT': AppTheme.processedColor,
+      'FINAL': AppTheme.completedColor,
     };
 
     // Default labels for common statuses
@@ -50,6 +53,8 @@ class StatusBadge extends StatelessWidget {
       'DIJADWALKAN': 'Dijadwalkan',
       'TERLAKSANA': 'Terlaksana',
       'AKTIF': 'Aktif',
+      'DRAFT': 'Draft',
+      'FINAL': 'Final',
     };
 
     // Determine color and label based on status

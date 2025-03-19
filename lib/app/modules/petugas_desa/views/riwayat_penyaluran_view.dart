@@ -98,7 +98,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Daftar Penyaluran ${status == 'TERLAKSANA' ? 'terlaksana' : 'batal terlaksana'}',
+                          'Daftar Penyaluran ${status == 'TERLAKSANA' ? 'Terlaksana' : 'Batal'}',
                           style:
                               Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,

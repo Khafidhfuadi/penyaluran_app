@@ -108,6 +108,11 @@ class WargaView extends GetView<WargaDashboardController> {
                 badgeColor: Colors.orange,
                 onTap: () => controller.changeTab(2),
               ),
+              DrawerMenuItem(
+                icon: Icons.description_outlined,
+                title: 'Laporan Penyaluran',
+                onTap: () => Get.toNamed('/laporan-penyaluran'),
+              ),
             ],
           )),
       body: Obx(() {

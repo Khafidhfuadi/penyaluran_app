@@ -2,9 +2,11 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/skema_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
+import 'package:penyaluran_app/app/data/models/laporan_penyaluran_model.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:penyaluran_app/app/modules/laporan_penyaluran/controllers/laporan_penyaluran_controller.dart';
 
 class DetailPenyaluranController extends GetxController {
   final SupabaseService _supabaseService = Get.find<SupabaseService>();
@@ -14,9 +16,15 @@ class DetailPenyaluranController extends GetxController {
   final penyaluran = Rx<PenyaluranBantuanModel?>(null);
   final skemaBantuan = Rx<SkemaBantuanModel?>(null);
   final penerimaPenyaluran = <PenerimaPenyaluranModel>[].obs;
+  final laporan = Rx<LaporanPenyaluranModel?>(null);
+  final isLoadingLaporan = false.obs;
 
   // Status untuk mengetahui apakah petugas desa
   final isPetugasDesa = false.obs;
+
+  // Tambahkan referensi ke controller laporan
+  LaporanPenyaluranController? laporanController;
+  final RxBool isExporting = false.obs;
 
   @override
   void onInit() {
@@ -432,6 +440,9 @@ class DetailPenyaluranController extends GetxController {
       }
       penerimaPenyaluran.assignAll(penerima);
 
+      // Periksa apakah ada laporan untuk penyaluran ini
+      await checkLaporanPenyaluran(penyaluranId);
+
       // if (penerima.isNotEmpty) {
       //   print('DetailPenyaluranController - ID penerima: ${penerima[0].id}');
       // }
@@ -444,6 +455,57 @@ class DetailPenyaluranController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> checkLaporanPenyaluran(String penyaluranId) async {
+    try {
+      isLoadingLaporan.value = true;
+
+      final response = await _supabaseService.client
+          .from('laporan_penyaluran')
+          .select('*')
+          .eq('penyaluran_bantuan_id', penyaluranId)
+          .maybeSingle();
+
+      if (response != null) {
+        // Laporan ditemukan
+        laporan.value = LaporanPenyaluranModel.fromJson(response);
+      } else {
+        // Tidak ada laporan
+        laporan.value = null;
+      }
+    } catch (e) {
+      print('Error saat memeriksa laporan penyaluran: $e');
+      laporan.value = null;
+    } finally {
+      isLoadingLaporan.value = false;
+    }
+  }
+
+  void navigateToLaporanCreate() {
+    if (penyaluran.value?.id == null) return;
+
+    // Kirim ID penyaluran langsung sebagai argument (String), bukan dalam bentuk Map
+    Get.toNamed('/laporan-penyaluran/create', arguments: penyaluran.value!.id)
+        ?.then((value) {
+      if (value == true) {
+        // Refresh data setelah membuat laporan
+        checkLaporanPenyaluran(penyaluran.value!.id!);
+      }
+    });
+  }
+
+  void navigateToLaporanDetail() {
+    if (laporan.value?.id == null) return;
+
+    // Navigasi ke halaman detail dengan mengirimkan ID sebagai argument
+    Get.toNamed('/laporan-penyaluran/detail', arguments: laporan.value!.id)
+        ?.then((value) {
+      if (value == true) {
+        // Refresh data setelah melihat detail laporan
+        checkLaporanPenyaluran(penyaluran.value!.id!);
+      }
+    });
   }
 
   // Metode untuk verifikasi penerima berdasarkan QR code
@@ -496,6 +558,55 @@ class DetailPenyaluranController extends GetxController {
       return false;
     } finally {
       isProcessing.value = false;
+    }
+  }
+
+  // Method untuk memuat controller laporan
+  Future<void> loadLaporanPenyaluranController() async {
+    if (laporanController == null) {
+      // Cek apakah controller sudah ada di Get
+      if (Get.isRegistered<LaporanPenyaluranController>()) {
+        laporanController = Get.find<LaporanPenyaluranController>();
+      } else {
+        // Jika belum ada, buat instance baru
+        laporanController = Get.put(LaporanPenyaluranController());
+      }
+    }
+
+    // Pastikan data laporan dimuat
+    if (laporan.value != null && penyaluran.value != null) {
+      await laporanController!.fetchLaporanDetail(laporan.value!.id!);
+    }
+  }
+
+  // Method untuk export PDF
+  Future<void> exportToPdf() async {
+    if (laporan.value == null || penyaluran.value == null) {
+      Get.snackbar(
+        'Error',
+        'Data laporan atau penyaluran tidak tersedia',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    isExporting.value = true;
+    try {
+      await loadLaporanPenyaluranController();
+      await laporanController!.exportToPdf(laporan.value!, penyaluran.value!);
+    } catch (e) {
+      print('Error saat export PDF: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal mengekspor laporan ke PDF',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isExporting.value = false;
     }
   }
 }

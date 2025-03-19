@@ -6,7 +6,6 @@ import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerima_page.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/qr_scanner_page.dart';
 
 class DetailPenyaluranPage extends StatelessWidget {
@@ -69,6 +68,9 @@ class DetailPenyaluranPage extends StatelessWidget {
                     controller.penyaluran.value?.alasanPembatalan != null &&
                     controller.penyaluran.value!.alasanPembatalan!.isNotEmpty)
                   _buildPembatalanSection(context),
+                if (controller.penyaluran.value?.status?.toUpperCase() ==
+                    'TERLAKSANA')
+                  _buildLaporanSection(context),
                 const SizedBox(height: 16),
                 _buildPenerimaPenyaluranSection(context),
                 const SizedBox(height: 24),
@@ -1493,6 +1495,220 @@ class DetailPenyaluranPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildLaporanSection(BuildContext context) {
+    return Obx(() {
+      if (controller.isLoadingLaporan.value) {
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 8),
+                  Text('Memuat data laporan...'),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      return Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.description_outlined,
+                        color: AppTheme.successColor,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Laporan Penyaluran',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.successColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (controller.laporan.value != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.successColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppTheme.successColor.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: AppTheme.successColor,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Tersedia',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.successColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              const Divider(height: 24),
+              if (controller.laporan.value == null)
+                Column(
+                  children: [
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.assignment_late_outlined,
+                            size: 50,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Belum ada laporan penyaluran',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Buat laporan untuk mendokumentasikan hasil penyaluran bantuan',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: controller.navigateToLaporanCreate,
+                            icon: const Icon(Icons.add_circle_outline),
+                            label: const Text('Buat Laporan'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoRow('Judul', controller.laporan.value!.judul),
+                    _buildInfoRow(
+                      'Tanggal Laporan',
+                      controller.laporan.value?.tanggalLaporan != null
+                          ? DateTimeHelper.formatDateTime(
+                              controller.laporan.value!.tanggalLaporan!)
+                          : '-',
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () =>
+                                controller.navigateToLaporanDetail(),
+                            icon: const Icon(Icons.visibility),
+                            label: const Text('Lihat Detail'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.primaryColor,
+                              side: const BorderSide(
+                                  color: AppTheme.primaryColor),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        if (controller.laporan.value?.beritaAcaraUrl != null &&
+                            controller
+                                .laporan.value!.beritaAcaraUrl!.isNotEmpty)
+                          Expanded(
+                            child: Obx(() => ElevatedButton.icon(
+                                  onPressed: controller.isExporting.value
+                                      ? null
+                                      : () => controller.exportToPdf(),
+                                  icon: controller.isExporting.value
+                                      ? SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.white),
+                                          ),
+                                        )
+                                      : const Icon(Icons.download),
+                                  label: Text(controller.isExporting.value
+                                      ? 'Mengekspor...'
+                                      : 'Unduh PDF'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.successColor,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    disabledBackgroundColor:
+                                        AppTheme.successColor.withOpacity(0.7),
+                                  ),
+                                )),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      );
+    });
   }
 
   List<PenerimaPenyaluranModel> _getFilteredPenerima() {

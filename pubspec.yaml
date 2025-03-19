@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^1.3.0 # atau versi yang lebih baru
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -63,6 +64,8 @@ dependencies:
 
   # Image picker untuk mengambil gambar dari kamera atau galeri
   image_picker: ^1.1.2
+  # File picker untuk memilih file dokumen
+  file_picker: ^9.2.1
   syncfusion_flutter_calendar: ^28.2.11
   syncfusion_localizations: ^28.2.11
   signature: ^6.0.0
@@ -80,6 +83,13 @@ dependencies:
   url_launcher: ^6.2.5
   # Untuk fungsi hash
   crypto: ^3.0.3
+
+  # Package untuk generate PDF
+  pdf: ^3.10.8
+  # Package untuk menyimpan file
+  path_provider: ^2.1.2
+  # Package untuk membuka file
+  open_file: ^3.3.2
 
 dev_dependencies:
   flutter_test:
@@ -124,6 +134,10 @@ flutter:
         - asset: assets/font/DMSans-VariableFont_opsz,wght.ttf
         - asset: assets/font/DMSans-Italic-VariableFont_opsz,wght.ttf
           style: italic
+        - asset: assets/font/DMSans-Regular.ttf
+          weight: 400
+        - asset: assets/font/DMSans-Bold.ttf
+          weight: 700
   #   - family: Trajan Pro
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf

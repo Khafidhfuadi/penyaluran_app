@@ -31,6 +31,11 @@ import 'package:penyaluran_app/app/modules/warga/views/warga_detail_penerimaan_v
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_pengaduan_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/pengaduan_binding.dart';
 import 'package:penyaluran_app/app/modules/warga/views/detail_pengaduan_view.dart';
+import 'package:penyaluran_app/app/modules/laporan_penyaluran/views/laporan_penyaluran_view.dart';
+import 'package:penyaluran_app/app/modules/laporan_penyaluran/views/laporan_penyaluran_detail_view.dart';
+import 'package:penyaluran_app/app/modules/laporan_penyaluran/views/laporan_penyaluran_create_view.dart';
+import 'package:penyaluran_app/app/modules/laporan_penyaluran/views/laporan_penyaluran_edit_view.dart';
+import 'package:penyaluran_app/app/modules/laporan_penyaluran/bindings/laporan_penyaluran_binding.dart';
 
 part 'app_routes.dart';
 
@@ -147,6 +152,26 @@ class AppPages {
       name: _Paths.riwayatPengaduan,
       page: () => const RiwayatPengaduanView(),
       binding: RiwayatPengaduanBinding(),
+    ),
+    GetPage(
+      name: _Paths.laporanPenyaluran,
+      page: () => const LaporanPenyaluranView(),
+      binding: LaporanPenyaluranBinding(),
+    ),
+    GetPage(
+      name: _Paths.laporanPenyaluran + '/detail',
+      page: () => const LaporanPenyaluranDetailView(),
+      binding: LaporanPenyaluranBinding(),
+    ),
+    GetPage(
+      name: _Paths.laporanPenyaluran + '/create',
+      page: () => const LaporanPenyaluranCreateView(),
+      binding: LaporanPenyaluranBinding(),
+    ),
+    GetPage(
+      name: _Paths.laporanPenyaluran + '/edit',
+      page: () => const LaporanPenyaluranEditView(),
+      binding: LaporanPenyaluranBinding(),
     ),
     GetPage(
       name: _Paths.qrScanner,

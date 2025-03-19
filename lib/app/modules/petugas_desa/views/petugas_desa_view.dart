@@ -179,18 +179,25 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.person,
-                    size: 40,
-                    color: AppTheme.primaryColor,
-                  ),
+                  backgroundImage: controller.user?.avatar != null &&
+                          controller.user!.avatar!.isNotEmpty
+                      ? NetworkImage(controller.user!.avatar!)
+                      : null,
+                  child: controller.user?.avatar == null ||
+                          controller.user!.avatar!.isEmpty
+                      ? const Icon(
+                          Icons.person,
+                          size: 40,
+                          color: AppTheme.primaryColor,
+                        )
+                      : null,
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  controller.nama,
+                  controller.user?.name ?? 'Petugas Desa',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -198,201 +205,104 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                   ),
                 ),
                 Text(
-                  'Petugas Desa',
+                  controller.user?.desa?.nama != null
+                      ? '${controller.user?.role} - ${controller.user!.desa!.nama}'
+                      : controller.user?.role ?? 'PETUGAS_DESA',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withAlpha(200),
                     fontSize: 14,
                   ),
                 ),
               ],
             ),
           ),
-          Obx(() => ListTile(
-                leading: const Icon(Icons.dashboard_outlined),
-                title: const Text('Dashboard'),
-                selected: controller.activeTabIndex.value == 0,
-                selectedColor: AppTheme.primaryColor,
-                onTap: () {
-                  controller.changeTab(0);
-                  Navigator.pop(context);
-                },
-              )),
-          Obx(() => ListTile(
-                leading: const Icon(Icons.calendar_today_outlined),
-                title: const Text('Penyaluran'),
-                selected: controller.activeTabIndex.value == 1,
-                selectedColor: AppTheme.primaryColor,
-                onTap: () {
-                  controller.changeTab(1);
-                  Navigator.pop(context);
-                },
-              )),
-          Obx(() => ListTile(
-                leading: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    const Icon(Icons.handshake_outlined),
-                    if (controller.jumlahMenunggu.value > 0)
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 12,
-                            minHeight: 12,
-                          ),
-                          child: Text(
-                            controller.jumlahMenunggu.value.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                title: const Text('Penitipan'),
-                selected: controller.activeTabIndex.value == 2,
-                selectedColor: AppTheme.primaryColor,
-                onTap: () {
-                  controller.changeTab(2);
-                  Navigator.pop(context);
-                },
-              )),
-          Obx(() {
-            final int jumlahPengaduanDiproses = controller.jumlahDiproses.value;
-
-            return ListTile(
-              leading: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Icon(Icons.report_problem_outlined),
-                  // Selalu tampilkan badge untuk debugging
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 12,
-                        minHeight: 12,
-                      ),
-                      child: Text(
-                        jumlahPengaduanDiproses.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              title: const Text('Pengaduan'),
-              selected: controller.activeTabIndex.value == 3,
-              selectedColor: AppTheme.primaryColor,
-              onTap: () {
-                controller.changeTab(3);
-                Navigator.pop(context);
-              },
-            );
-          }),
-          Obx(() => ListTile(
-                leading: const Icon(Icons.inventory_2_outlined),
-                title: const Text('Stok Bantuan'),
-                selected: controller.activeTabIndex.value == 4,
-                selectedColor: AppTheme.primaryColor,
-                onTap: () {
-                  controller.changeTab(4);
-                  Navigator.pop(context);
-                },
-              )),
-          const Divider(),
           ListTile(
-            leading: const Icon(Icons.people_outline),
-            title: const Text('Daftar Penerima'),
+            leading: const Icon(Icons.dashboard_outlined),
+            title: const Text('Dashboard'),
+            selected: controller.activeTabIndex.value == 0,
+            selectedColor: AppTheme.primaryColor,
             onTap: () {
-              Navigator.pop(context); // Tutup drawer terlebih dahulu
+              Navigator.pop(context);
+              controller.changeTab(0);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.handshake_outlined),
+            title: const Text('Penyaluran'),
+            selected: controller.activeTabIndex.value == 1,
+            selectedColor: AppTheme.primaryColor,
+            onTap: () {
+              Navigator.pop(context);
+              controller.changeTab(1);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.inventory_2_outlined),
+            title: const Text('Penitipan'),
+            selected: controller.activeTabIndex.value == 2,
+            selectedColor: AppTheme.primaryColor,
+            onTap: () {
+              Navigator.pop(context);
+              controller.changeTab(2);
+            },
+          ),
+          Obx(() => ListTile(
+                leading: controller.jumlahDiproses.value > 0
+                    ? Badge(
+                        label: Text(controller.jumlahDiproses.value.toString()),
+                        backgroundColor: Colors.red,
+                        child: const Icon(Icons.support_outlined),
+                      )
+                    : const Icon(Icons.support_outlined),
+                title: const Text('Pengaduan'),
+                selected: controller.activeTabIndex.value == 3,
+                selectedColor: AppTheme.primaryColor,
+                onTap: () {
+                  Navigator.pop(context);
+                  controller.changeTab(3);
+                },
+              )),
+          ListTile(
+            leading: const Icon(Icons.inventory_outlined),
+            title: const Text('Stok Bantuan'),
+            selected: controller.activeTabIndex.value == 4,
+            selectedColor: AppTheme.primaryColor,
+            onTap: () {
+              Navigator.pop(context);
+              controller.changeTab(4);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.person_add_outlined),
+            title: const Text('Kelola Penerima'),
+            onTap: () {
+              Navigator.pop(context);
               Get.toNamed('/daftar-penerima');
             },
           ),
           ListTile(
-            leading: const Icon(Icons.volunteer_activism_outlined),
-            title: const Text('Daftar Donatur'),
+            leading: const Icon(Icons.people_outlined),
+            title: const Text('Kelola Donatur'),
             onTap: () {
-              Navigator.pop(context); // Tutup drawer terlebih dahulu
+              Navigator.pop(context);
               Get.toNamed('/daftar-donatur');
             },
           ),
           ListTile(
-            leading: Stack(
-              alignment: Alignment.center,
-              children: [
-                const Icon(Icons.notifications_outlined),
-                if (controller.jumlahNotifikasiBelumDibaca.value > 0)
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 12,
-                        minHeight: 12,
-                      ),
-                      child: Text(
-                        controller.jumlahNotifikasiBelumDibaca.value.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            title: const Text('Notifikasi'),
+            leading: const Icon(Icons.description_outlined),
+            title: const Text('Laporan Penyaluran'),
             onTap: () {
-              Navigator.pop(context); // Tutup drawer terlebih dahulu
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotifikasiView(),
-                ),
-              );
+              Navigator.pop(context);
+              Get.toNamed('/laporan-penyaluran');
             },
           ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Profil'),
             onTap: () {
-              // Navigasi ke halaman profil
               Navigator.pop(context);
               Get.toNamed('/profile');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.settings_outlined),
-            title: const Text('Pengaturan'),
-            onTap: () {
-              // Navigasi ke halaman pengaturan
-              Navigator.pop(context);
             },
           ),
           ListTile(

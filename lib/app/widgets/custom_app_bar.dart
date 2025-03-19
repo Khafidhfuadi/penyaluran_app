@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:penyaluran_app/app/theme/app_colors.dart';
+import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 /// AppBar kustom yang digunakan di seluruh aplikasi
 ///
@@ -60,7 +60,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       centerTitle: centerTitle,
       elevation: elevation,
-      backgroundColor: backgroundColor ?? AppColors.primary,
+      backgroundColor: backgroundColor ?? AppTheme.primaryColor,
       foregroundColor: foregroundColor ?? Colors.white,
       leading: _buildLeading(),
       actions: actions,
