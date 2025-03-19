@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
 import 'package:penyaluran_app/app/widgets/bantuan_card.dart';
+import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class WargaPenerimaanView extends GetView<WargaDashboardController> {
   const WargaPenerimaanView({super.key});
@@ -23,15 +24,6 @@ class WargaPenerimaanView extends GetView<WargaDashboardController> {
               : _buildPenerimaanList(),
         );
       }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigasi ke halaman riwayat penerimaan
-          Get.toNamed('/riwayat-penyaluran');
-        },
-        backgroundColor: Colors.blue,
-        tooltip: 'Riwayat Penerimaan',
-        child: const Icon(Icons.history),
-      ),
     );
   }
 
@@ -43,13 +35,13 @@ class WargaPenerimaanView extends GetView<WargaDashboardController> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
+              color: AppTheme.primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.volunteer_activism,
               size: 80,
-              color: Colors.blue.shade400,
+              color: AppTheme.primaryColor,
             ),
           ),
           const SizedBox(height: 24),
@@ -82,6 +74,8 @@ class WargaPenerimaanView extends GetView<WargaDashboardController> {
             label: const Text('Muat Ulang'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

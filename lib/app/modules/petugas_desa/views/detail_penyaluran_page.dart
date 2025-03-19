@@ -37,7 +37,7 @@ class DetailPenyaluranPage extends StatelessWidget {
         title: const Text('Detail Penyaluran'),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: AppTheme.primaryColor),
           onPressed: () => Get.back(),
         ),
       ),
@@ -969,8 +969,14 @@ class DetailPenyaluranPage extends StatelessWidget {
               backgroundColor: AppTheme.successColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
+              // Tombol disabled jika belum semua penerima menerima bantuan
+              disabledBackgroundColor: Colors.grey.shade300,
+              disabledForegroundColor: Colors.grey.shade700,
             ),
-            onPressed: controller.selesaikanPenyaluran,
+            onPressed: controller.penerimaPenyaluran.every((penerima) =>
+                    penerima.statusPenerimaan?.toUpperCase() == 'DITERIMA')
+                ? controller.selesaikanPenyaluran
+                : null,
           ),
         ),
         const SizedBox(width: 12),

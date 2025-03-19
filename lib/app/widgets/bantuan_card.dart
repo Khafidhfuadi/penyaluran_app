@@ -112,6 +112,19 @@ class BantuanCard extends StatelessWidget {
                         vertical: 4,
                       ),
                     ),
+                    if (item.statusPenyaluran != null &&
+                        item.statusPenyaluran!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: _buildPenyaluranStatusBadge(
+                          item.statusPenyaluran!,
+                          fontSize: 10,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     Text(
                       formattedJumlah,
@@ -159,8 +172,14 @@ class BantuanCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  StatusBadge(
-                    status: item.statusPenerimaan ?? 'MENUNGGU',
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      StatusBadge(status: item.statusPenyaluran ?? ""),
+                      StatusBadge(
+                        status: item.statusPenerimaan ?? 'MENUNGGU',
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -272,6 +291,53 @@ class BantuanCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // Widget untuk menampilkan badge status penyaluran
+  Widget _buildPenyaluranStatusBadge(
+    String status, {
+    double fontSize = 12,
+    EdgeInsets padding =
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  }) {
+    Color statusColor;
+    String statusText;
+
+    switch (status.toUpperCase()) {
+      case 'DIJADWALKAN':
+      case 'DISETUJUI':
+        statusColor = Colors.blue;
+        statusText = 'Dijadwalkan';
+        break;
+      case 'TERLAKSANA':
+        statusColor = Colors.green;
+        statusText = 'Terlaksana';
+        break;
+      case 'BATALTERLAKSANA':
+        statusColor = Colors.red;
+        statusText = 'Dibatalkan';
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusText = status;
+    }
+
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: statusColor),
+      ),
+      child: Text(
+        statusText,
+        style: TextStyle(
+          color: statusColor,
+          fontWeight: FontWeight.bold,
+          fontSize: fontSize,
         ),
       ),
     );

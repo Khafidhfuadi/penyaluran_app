@@ -30,13 +30,13 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.report_problem,
+            Icons.check_circle_outline,
             size: 80,
             color: Colors.grey.shade400,
           ),
           const SizedBox(height: 16),
           Text(
-            'Belum Ada Pengaduan',
+            'Bagus!',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -45,25 +45,10 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Anda belum membuat pengaduan',
+            'Belum ada pengaduan yang dibuat',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade600,
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              // TODO: Implementasi navigasi ke halaman buat pengaduan
-              Get.toNamed('/buat-pengaduan');
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Buat Pengaduan Baru'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
             ),
           ),
         ],

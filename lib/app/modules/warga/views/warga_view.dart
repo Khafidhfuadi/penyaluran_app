@@ -108,16 +108,6 @@ class WargaView extends GetView<WargaDashboardController> {
                 badgeColor: Colors.orange,
                 onTap: () => controller.changeTab(2),
               ),
-              DrawerMenuItem(
-                icon: Icons.assignment_outlined,
-                title: 'Pengajuan Kelayakan',
-                onTap: () {
-                  // TODO: Navigasi ke halaman pengajuan kelayakan
-                  Get.toNamed('/pengajuan-kelayakan');
-                },
-                badgeCount: controller.totalPengajuanMenunggu.value,
-                badgeColor: Colors.blue,
-              ),
             ],
           )),
       body: Obx(() {
@@ -161,20 +151,6 @@ class WargaView extends GetView<WargaDashboardController> {
               ),
             ],
           )),
-      floatingActionButton: Obx(() {
-        // Tampilkan FAB hanya di halaman pengaduan
-        if (controller.activeTabIndex.value == 2) {
-          return FloatingActionButton(
-            onPressed: () {
-              // TODO: Implementasi navigasi ke halaman buat pengaduan
-              Get.toNamed('/buat-pengaduan');
-            },
-            backgroundColor: AppTheme.primaryColor,
-            child: const Icon(Icons.add),
-          );
-        }
-        return const SizedBox.shrink();
-      }),
     );
   }
 }

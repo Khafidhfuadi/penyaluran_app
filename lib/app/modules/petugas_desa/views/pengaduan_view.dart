@@ -321,8 +321,6 @@ class PengaduanView extends GetView<PengaduanController> {
     String formattedDate = '';
     if (item.tanggalPengaduan != null) {
       formattedDate = DateTimeHelper.formatDate(item.tanggalPengaduan);
-    } else if (item.createdAt != null) {
-      formattedDate = DateTimeHelper.formatDate(item.createdAt);
     }
 
     return Container(
@@ -452,7 +450,7 @@ class PengaduanView extends GetView<PengaduanController> {
                     child: _buildItemDetail(
                       context,
                       icon: Icons.calendar_today,
-                      label: 'Tanggal',
+                      label: 'Tanggal Pengaduan',
                       value: formattedDate,
                     ),
                   ),
@@ -631,7 +629,6 @@ class PengaduanView extends GetView<PengaduanController> {
                   tindakan: controller.tindakanController.text,
                   kategoriTindakan: 'VERIFIKASI_DATA',
                   statusTindakan: 'PROSES',
-                  prioritas: 'SEDANG',
                   catatan: controller.catatanController.text.isEmpty
                       ? null
                       : controller.catatanController.text,

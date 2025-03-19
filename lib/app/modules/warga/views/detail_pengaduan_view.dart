@@ -916,34 +916,10 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
                 ),
               ],
             ),
-
-            // Prioritas tindakan (jika ada)
-            if (tindakan.prioritas != null) ...[
-              const SizedBox(height: 8),
-              // Menggunakan StatusPill untuk prioritas tindakan
-              StatusPill(
-                status: tindakan.prioritasText,
-                backgroundColor: _getPriorityColor(tindakan.prioritas),
-                textColor: Colors.white,
-              ),
-            ],
           ],
         ),
       ),
     );
-  }
-
-  Color _getPriorityColor(String? priority) {
-    switch (priority) {
-      case 'TINGGI':
-        return Colors.red;
-      case 'SEDANG':
-        return Colors.orange;
-      case 'RENDAH':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
   }
 
   void showFullScreenImage(BuildContext context, String imageUrl) {

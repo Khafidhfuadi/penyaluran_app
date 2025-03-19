@@ -383,6 +383,9 @@ class JadwalPenyaluranController extends GetxController {
     required String lokasiPenyaluranId,
     required int jumlahPenerima,
     required DateTime? tanggalPenyaluran,
+    required double jumlahDiterimaPerOrang,
+    required String stokBantuanId,
+    required double totalStokDibutuhkan,
   }) async {
     isLoading.value = true;
     try {
@@ -427,12 +430,36 @@ class JadwalPenyaluranController extends GetxController {
           'stok_bantuan_id': skemaBantuanCache[skemaId]?.stokBantuanId,
           'status_penerimaan': 'BELUMMENERIMA',
           'qr_code_hash': qrCodeHash,
+          'jumlah_bantuan': jumlahDiterimaPerOrang,
         };
 
         // Simpan data penerima ke database
         await _supabaseService.client
             .from('penerima_penyaluran')
             .insert(penerimaPenyaluran);
+      }
+
+      // Update stok bantuan (kurangi dengan total stok yang dibutuhkan)
+      try {
+        // Dapatkan stok saat ini
+        final stokData = await _supabaseService.client
+            .from('stok_bantuan')
+            .select('total_stok')
+            .eq('id', stokBantuanId)
+            .single();
+
+        if (stokData != null && stokData['total_stok'] != null) {
+          final currentStok = stokData['total_stok'].toDouble();
+          final newStok = currentStok - totalStokDibutuhkan;
+
+          // Update stok bantuan dengan nilai baru
+          await _supabaseService.client
+              .from('stok_bantuan')
+              .update({'total_stok': newStok}).eq('id', stokBantuanId);
+        }
+      } catch (e) {
+        print('Error updating stok bantuan: $e');
+        // Tidak throw exception di sini karena penyaluran sudah disimpan
       }
 
       // Setelah berhasil menambahkan, refresh data

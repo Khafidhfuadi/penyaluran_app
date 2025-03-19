@@ -460,6 +460,92 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            if (pengaduan.fotoPengaduan != null &&
+                pengaduan.fotoPengaduan!.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Foto Pengaduan:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: pengaduan.fotoPengaduan!.length,
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            // Tampilkan gambar dalam ukuran penuh saat diklik
+                            Get.to(() => Scaffold(
+                                  appBar: AppBar(
+                                    title: const Text('Foto Pengaduan'),
+                                    backgroundColor: Colors.black,
+                                  ),
+                                  body: Center(
+                                    child: InteractiveViewer(
+                                      child: Image.network(
+                                        pengaduan.fotoPengaduan![index],
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                  ),
+                                  backgroundColor: Colors.black,
+                                ));
+                          },
+                          child: Container(
+                            width: 120,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                pengaduan.fotoPengaduan![index],
+                                fit: BoxFit.cover,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value:
+                                          loadingProgress.expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                      .cumulativeBytesLoaded /
+                                                  loadingProgress
+                                                      .expectedTotalBytes!
+                                              : null,
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey.shade200,
+                                    child: const Center(
+                                      child:
+                                          Icon(Icons.error, color: Colors.red),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             const SizedBox(height: 16),
             // Panel status pengaduan
             _buildStatusPanel(context, pengaduan),
@@ -1234,17 +1320,6 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                 ),
               ],
             ),
-
-            // Prioritas tindakan (jika ada)
-            if (tindakan.prioritas != null) ...[
-              const SizedBox(height: 8),
-              // Menggunakan StatusPill untuk prioritas tindakan
-              StatusPill(
-                status: tindakan.prioritasText,
-                backgroundColor: _getPriorityColor(tindakan.prioritas),
-                textColor: Colors.white,
-              ),
-            ],
             // Tampilkan tombol edit jika status PROSES
             if (tindakan.statusTindakan == 'PROSES') ...[
               const SizedBox(height: 8),
@@ -1288,24 +1363,10 @@ class DetailPengaduanView extends GetView<PengaduanController> {
     );
   }
 
-  Color _getPriorityColor(String? priority) {
-    switch (priority) {
-      case 'TINGGI':
-        return Colors.red;
-      case 'SEDANG':
-        return Colors.orange;
-      case 'RENDAH':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
   void _showTambahTindakanDialog(BuildContext context, String pengaduanId) {
     final formKey = GlobalKey<FormState>();
     final tindakanController = TextEditingController();
     String? selectedKategori;
-    String? selectedPrioritas;
     String selectedStatus = 'PROSES';
 
     final List<String> kategoriOptions = [
@@ -1326,26 +1387,11 @@ class DetailPengaduanView extends GetView<PengaduanController> {
       'PELAPORAN_KE_PIHAK_BERWENANG',
     ];
 
-    final List<String> prioritasOptions = [
-      'RENDAH',
-      'SEDANG',
-      'TINGGI',
-    ];
-
     // Konversi ke format DropdownItem
     final List<DropdownItem<String>> kategoriItems = kategoriOptions
         .map((kategori) => DropdownItem<String>(
               value: kategori,
               label: kategori.replaceAll('_', ' '),
-            ))
-        .toList();
-
-    // Konversi ke format DropdownItem untuk prioritas
-    final List<DropdownItem<String>> prioritasItems = prioritasOptions
-        .map((prioritas) => DropdownItem<String>(
-              value: prioritas,
-              label: prioritas[0].toUpperCase() +
-                  prioritas.substring(1).toLowerCase(),
             ))
         .toList();
 
@@ -1373,26 +1419,6 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Pilih kategori tindakan';
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                // Prioritas menggunakan DropdownInput
-                DropdownInput<String>(
-                  label: 'Prioritas',
-                  hint: 'Pilih prioritas tindakan',
-                  items: prioritasItems,
-                  value: selectedPrioritas,
-                  onChanged: (value) {
-                    selectedPrioritas = value;
-                  },
-                  required: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Pilih prioritas tindakan';
                     }
                     return null;
                   },
@@ -1433,7 +1459,6 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                         tindakan: tindakanController.text,
                         kategoriTindakan: selectedKategori ?? '',
                         statusTindakan: selectedStatus,
-                        prioritas: selectedPrioritas ?? '',
                         catatan: null,
                         hasilTindakan: null,
                         buktiTindakanPaths: [],
@@ -1466,7 +1491,6 @@ class DetailPengaduanView extends GetView<PengaduanController> {
     final hasilTindakanController =
         TextEditingController(text: tindakan.hasilTindakan);
     String? selectedKategori = tindakan.kategoriTindakan;
-    String? selectedPrioritas = tindakan.prioritas;
     String selectedStatus = 'SELESAI';
 
     // Gunakan List untuk bukti tindakan paths
@@ -1865,8 +1889,6 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                             kategoriTindakan: selectedKategori ??
                                 '', // Gunakan kategori yang sudah ada
                             statusTindakan: selectedStatus,
-                            prioritas: selectedPrioritas ??
-                                '', // Gunakan prioritas yang sudah ada
                             catatan: catatanController.text.isEmpty
                                 ? null
                                 : catatanController.text,

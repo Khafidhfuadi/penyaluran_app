@@ -30,6 +30,10 @@ class StatusBadge extends StatelessWidget {
       'TINDAKAN': Colors.orange,
       'SELESAI': Colors.green,
       'TERVERIFIKASI': Colors.green,
+      'BELUMMENERIMA': Colors.orange,
+      'DIJADWALKAN': Colors.blue,
+      'TERLAKSANA': Colors.purple,
+      'AKTIF': Colors.green,
     };
 
     // Default labels for common statuses
@@ -42,6 +46,10 @@ class StatusBadge extends StatelessWidget {
       'TINDAKAN': 'Tindakan',
       'SELESAI': 'Selesai',
       'TERVERIFIKASI': 'Terverifikasi',
+      'BELUMMENERIMA': 'Belum Menerima',
+      'DIJADWALKAN': 'Dijadwalkan',
+      'TERLAKSANA': 'Terlaksana',
+      'AKTIF': 'Aktif',
     };
 
     // Determine color and label based on status

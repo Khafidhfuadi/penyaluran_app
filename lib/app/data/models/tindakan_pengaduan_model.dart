@@ -6,7 +6,6 @@ class TindakanPengaduanModel {
   final String? tindakan;
   final String? catatan;
   final String? statusTindakan; // PROSES, SELESAI
-  final String? prioritas; // RENDAH, SEDANG, TINGGI
   final String? kategoriTindakan; // Kategori tindakan enum
   final String? petugasId;
   final String? verifikatorId;
@@ -27,7 +26,6 @@ class TindakanPengaduanModel {
     this.tindakan,
     this.catatan,
     this.statusTindakan,
-    this.prioritas,
     this.kategoriTindakan,
     this.petugasId,
     this.verifikatorId,
@@ -55,7 +53,6 @@ class TindakanPengaduanModel {
         tindakan: json["tindakan"],
         catatan: json["catatan"],
         statusTindakan: json["status_tindakan"],
-        prioritas: json["prioritas"],
         kategoriTindakan: json["kategori_tindakan"],
         petugasId: json["petugas_id"],
         verifikatorId: json["verifikator_id"],
@@ -76,9 +73,7 @@ class TindakanPengaduanModel {
         updatedAt: json["updated_at"] != null
             ? DateTime.parse(json["updated_at"])
             : null,
-        biayaTindakan: json["biaya_tindakan"] != null
-            ? double.parse(json["biaya_tindakan"].toString())
-            : null,
+        biayaTindakan: json["biaya_tindakan"]?.toDouble(),
         petugas: json["petugas"],
         verifikator: json["verifikator"],
       );
@@ -89,7 +84,6 @@ class TindakanPengaduanModel {
         "tindakan": tindakan,
         "catatan": catatan,
         "status_tindakan": statusTindakan,
-        "prioritas": prioritas,
         "kategori_tindakan": kategoriTindakan,
         "petugas_id": petugasId,
         "verifikator_id": verifikatorId,
@@ -134,20 +128,6 @@ class TindakanPengaduanModel {
         return 'Selesai';
       default:
         return statusTindakan ?? 'Tidak Diketahui';
-    }
-  }
-
-  // Getter untuk mendapatkan prioritas yang lebih user-friendly
-  String get prioritasText {
-    switch (prioritas) {
-      case 'RENDAH':
-        return 'Prioritas Rendah';
-      case 'SEDANG':
-        return 'Prioritas Sedang';
-      case 'TINGGI':
-        return 'Prioritas Tinggi';
-      default:
-        return prioritas ?? 'Tidak Diketahui';
     }
   }
 

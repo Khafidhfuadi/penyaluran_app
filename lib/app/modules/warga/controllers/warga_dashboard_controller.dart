@@ -110,33 +110,37 @@ class WargaDashboardController extends GetxController {
             ),
             penyaluran_bantuan:penyaluran_bantuan_id(
               *,
-              lokasi_penyaluran(*)
+              lokasi_penyaluran(*),
+              kategori_bantuan(*)
             )
           ''').eq('warga_id', wargaId).order('created_at', ascending: false);
 
       final List<PenerimaPenyaluranModel> penerima = [];
+
+      // Loop melalui setiap data penerima
       for (var item in response) {
+        // Pastikan data penerima sesuai dengan tipe data yang diharapkan
         Map<String, dynamic> sanitizedPenerimaData =
             Map<String, dynamic>.from(item);
 
+        // Konversi jumlah_bantuan ke double jika bertipe String
         if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
-          var jumlahBantuan = double.tryParse(
-              sanitizedPenerimaData['jumlah_bantuan'] as String);
-          sanitizedPenerimaData['jumlah_bantuan'] = jumlahBantuan;
+          sanitizedPenerimaData['jumlah_bantuan'] =
+              double.tryParse(sanitizedPenerimaData['jumlah_bantuan']) ?? 0.0;
         }
 
-        // Tambahkan informasi apakah bantuan uang atau bukan dan satuan
+        // Ambil data dari stok bantuan jika tersedia
         if (sanitizedPenerimaData['stok_bantuan'] != null) {
-          // Cek apakah bantuan uang
+          // Cek apakah bantuan berupa uang atau barang
           final isUang =
               sanitizedPenerimaData['stok_bantuan']['is_uang'] ?? false;
           sanitizedPenerimaData['is_uang'] = isUang;
 
-          // Ambil satuan
+          // Ambil satuan bantuan
           final satuan = sanitizedPenerimaData['stok_bantuan']['satuan'] ?? '';
           sanitizedPenerimaData['satuan'] = satuan;
 
-          // Ambil nama kategori bantuan jika tersedia
+          // Ambil nama kategori bantuan
           if (sanitizedPenerimaData['stok_bantuan']['kategori_bantuan'] !=
               null) {
             final kategoriNama = sanitizedPenerimaData['stok_bantuan']
@@ -146,7 +150,7 @@ class WargaDashboardController extends GetxController {
           }
         }
 
-        // Tambahkan informasi dari penyaluran bantuan
+        // Ambil data dari penyaluran bantuan jika tersedia
         if (sanitizedPenerimaData['penyaluran_bantuan'] != null) {
           // Ambil nama penyaluran
           final namaPenyaluran =
@@ -157,6 +161,11 @@ class WargaDashboardController extends GetxController {
           final deskripsiPenyaluran =
               sanitizedPenerimaData['penyaluran_bantuan']['deskripsi'] ?? '';
           sanitizedPenerimaData['deskripsi_penyaluran'] = deskripsiPenyaluran;
+
+          // Ambil status penyaluran
+          final statusPenyaluran =
+              sanitizedPenerimaData['penyaluran_bantuan']['status'] ?? '';
+          sanitizedPenerimaData['status_penyaluran'] = statusPenyaluran;
 
           // Ambil lokasi penyaluran jika tersedia
           if (sanitizedPenerimaData['penyaluran_bantuan']
@@ -171,6 +180,19 @@ class WargaDashboardController extends GetxController {
                     ['lokasi_penyaluran']['alamat_lengkap'] ??
                 '';
             sanitizedPenerimaData['lokasi_penyaluran_alamat'] = lokasiAlamat;
+          }
+
+          // Ambil kategori bantuan dari relasi langsung jika ada
+          if (sanitizedPenerimaData['penyaluran_bantuan']['kategori_bantuan'] !=
+              null) {
+            final kategoriNama = sanitizedPenerimaData['penyaluran_bantuan']
+                    ['kategori_bantuan']['nama'] ??
+                '';
+            // Jika belum ada kategori_nama dari stok_bantuan, gunakan dari relasi langsung
+            if (sanitizedPenerimaData['kategori_nama'] == null ||
+                sanitizedPenerimaData['kategori_nama'].isEmpty) {
+              sanitizedPenerimaData['kategori_nama'] = kategoriNama;
+            }
           }
         }
 
@@ -394,6 +416,76 @@ class WargaDashboardController extends GetxController {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    }
+  }
+
+  // Metode untuk menambahkan pengaduan baru
+  Future<bool> addPengaduan({
+    required String judul,
+    required String deskripsi,
+    required String penerimaPenyaluranId,
+    List<String> fotoPengaduanPaths = const [],
+  }) async {
+    try {
+      isLoading.value = true;
+
+      // Cari warga_id berdasarkan user_id
+      final wargaData = await _supabaseService.getWargaByUserId();
+      if (wargaData == null) {
+        throw Exception('Data warga tidak ditemukan');
+      }
+
+      final String wargaId = wargaData['id'];
+
+      // Upload foto pengaduan jika ada
+      List<String> fotoPengaduanUrls = [];
+      if (fotoPengaduanPaths.isNotEmpty) {
+        fotoPengaduanUrls = await _supabaseService.uploadMultipleFiles(
+                fotoPengaduanPaths, 'pengaduan', 'foto_pengaduan') ??
+            [];
+      }
+
+      // Buat objek pengaduan
+      final Map<String, dynamic> pengaduanData = {
+        'judul': judul,
+        'deskripsi': deskripsi,
+        'status': 'MENUNGGU',
+        'warga_id': wargaId,
+        'penerima_penyaluran_id': penerimaPenyaluranId,
+        'foto_pengaduan': fotoPengaduanUrls,
+        'tanggal_pengaduan': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      // Simpan pengaduan ke Supabase
+      await _supabaseService.client.from('pengaduan').insert(pengaduanData);
+
+      // Refresh data pengaduan
+      await fetchPengaduan();
+
+      Get.snackbar(
+        'Berhasil',
+        'Pengaduan berhasil dibuat dan akan segera diproses',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+
+      return true;
+    } catch (e) {
+      print('Error membuat pengaduan: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal membuat pengaduan: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
     }
   }
 }

@@ -11,6 +11,7 @@ class SkemaBantuanModel {
   final DateTime? updatedAt;
   final String? stokBantuanId;
   final String? kategoriBantuanId;
+  final double? jumlahDiterimaPerOrang;
 
   SkemaBantuanModel({
     this.id,
@@ -23,6 +24,7 @@ class SkemaBantuanModel {
     this.updatedAt,
     this.stokBantuanId,
     this.kategoriBantuanId,
+    this.jumlahDiterimaPerOrang,
   });
 
   factory SkemaBantuanModel.fromRawJson(String str) =>
@@ -46,6 +48,9 @@ class SkemaBantuanModel {
             : null,
         stokBantuanId: json["stok_bantuan_id"],
         kategoriBantuanId: json["kategori_bantuan_id"],
+        jumlahDiterimaPerOrang: json["jumlah_diterima_per_orang"] != null
+            ? json["jumlah_diterima_per_orang"].toDouble()
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
@@ -59,5 +64,6 @@ class SkemaBantuanModel {
         "updated_at": updatedAt?.toIso8601String(),
         "stok_bantuan_id": stokBantuanId,
         "kategori_bantuan_id": kategoriBantuanId,
+        "jumlah_diterima_per_orang": jumlahDiterimaPerOrang,
       };
 }
