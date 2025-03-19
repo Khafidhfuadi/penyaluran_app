@@ -445,4 +445,57 @@ class DetailPenyaluranController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  // Metode untuk verifikasi penerima berdasarkan QR code
+  Future<bool> verifikasiPenerimaByQrCode(
+      String penyaluranId, String qrHash) async {
+    try {
+      isProcessing.value = true;
+
+      // Cari penerima dengan QR hash yang sesuai
+      final data = await _supabaseService.client
+          .from('penerima_penyaluran')
+          .select('*, warga:warga_id(*)')
+          .eq('penyaluran_bantuan_id', penyaluranId)
+          .eq('qr_code_hash', qrHash)
+          .single();
+
+      if (data != null) {
+        // Jika penerima ditemukan, konversi ke model
+        final Map<String, dynamic> sanitizedPenerimaData =
+            Map<String, dynamic>.from(data);
+
+        // Konversi jumlah_bantuan ke double jika bertipe String
+        if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
+          sanitizedPenerimaData['jumlah_bantuan'] = double.tryParse(
+              sanitizedPenerimaData['jumlah_bantuan'] as String);
+        }
+
+        // Konversi data ke model
+        final penerima =
+            PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData);
+
+        // Set isProcessing ke false sebelum navigasi untuk menghindari masalah loading
+        isProcessing.value = false;
+
+        // Navigasi ke halaman konfirmasi dengan data terbaru
+        await Get.toNamed('/petugas-desa/konfirmasi-penerima/${penerima.id}',
+            arguments: {
+              'penerima': penerima,
+              'tanggal_penyaluran': penyaluran.value?.tanggalPenyaluran
+            });
+
+        // Refresh data
+        await refreshData();
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      print('Error verifikasi QR code: $e');
+      return false;
+    } finally {
+      isProcessing.value = false;
+    }
+  }
 }

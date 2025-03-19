@@ -9,6 +9,8 @@ import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class JadwalPenyaluranController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
@@ -415,43 +417,59 @@ class JadwalPenyaluranController extends GetxController {
 
       // Buat data penerima penyaluran untuk setiap pengajuan yang disetujui
       for (var pengajuan in pengajuanData) {
+        // Generate QR code hash unik untuk setiap penerima
+        final String qrCodeHash =
+            generateQrCodeHash(penyaluranId, pengajuan['warga_id']);
+
         final penerimaPenyaluran = {
           'penyaluran_bantuan_id': penyaluranId,
           'warga_id': pengajuan['warga_id'],
           'stok_bantuan_id': skemaBantuanCache[skemaId]?.stokBantuanId,
-          'status_penerimaan': 'MENUNGGU',
+          'status_penerimaan': 'BELUMMENERIMA',
+          'qr_code_hash': qrCodeHash,
         };
 
+        // Simpan data penerima ke database
         await _supabaseService.client
             .from('penerima_penyaluran')
             .insert(penerimaPenyaluran);
       }
 
-      // Refresh data
+      // Setelah berhasil menambahkan, refresh data
       await loadJadwalData();
+      await loadPermintaanPenjadwalanData();
 
-      // Kembali ke halaman sebelumnya
-      Get.back();
-
-      // Tampilkan notifikasi sukses
+      // Tampilkan pesan sukses
       Get.snackbar(
         'Sukses',
-        'Penyaluran berhasil ditambahkan',
-        snackPosition: SnackPosition.TOP,
+        'Jadwal penyaluran bantuan telah dibuat',
+        snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
     } catch (e) {
-      print('Error menambahkan penyaluran: $e');
+      print('Error: $e');
       Get.snackbar(
-        'Error',
-        'Gagal menambahkan penyaluran: ${e.toString()}',
-        snackPosition: SnackPosition.TOP,
+        'Gagal',
+        'Terjadi kesalahan saat menambahkan jadwal penyaluran',
+        snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // Fungsi untuk generate hash QR code berdasarkan ID penyaluran dan ID warga
+  String generateQrCodeHash(String penyaluranId, String wargaId) {
+    // Kombinasikan ID penyaluran dan ID warga dengan timestamp untuk keunikan
+    final String combinedData =
+        '$penyaluranId-$wargaId-${DateTime.now().millisecondsSinceEpoch}';
+    // Gunakan SHA-256 untuk menghasilkan hash yang aman
+    final bytes = utf8.encode(combinedData);
+    final hash = sha256.convert(bytes);
+    // Kembalikan representasi string dari hash
+    return hash.toString();
   }
 }

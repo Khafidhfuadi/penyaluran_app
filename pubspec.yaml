@@ -72,6 +72,15 @@ dependencies:
   flutter_staggered_animations: ^1.1.1
   timeline_tile: ^2.0.0
 
+  # Library untuk QR code
+  qr_flutter: ^4.1.0
+  qr_code_scanner_plus: ^2.0.10+1
+
+  # Untuk URL launcher
+  url_launcher: ^6.2.5
+  # Untuk fungsi hash
+  crypto: ^3.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

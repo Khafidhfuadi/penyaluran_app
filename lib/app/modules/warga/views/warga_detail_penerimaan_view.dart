@@ -5,6 +5,7 @@ import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/widgets/status_badge.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
   const WargaDetailPenerimaanView({super.key});
@@ -13,6 +14,11 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
   Widget build(BuildContext context) {
     final Map<String, dynamic> args = Get.arguments ?? {};
     final id = args['id'];
+
+    // Segera muat ulang data penerimaan ketika halaman dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.fetchPenerimaPenyaluran();
+    });
 
     if (id == null) {
       return Scaffold(
@@ -28,64 +34,67 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
     // Konversi id ke string untuk memastikan kompatibilitas dengan model
     final String penyaluranId = id.toString();
 
-    // Cari data penerimaan berdasarkan ID
-    final PenerimaPenyaluranModel? penyaluran = controller.penerimaPenyaluran
-        .firstWhereOrNull((item) => item.id == penyaluranId);
+    // Gunakan GetBuilder untuk memastikan widget dibangun ulang ketika data berubah
+    return Obx(() {
+      // Cari data penerimaan berdasarkan ID
+      final PenerimaPenyaluranModel? penyaluran = controller.penerimaPenyaluran
+          .firstWhereOrNull((item) => item.id == penyaluranId);
 
-    if (penyaluran == null) {
+      if (penyaluran == null) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Detail Penerimaan'),
+          ),
+          body: const Center(
+            child: Text('Data penerimaan tidak ditemukan'),
+          ),
+        );
+      }
+
+      final bool isDiterima = penyaluran.statusPenerimaan == 'DITERIMA';
+
       return Scaffold(
         appBar: AppBar(
           title: const Text('Detail Penerimaan'),
+          elevation: 0,
+          backgroundColor: Get.theme.primaryColor,
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Get.back(),
+          ),
         ),
-        body: const Center(
-          child: Text('Data penerimaan tidak ditemukan'),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Get.theme.primaryColor.withOpacity(0.05),
+                Colors.white,
+              ],
+            ),
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeaderSection(penyaluran),
+                const SizedBox(height: 16),
+                _buildDetailSection(penyaluran),
+                const SizedBox(height: 16),
+                _buildLocationSection(penyaluran),
+                const SizedBox(height: 16),
+                if (isDiterima) _buildBuktiPenerimaanSection(penyaluran),
+                if (isDiterima) const SizedBox(height: 16),
+                _buildAdditionalInfoSection(penyaluran),
+              ],
+            ),
+          ),
         ),
       );
-    }
-
-    final bool isDiterima = penyaluran.statusPenerimaan == 'DITERIMA';
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Penerimaan'),
-        elevation: 0,
-        backgroundColor: Get.theme.primaryColor,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Get.back(),
-        ),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Get.theme.primaryColor.withOpacity(0.05),
-              Colors.white,
-            ],
-          ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderSection(penyaluran),
-              const SizedBox(height: 16),
-              _buildDetailSection(penyaluran),
-              const SizedBox(height: 16),
-              _buildLocationSection(penyaluran),
-              const SizedBox(height: 16),
-              if (isDiterima) _buildBuktiPenerimaanSection(penyaluran),
-              if (isDiterima) const SizedBox(height: 16),
-              _buildAdditionalInfoSection(penyaluran),
-            ],
-          ),
-        ),
-      ),
-    );
+    });
   }
 
   Widget _buildHeaderSection(PenerimaPenyaluranModel penyaluran) {
@@ -577,9 +586,93 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
                       .format(penyaluran.tanggalPenerimaan!)
                   : 'Tidak tersedia',
             ),
+
+            // Tambahkan QR Code untuk verifikasi
+            if (penyaluran.qrCodeHash != null &&
+                penyaluran.qrCodeHash!.isNotEmpty) ...[
+              const Divider(height: 24),
+              _buildQrCodeSection(penyaluran),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  // Tambahkan widget untuk menampilkan QR Code
+  Widget _buildQrCodeSection(PenerimaPenyaluranModel penyaluran) {
+    // Pastikan menggunakan data terbaru dari model dan cetak ke log untuk debugging
+    final qrData = penyaluran.qrCodeHash ?? 'invalid-qr-code';
+    print('QR Code Hash: $qrData'); // Log untuk debugging
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.qr_code,
+              color: Get.theme.primaryColor,
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'QR Code Verifikasi',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.2),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Gunakan UniqueKey() untuk memaksa rebuild widget QR code
+                QrImageView(
+                  key: UniqueKey(),
+                  data: qrData,
+                  version: QrVersions.auto,
+                  size: 200.0,
+                  backgroundColor: Colors.white,
+                  errorStateBuilder: (cxt, err) {
+                    return const Center(
+                      child: Text(
+                        "QR Code tidak tersedia",
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Tunjukkan QR Code ini kepada petugas untuk verifikasi penerimaan',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -22,6 +22,7 @@ class PenerimaPenyaluranModel {
   final String? deskripsiPenyaluran; // Deskripsi penyaluran
   final String? lokasiPenyaluranNama; // Nama lokasi penyaluran
   final String? lokasiPenyaluranAlamat; // Alamat lokasi penyaluran
+  final String? qrCodeHash; // Hash untuk QR code
 
   PenerimaPenyaluranModel({
     this.id,
@@ -45,6 +46,7 @@ class PenerimaPenyaluranModel {
     this.deskripsiPenyaluran,
     this.lokasiPenyaluranNama,
     this.lokasiPenyaluranAlamat,
+    this.qrCodeHash,
   });
 
   factory PenerimaPenyaluranModel.fromRawJson(String str) =>
@@ -79,6 +81,7 @@ class PenerimaPenyaluranModel {
         deskripsiPenyaluran: json["deskripsi_penyaluran"],
         lokasiPenyaluranNama: json["lokasi_penyaluran_nama"],
         lokasiPenyaluranAlamat: json["lokasi_penyaluran_alamat"],
+        qrCodeHash: json["qr_code_hash"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -103,5 +106,6 @@ class PenerimaPenyaluranModel {
         "deskripsi_penyaluran": deskripsiPenyaluran,
         "lokasi_penyaluran_nama": lokasiPenyaluranNama,
         "lokasi_penyaluran_alamat": lokasiPenyaluranAlamat,
+        "qr_code_hash": qrCodeHash,
       };
 }

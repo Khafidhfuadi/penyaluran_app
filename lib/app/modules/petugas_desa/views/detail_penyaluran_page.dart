@@ -6,6 +6,8 @@ import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerima_page.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/qr_scanner_page.dart';
 
 class DetailPenyaluranPage extends StatelessWidget {
   final controller = Get.put(DetailPenyaluranController());
@@ -75,20 +77,31 @@ class DetailPenyaluranPage extends StatelessWidget {
           ),
         );
       }),
-      floatingActionButton: Obx(() => showScrollToTop.value
-          ? FloatingActionButton(
-              mini: true,
-              backgroundColor: AppTheme.primaryColor,
-              child: const Icon(Icons.arrow_upward),
-              onPressed: () {
-                scrollController.animateTo(
-                  0,
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeInOut,
-                );
-              },
-            )
-          : const SizedBox.shrink()),
+      floatingActionButton: Obx(() {
+        final status = controller.penyaluran.value?.status?.toUpperCase() ?? '';
+        if (status == 'AKTIF') {
+          return FloatingActionButton(
+            backgroundColor: AppTheme.primaryColor,
+            onPressed: () => _showQrCodeScanner(context),
+            tooltip: 'Scan QR Code',
+            child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+          );
+        }
+        return showScrollToTop.value
+            ? FloatingActionButton(
+                mini: true,
+                backgroundColor: AppTheme.primaryColor,
+                child: const Icon(Icons.arrow_upward),
+                onPressed: () {
+                  scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                },
+              )
+            : const SizedBox.shrink();
+      }),
       bottomNavigationBar: Obx(() {
         final status = controller.penyaluran.value?.status?.toUpperCase() ?? '';
         if (status == 'AKTIF' ||
@@ -749,6 +762,18 @@ class DetailPenyaluranPage extends StatelessWidget {
     );
   }
 
+  // Method untuk mendapatkan warna status
+  Color _getStatusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'DITERIMA':
+        return AppTheme.successColor;
+      case 'BELUMMENERIMA':
+        return AppTheme.warningColor;
+      default:
+        return Colors.grey;
+    }
+  }
+
   Widget _buildPenerimaItem(
       BuildContext context, PenerimaPenyaluranModel item) {
     final warga = item.warga;
@@ -844,52 +869,6 @@ class DetailPenyaluranPage extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChipNew(String status) {
-    Color backgroundColor;
-    Color textColor = Colors.white;
-    String statusText = _getStatusPenerimaanText(status);
-    IconData iconData;
-
-    // Konversi status ke format yang diinginkan
-    if (status.toUpperCase() == 'DITERIMA') {
-      backgroundColor = AppTheme.successColor;
-      statusText = 'Sudah Menerima';
-      iconData = Icons.check_circle;
-    } else {
-      // Semua status selain DITERIMA dianggap sebagai BELUMMENERIMA
-      backgroundColor = AppTheme.warningColor;
-      statusText = 'Belum Menerima';
-      iconData = Icons.pending;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            iconData,
-            color: textColor,
-            size: 12,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            statusText,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1111,8 +1090,9 @@ class DetailPenyaluranPage extends StatelessWidget {
     );
   }
 
-  void _showDetailPenerima(
+  void _showDetailPenerimaan(
       BuildContext context, PenerimaPenyaluranModel penerima) {
+    // Tampilkan detail penerimaan menggunakan bottom sheet
     final warga = penerima.warga;
     final bool sudahMenerima =
         penerima.statusPenerimaan?.toUpperCase() == 'DITERIMA';
@@ -1125,7 +1105,7 @@ class DetailPenyaluranPage extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (BuildContext context) {
         return Container(
           padding: const EdgeInsets.all(20),
           constraints: BoxConstraints(
@@ -1185,7 +1165,26 @@ class DetailPenyaluranPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          _buildStatusChipNew(penerima.statusPenerimaan ?? '-'),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: statusColor.withOpacity(0.3)),
+                            ),
+                            child: Text(
+                              sudahMenerima
+                                  ? 'Sudah Menerima'
+                                  : 'Belum Menerima',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: statusColor,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1366,25 +1365,26 @@ class DetailPenyaluranPage extends StatelessWidget {
 
                 // Tombol tutup
                 SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade200,
-                        foregroundColor: Colors.black87,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade200,
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        'Tutup',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    ),
+                    child: const Text(
+                      'Tutup',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                    )),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -1526,5 +1526,69 @@ class DetailPenyaluranPage extends StatelessWidget {
     }
 
     return filteredList;
+  }
+
+  // Fungsi untuk membuka scanner QR code
+  void _showQrCodeScanner(BuildContext context) async {
+    if (controller.penyaluran.value?.id == null) return;
+
+    final result = await Get.to(
+      () => QrScannerPage(
+        penyaluranId: controller.penyaluran.value!.id!,
+      ),
+    );
+
+    if (result == true) {
+      // Refresh data setelah kembali dari scanner jika berhasil
+      await controller.refreshData();
+      Get.snackbar(
+        'Berhasil',
+        'Penerima berhasil diverifikasi',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Widget untuk menampilkan QR Code (dikosongkan untuk petugas desa)
+  Widget _buildQrCodeSection(PenerimaPenyaluranModel penerima) {
+    // Widget QR Code tetap dibuat tapi tidak digunakan di petugas desa
+    return const SizedBox.shrink();
+  }
+
+  // Widget untuk status chip baru
+  Widget _buildStatusChipNew(String status) {
+    final Color statusColor;
+    final String statusText;
+
+    if (status.toUpperCase() == 'DITERIMA') {
+      statusColor = AppTheme.successColor;
+      statusText = 'Sudah Menerima';
+    } else {
+      statusColor = AppTheme.warningColor;
+      statusText = 'Belum Menerima';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
+      ),
+      child: Text(
+        statusText,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: statusColor,
+        ),
+      ),
+    );
+  }
+
+  void _showDetailPenerima(
+      BuildContext context, PenerimaPenyaluranModel penerima) {
+    _showDetailPenerimaan(context, penerima);
   }
 }

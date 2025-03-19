@@ -15,6 +15,8 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_penyaluran_
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/penyaluran_binding.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_pengaduan_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/riwayat_pengaduan_binding.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/qr_scanner_page.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerima_page.dart';
 
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/penerima_binding.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/donatur_binding.dart';
@@ -145,6 +147,19 @@ class AppPages {
       name: _Paths.riwayatPengaduan,
       page: () => const RiwayatPengaduanView(),
       binding: RiwayatPengaduanBinding(),
+    ),
+    GetPage(
+      name: _Paths.qrScanner,
+      page: () => QrScannerPage(penyaluranId: Get.parameters['id'] ?? ''),
+      binding: PenyaluranBinding(),
+    ),
+    GetPage(
+      name: _Paths.konfirmasiPenerimaQr,
+      page: () => KonfirmasiPenerimaPage(
+        penerima: Get.arguments['penerima'],
+        tanggalPenyaluran: Get.arguments['tanggal_penyaluran'],
+      ),
+      binding: PenyaluranBinding(),
     ),
   ];
 }

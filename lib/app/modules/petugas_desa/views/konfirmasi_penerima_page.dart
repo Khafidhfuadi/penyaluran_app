@@ -29,6 +29,7 @@ class KonfirmasiPenerimaPage extends StatefulWidget {
 }
 
 class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
+  late PenerimaPenyaluranModel penerima;
   final controller = Get.find<DetailPenyaluranController>();
   final ImagePicker _picker = ImagePicker();
   File? _buktiPenerimaan;
@@ -47,6 +48,16 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
   Uint8List? _signatureImage;
 
   @override
+  void initState() {
+    super.initState();
+    // Menggunakan data penerima yang diberikan dari arguments
+    penerima = widget.penerima;
+    print('KonfirmasiPenerimaPage - ID Penerima: ${penerima.id}');
+    print(
+        'KonfirmasiPenerimaPage - Nama Penerima: ${penerima.warga?['nama_lengkap']}');
+  }
+
+  @override
   void dispose() {
     // Pastikan controller signature dibersihkan
     _signatureController.dispose();
@@ -55,7 +66,7 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
 
   @override
   Widget build(BuildContext context) {
-    final warga = widget.penerima.warga;
+    final warga = penerima.warga;
 
     return Scaffold(
       appBar: AppBar(
@@ -66,40 +77,38 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
           onPressed: () => Get.back(),
         ),
       ),
-      body: Obx(
-        () => controller.isProcessing.value || _isLoading
-            ? const Center(
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Sedang memproses konfirmasi...'),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Sedang memproses konfirmasi...'),
+                    _buildDetailPenerimaSection(warga),
+                    const SizedBox(height: 16),
+                    _buildDetailBantuanSection(),
+                    const SizedBox(height: 16),
+                    _buildFotoBuktiSection(),
+                    const SizedBox(height: 16),
+                    _buildTandaTanganSection(),
+                    const SizedBox(height: 16),
+                    _buildFormPersetujuanSection(),
+                    const SizedBox(height: 24),
+                    _buildKonfirmasiButton(),
                   ],
                 ),
-              )
-            : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildDetailPenerimaSection(warga),
-                      const SizedBox(height: 16),
-                      _buildDetailBantuanSection(),
-                      const SizedBox(height: 16),
-                      _buildFotoBuktiSection(),
-                      const SizedBox(height: 16),
-                      _buildTandaTanganSection(),
-                      const SizedBox(height: 16),
-                      _buildFormPersetujuanSection(),
-                      const SizedBox(height: 24),
-                      _buildKonfirmasiButton(),
-                    ],
-                  ),
-                ),
               ),
-      ),
+            ),
     );
   }
 
@@ -155,6 +164,9 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
               ],
             ),
             const Divider(),
+
+            //nama lengkap
+            _buildInfoRow('Nama Lengkap', warga?['nama_lengkap'] ?? 'Bajiyadi'),
 
             // NIK
             _buildInfoRow('NIK', warga?['nik'] ?? '3201020107030010'),
@@ -215,6 +227,8 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
     String satuan = '';
     if (widget.bentukBantuan?.satuan != null) {
       satuan = widget.bentukBantuan!.satuan!;
+    } else if (penerima.satuan != null) {
+      satuan = penerima.satuan!;
     } else {
       // Default satuan jika tidak ada
       satuan = 'Kg';
@@ -227,8 +241,33 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
       final waktuSelesai = DateTimeHelper.formatTime(
           widget.tanggalPenyaluran!.add(const Duration(hours: 1)));
       tanggalWaktuPenyaluran = '$tanggal $waktuMulai-$waktuSelesai';
+    } else if (penerima.penyaluranBantuan != null &&
+        penerima.penyaluranBantuan!['tanggal_penyaluran'] != null) {
+      final tanggalPenyaluran =
+          DateTime.parse(penerima.penyaluranBantuan!['tanggal_penyaluran']);
+      final tanggal = DateTimeHelper.formatDate(tanggalPenyaluran);
+      final waktuMulai = DateTimeHelper.formatTime(tanggalPenyaluran);
+      final waktuSelesai = DateTimeHelper.formatTime(
+          tanggalPenyaluran.add(const Duration(hours: 1)));
+      tanggalWaktuPenyaluran = '$tanggal $waktuMulai-$waktuSelesai';
     } else {
       tanggalWaktuPenyaluran = '09 April 2025 13:00-14:00';
+    }
+
+    // Ambil nama bantuan dari model jika tersedia
+    String namaBantuan = 'Beras';
+    if (widget.bentukBantuan?.nama != null) {
+      namaBantuan = widget.bentukBantuan!.nama!;
+    } else if (penerima.kategoriNama != null) {
+      namaBantuan = penerima.kategoriNama!;
+    }
+
+    // Ambil jumlah bantuan
+    String jumlahBantuan = '5';
+    if (widget.jumlahBantuan != null) {
+      jumlahBantuan = widget.jumlahBantuan!;
+    } else if (penerima.jumlahBantuan != null) {
+      jumlahBantuan = penerima.jumlahBantuan.toString();
     }
 
     return Card(
@@ -252,13 +291,11 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
             const SizedBox(height: 16),
 
             // Bentuk Bantuan
-            _buildInfoRow(
-                'Bentuk Bantuan', widget.bentukBantuan?.nama ?? 'Beras'),
+            _buildInfoRow('Bentuk Bantuan', namaBantuan),
             const Divider(),
 
             // Nilai Bantuan
-            _buildInfoRow(
-                'Nilai Bantuan', '${widget.jumlahBantuan ?? '5'}$satuan'),
+            _buildInfoRow('Nilai Bantuan', '$jumlahBantuan$satuan'),
             const Divider(),
 
             // Tanggal Penyaluran
@@ -654,39 +691,62 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
     File? signatureFile;
 
     try {
-      String imageUrl;
-      String signatureUrl;
+      String imageUrl = '';
+      String signatureUrl = '';
 
       // Upload bukti penerimaan
-      imageUrl = await controller.uploadBuktiPenerimaan(_buktiPenerimaan!.path);
+      try {
+        imageUrl =
+            await controller.uploadBuktiPenerimaan(_buktiPenerimaan!.path);
+        print('Berhasil upload bukti penerimaan: $imageUrl');
+      } catch (e) {
+        // Jika upload bukti penerimaan gagal, tampilkan pesan dan hentikan proses
+        print('Error upload bukti penerimaan: $e');
+        throw Exception('Gagal mengupload bukti penerimaan: $e');
+      }
 
       // Simpan tanda tangan ke file sementara dan upload
-      tempDir = await Directory.systemTemp.createTemp('signature');
-      signatureFile = File('${tempDir.path}/signature.png');
-      await signatureFile.writeAsBytes(_signatureImage!);
+      try {
+        tempDir = await Directory.systemTemp.createTemp('signature');
+        signatureFile = File('${tempDir.path}/signature.png');
+        await signatureFile.writeAsBytes(_signatureImage!);
 
-      print('Signature file path: ${signatureFile.path}');
-      print('Signature file exists: ${signatureFile.existsSync()}');
-      print('Signature file size: ${signatureFile.lengthSync()} bytes');
+        print('Signature file path: ${signatureFile.path}');
+        print('Signature file exists: ${signatureFile.existsSync()}');
+        print('Signature file size: ${signatureFile.lengthSync()} bytes');
 
-      signatureUrl = await controller.uploadBuktiPenerimaan(
-        signatureFile.path,
-        isTandaTangan: true,
-      );
+        signatureUrl = await controller.uploadBuktiPenerimaan(
+          signatureFile.path,
+          isTandaTangan: true,
+        );
+        print('Berhasil upload tanda tangan: $signatureUrl');
+      } catch (e) {
+        // Jika upload tanda tangan gagal, tampilkan pesan dan hentikan proses
+        print('Error upload tanda tangan: $e');
+        throw Exception('Gagal mengupload tanda tangan: $e');
+      }
 
       // Konfirmasi penerimaan
-      await controller.konfirmasiPenerimaan(
-        widget.penerima,
-        buktiPenerimaan: imageUrl,
-        tandaTangan: signatureUrl,
-      );
+      try {
+        print('Melakukan konfirmasi penerimaan untuk ID: ${penerima.id}');
+        await controller.konfirmasiPenerimaan(
+          penerima,
+          buktiPenerimaan: imageUrl,
+          tandaTangan: signatureUrl,
+        );
+        print('Konfirmasi penerimaan berhasil');
+      } catch (e) {
+        // Jika konfirmasi penerimaan gagal, tampilkan pesan dan hentikan proses
+        print('Error konfirmasi penerimaan: $e');
+        throw Exception('Gagal melakukan konfirmasi penerimaan: $e');
+      }
 
       // Hapus file sementara sebelum navigasi
       try {
-        if (signatureFile.existsSync()) {
+        if (signatureFile != null && signatureFile.existsSync()) {
           await signatureFile.delete();
         }
-        if (tempDir.existsSync()) {
+        if (tempDir != null && tempDir.existsSync()) {
           await tempDir.delete();
         }
       } catch (e) {
@@ -736,9 +796,12 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
         print('Error saat menghapus file sementara: $e');
       }
 
-      setState(() {
-        _isLoading = false;
-      });
+      // Pastikan state loading diatur kembali ke false
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 }

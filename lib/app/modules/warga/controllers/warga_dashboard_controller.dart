@@ -85,8 +85,11 @@ class WargaDashboardController extends GetxController {
   }
 
   // Fungsi untuk mengambil data penerima penyaluran
-  Future<void> fetchPenerimaPenyaluran() async {
+  Future<List<PenerimaPenyaluranModel>> fetchPenerimaPenyaluran() async {
     try {
+      // Reset data terlebih dahulu untuk memastikan tidak ada data lama yang tersimpan
+      penerimaPenyaluran.clear();
+
       // Pertama, cari warga_id berdasarkan user_id
       final wargaResponse = await _supabaseService.client
           .from('warga')
@@ -175,13 +178,21 @@ class WargaDashboardController extends GetxController {
         penerima.add(model);
       }
 
+      // Update nilai observable
       penerimaPenyaluran.assignAll(penerima);
 
       var diterima =
           penerima.where((p) => p.statusPenerimaan == 'DITERIMA').length;
       totalPenyaluranDiterima.value = diterima;
+
+      // Log untuk debugging
+      print(
+          'Berhasil memuat ${penerima.length} data penerimaan untuk warga ID: $wargaId');
+
+      return penerima;
     } catch (e) {
       print('Error fetchPenerimaPenyaluran: $e');
+      return [];
     }
   }
 

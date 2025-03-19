@@ -2,6 +2,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        jcenter()
     }
 }
 
@@ -10,7 +11,9 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
 subprojects {
-    project.evaluationDependsOn(":app")
+    if (project.name.contains('qr_code_scanner_plus') || project.name.contains('flutter')) {
+        project.evaluationDependsOn(":app")
+    }
 }
 
 tasks.register("clean", Delete) {

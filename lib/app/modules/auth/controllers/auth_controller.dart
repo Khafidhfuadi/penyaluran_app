@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/data/providers/auth_provider.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
+import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
 
 class AuthController extends GetxController {
   static AuthController get to => Get.find();
@@ -265,14 +266,29 @@ class AuthController extends GetxController {
   // Metode untuk logout
   Future<void> logout() async {
     try {
+      // Ambil semua controller yang mungkin perlu dibersihkan
+      try {
+        final wargaController = Get.find<WargaDashboardController>();
+        wargaController.penerimaPenyaluran.clear();
+        wargaController.pengajuanKelayakan.clear();
+        wargaController.pengaduan.clear();
+      } catch (e) {
+        // Jika controller tidak ditemukan, abaikan
+        print('Controller tidak ditemukan: $e');
+      }
+
+      // Logout dari Supabase
       await _authProvider.signOut();
+
+      // Reset semua state
       _user.value = null;
-      _hasLoadedProfile.value = false; // Reset flag saat logout
+      _hasLoadedProfile.value = false;
       isWargaProfileComplete.value = false;
 
       // Bersihkan dependensi form sebelum navigasi
       clearFormDependencies();
 
+      // Navigasi ke halaman login
       Get.offAllNamed(Routes.login);
     } catch (e) {
       Get.snackbar(
