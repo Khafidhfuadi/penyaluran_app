@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class WargaPengaduanView extends GetView<WargaDashboardController> {
-  const WargaPengaduanView({Key? key}) : super(key: key);
+  const WargaPengaduanView({super.key});
 
   @override
   Widget build(BuildContext context) {

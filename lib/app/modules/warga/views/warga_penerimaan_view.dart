@@ -4,7 +4,7 @@ import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_con
 import 'package:penyaluran_app/app/widgets/bantuan_card.dart';
 
 class WargaPenerimaanView extends GetView<WargaDashboardController> {
-  const WargaPenerimaanView({Key? key}) : super(key: key);
+  const WargaPenerimaanView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +29,8 @@ class WargaPenerimaanView extends GetView<WargaDashboardController> {
           Get.toNamed('/riwayat-penyaluran');
         },
         backgroundColor: Colors.blue,
-        child: const Icon(Icons.history),
         tooltip: 'Riwayat Penerimaan',
+        child: const Icon(Icons.history),
       ),
     );
   }

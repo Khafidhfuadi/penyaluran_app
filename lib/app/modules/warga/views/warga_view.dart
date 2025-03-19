@@ -9,7 +9,7 @@ import 'package:penyaluran_app/app/widgets/app_bottom_navigation_bar.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class WargaView extends GetView<WargaDashboardController> {
-  const WargaView({Key? key}) : super(key: key);
+  const WargaView({super.key});
 
   @override
   Widget build(BuildContext context) {

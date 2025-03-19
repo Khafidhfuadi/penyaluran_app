@@ -16,7 +16,7 @@ import 'package:penyaluran_app/app/widgets/inputs/dropdown_input.dart';
 import 'package:penyaluran_app/app/widgets/inputs/text_input.dart';
 
 class DetailPengaduanView extends GetView<PengaduanController> {
-  const DetailPengaduanView({Key? key}) : super(key: key);
+  const DetailPengaduanView({super.key});
 
   // Definisi konstanta warna status untuk konsistensi
   static const Color statusMenungguColor = Colors.orange;
@@ -123,8 +123,9 @@ class DetailPengaduanView extends GetView<PengaduanController> {
           if (!snapshot.hasData) return const SizedBox();
 
           final data = snapshot.data;
-          if (data == null || data['pengaduan'] == null)
+          if (data == null || data['pengaduan'] == null) {
             return const SizedBox();
+          }
 
           final pengaduan = PengaduanModel.fromJson(data['pengaduan']);
 
@@ -1511,7 +1512,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
           } catch (e) {
             // Tutup loading dialog jika terjadi error
             Navigator.of(dialogContext, rootNavigator: true).pop();
-            throw e;
+            rethrow;
           }
         }
       } catch (e) {

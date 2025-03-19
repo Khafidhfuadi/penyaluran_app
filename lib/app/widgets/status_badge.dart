@@ -8,13 +8,13 @@ class StatusBadge extends StatelessWidget {
   final EdgeInsets padding;
 
   const StatusBadge({
-    Key? key,
+    super.key,
     required this.status,
     this.customColors,
     this.customLabels,
     this.fontSize = 12,
     this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

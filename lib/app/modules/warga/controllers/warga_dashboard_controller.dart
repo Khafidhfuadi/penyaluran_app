@@ -111,78 +111,75 @@ class WargaDashboardController extends GetxController {
             )
           ''').eq('warga_id', wargaId).order('created_at', ascending: false);
 
-      if (response != null) {
-        final List<PenerimaPenyaluranModel> penerima = [];
-        for (var item in response) {
-          Map<String, dynamic> sanitizedPenerimaData =
-              Map<String, dynamic>.from(item);
+      final List<PenerimaPenyaluranModel> penerima = [];
+      for (var item in response) {
+        Map<String, dynamic> sanitizedPenerimaData =
+            Map<String, dynamic>.from(item);
 
-          if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
-            var jumlahBantuan = double.tryParse(
-                sanitizedPenerimaData['jumlah_bantuan'] as String);
-            sanitizedPenerimaData['jumlah_bantuan'] = jumlahBantuan;
-          }
-
-          // Tambahkan informasi apakah bantuan uang atau bukan dan satuan
-          if (sanitizedPenerimaData['stok_bantuan'] != null) {
-            // Cek apakah bantuan uang
-            final isUang =
-                sanitizedPenerimaData['stok_bantuan']['is_uang'] ?? false;
-            sanitizedPenerimaData['is_uang'] = isUang;
-
-            // Ambil satuan
-            final satuan =
-                sanitizedPenerimaData['stok_bantuan']['satuan'] ?? '';
-            sanitizedPenerimaData['satuan'] = satuan;
-
-            // Ambil nama kategori bantuan jika tersedia
-            if (sanitizedPenerimaData['stok_bantuan']['kategori_bantuan'] !=
-                null) {
-              final kategoriNama = sanitizedPenerimaData['stok_bantuan']
-                      ['kategori_bantuan']['nama'] ??
-                  '';
-              sanitizedPenerimaData['kategori_nama'] = kategoriNama;
-            }
-          }
-
-          // Tambahkan informasi dari penyaluran bantuan
-          if (sanitizedPenerimaData['penyaluran_bantuan'] != null) {
-            // Ambil nama penyaluran
-            final namaPenyaluran =
-                sanitizedPenerimaData['penyaluran_bantuan']['nama'] ?? '';
-            sanitizedPenerimaData['nama_penyaluran'] = namaPenyaluran;
-
-            // Ambil deskripsi penyaluran
-            final deskripsiPenyaluran =
-                sanitizedPenerimaData['penyaluran_bantuan']['deskripsi'] ?? '';
-            sanitizedPenerimaData['deskripsi_penyaluran'] = deskripsiPenyaluran;
-
-            // Ambil lokasi penyaluran jika tersedia
-            if (sanitizedPenerimaData['penyaluran_bantuan']
-                    ['lokasi_penyaluran'] !=
-                null) {
-              final lokasiNama = sanitizedPenerimaData['penyaluran_bantuan']
-                      ['lokasi_penyaluran']['nama'] ??
-                  '';
-              sanitizedPenerimaData['lokasi_penyaluran_nama'] = lokasiNama;
-
-              final lokasiAlamat = sanitizedPenerimaData['penyaluran_bantuan']
-                      ['lokasi_penyaluran']['alamat_lengkap'] ??
-                  '';
-              sanitizedPenerimaData['lokasi_penyaluran_alamat'] = lokasiAlamat;
-            }
-          }
-
-          var model = PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData);
-          penerima.add(model);
+        if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
+          var jumlahBantuan = double.tryParse(
+              sanitizedPenerimaData['jumlah_bantuan'] as String);
+          sanitizedPenerimaData['jumlah_bantuan'] = jumlahBantuan;
         }
 
-        penerimaPenyaluran.assignAll(penerima);
+        // Tambahkan informasi apakah bantuan uang atau bukan dan satuan
+        if (sanitizedPenerimaData['stok_bantuan'] != null) {
+          // Cek apakah bantuan uang
+          final isUang =
+              sanitizedPenerimaData['stok_bantuan']['is_uang'] ?? false;
+          sanitizedPenerimaData['is_uang'] = isUang;
 
-        var diterima =
-            penerima.where((p) => p.statusPenerimaan == 'DITERIMA').length;
-        totalPenyaluranDiterima.value = diterima;
+          // Ambil satuan
+          final satuan = sanitizedPenerimaData['stok_bantuan']['satuan'] ?? '';
+          sanitizedPenerimaData['satuan'] = satuan;
+
+          // Ambil nama kategori bantuan jika tersedia
+          if (sanitizedPenerimaData['stok_bantuan']['kategori_bantuan'] !=
+              null) {
+            final kategoriNama = sanitizedPenerimaData['stok_bantuan']
+                    ['kategori_bantuan']['nama'] ??
+                '';
+            sanitizedPenerimaData['kategori_nama'] = kategoriNama;
+          }
+        }
+
+        // Tambahkan informasi dari penyaluran bantuan
+        if (sanitizedPenerimaData['penyaluran_bantuan'] != null) {
+          // Ambil nama penyaluran
+          final namaPenyaluran =
+              sanitizedPenerimaData['penyaluran_bantuan']['nama'] ?? '';
+          sanitizedPenerimaData['nama_penyaluran'] = namaPenyaluran;
+
+          // Ambil deskripsi penyaluran
+          final deskripsiPenyaluran =
+              sanitizedPenerimaData['penyaluran_bantuan']['deskripsi'] ?? '';
+          sanitizedPenerimaData['deskripsi_penyaluran'] = deskripsiPenyaluran;
+
+          // Ambil lokasi penyaluran jika tersedia
+          if (sanitizedPenerimaData['penyaluran_bantuan']
+                  ['lokasi_penyaluran'] !=
+              null) {
+            final lokasiNama = sanitizedPenerimaData['penyaluran_bantuan']
+                    ['lokasi_penyaluran']['nama'] ??
+                '';
+            sanitizedPenerimaData['lokasi_penyaluran_nama'] = lokasiNama;
+
+            final lokasiAlamat = sanitizedPenerimaData['penyaluran_bantuan']
+                    ['lokasi_penyaluran']['alamat_lengkap'] ??
+                '';
+            sanitizedPenerimaData['lokasi_penyaluran_alamat'] = lokasiAlamat;
+          }
+        }
+
+        var model = PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData);
+        penerima.add(model);
       }
+
+      penerimaPenyaluran.assignAll(penerima);
+
+      var diterima =
+          penerima.where((p) => p.statusPenerimaan == 'DITERIMA').length;
+      totalPenyaluranDiterima.value = diterima;
     } catch (e) {
       print('Error fetchPenerimaPenyaluran: $e');
     }
@@ -198,10 +195,6 @@ class WargaDashboardController extends GetxController {
           .eq('user_id', user!.id)
           .single();
 
-      if (wargaResponse == null) {
-        return;
-      }
-
       final wargaId = wargaResponse['id'];
 
       final response = await _supabaseService.client
@@ -210,28 +203,26 @@ class WargaDashboardController extends GetxController {
           .eq('warga_id', wargaId)
           .order('created_at', ascending: false);
 
-      if (response != null) {
-        final List<PengajuanKelayakanBantuanModel> pengajuan = [];
-        for (var item in response) {
-          // Konversi status ke enum
-          if (item['status'] != null) {
-            final statusStr = item['status'].toString();
-            item['status'] = statusStr; // Pastikan status dalam format string
-          }
-
-          pengajuan.add(PengajuanKelayakanBantuanModel.fromJson(item));
+      final List<PengajuanKelayakanBantuanModel> pengajuan = [];
+      for (var item in response) {
+        // Konversi status ke enum
+        if (item['status'] != null) {
+          final statusStr = item['status'].toString();
+          item['status'] = statusStr; // Pastikan status dalam format string
         }
-        pengajuanKelayakan.assignAll(pengajuan);
 
-        // Hitung jumlah berdasarkan status
-        totalPengajuanMenunggu.value =
-            pengajuan.where((p) => p.status == StatusKelayakan.MENUNGGU).length;
-        totalPengajuanTerverifikasi.value = pengajuan
-            .where((p) => p.status == StatusKelayakan.TERVERIFIKASI)
-            .length;
-        totalPengajuanDitolak.value =
-            pengajuan.where((p) => p.status == StatusKelayakan.DITOLAK).length;
+        pengajuan.add(PengajuanKelayakanBantuanModel.fromJson(item));
       }
+      pengajuanKelayakan.assignAll(pengajuan);
+
+      // Hitung jumlah berdasarkan status
+      totalPengajuanMenunggu.value =
+          pengajuan.where((p) => p.status == StatusKelayakan.MENUNGGU).length;
+      totalPengajuanTerverifikasi.value = pengajuan
+          .where((p) => p.status == StatusKelayakan.TERVERIFIKASI)
+          .length;
+      totalPengajuanDitolak.value =
+          pengajuan.where((p) => p.status == StatusKelayakan.DITOLAK).length;
     } catch (e) {
       print('Error fetching pengajuan kelayakan: $e');
     }

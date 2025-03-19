@@ -7,11 +7,11 @@ class AppBottomNavigationBar extends StatelessWidget {
   final List<AppBottomNavigationBarItem> items;
 
   const AppBottomNavigationBar({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onTap,
     required this.items,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

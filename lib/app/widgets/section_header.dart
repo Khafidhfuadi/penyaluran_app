@@ -9,14 +9,14 @@ class SectionHeader extends StatelessWidget {
   final TextStyle? titleStyle;
 
   const SectionHeader({
-    Key? key,
+    super.key,
     required this.title,
     this.onViewAll,
     this.viewAllText = 'Lihat Semua',
     this.trailing,
     this.padding = const EdgeInsets.only(bottom: 4),
     this.titleStyle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +38,11 @@ class SectionHeader extends StatelessWidget {
           else if (onViewAll != null)
             TextButton(
               onPressed: onViewAll,
-              child: Text(viewAllText!),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: const Size(0, 36),
               ),
+              child: Text(viewAllText!),
             ),
         ],
       ),

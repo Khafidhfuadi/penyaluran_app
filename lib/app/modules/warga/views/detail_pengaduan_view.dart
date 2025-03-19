@@ -13,7 +13,7 @@ import 'package:penyaluran_app/app/widgets/cards/info_card.dart';
 import 'dart:io';
 
 class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
-  const WargaDetailPengaduanView({Key? key}) : super(key: key);
+  const WargaDetailPengaduanView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -71,8 +71,9 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
           if (!snapshot.hasData) return const SizedBox();
 
           final data = snapshot.data;
-          if (data == null || data['pengaduan'] == null)
+          if (data == null || data['pengaduan'] == null) {
             return const SizedBox();
+          }
 
           final pengaduan = PengaduanModel.fromJson(data['pengaduan']);
 
@@ -228,8 +229,7 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
   }
 
   // Dialog untuk menambahkan atau mengedit feedback
-  void _showFeedbackDialog(BuildContext context, PengaduanModel pengaduan,
-      {bool isEdit = false}) {
+  void _showFeedbackDialog(BuildContext context, PengaduanModel pengaduan) {
     final formKey = GlobalKey<FormState>();
     final feedbackController =
         TextEditingController(text: pengaduan.feedbackWarga);
@@ -1084,8 +1084,7 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
 class TambahTindakanPengaduanView extends StatefulWidget {
   final String pengaduanId;
 
-  const TambahTindakanPengaduanView({Key? key, required this.pengaduanId})
-      : super(key: key);
+  const TambahTindakanPengaduanView({super.key, required this.pengaduanId});
 
   @override
   State<TambahTindakanPengaduanView> createState() =>

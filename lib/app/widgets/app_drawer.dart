@@ -12,7 +12,7 @@ class AppDrawer extends StatelessWidget {
   final List<DrawerMenuItem> menuItems;
 
   const AppDrawer({
-    Key? key,
+    super.key,
     required this.nama,
     required this.role,
     this.desa,
@@ -20,7 +20,7 @@ class AppDrawer extends StatelessWidget {
     this.notificationCount,
     required this.onLogout,
     required this.menuItems,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

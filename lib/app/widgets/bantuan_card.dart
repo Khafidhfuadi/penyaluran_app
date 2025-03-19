@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:penyaluran_app/app/widgets/status_badge.dart';
@@ -10,11 +9,11 @@ class BantuanCard extends StatelessWidget {
   final bool isCompact;
 
   const BantuanCard({
-    Key? key,
+    super.key,
     required this.item,
     this.onTap,
     this.isCompact = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

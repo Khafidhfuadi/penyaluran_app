@@ -7,7 +7,7 @@ import 'package:penyaluran_app/app/widgets/bantuan_card.dart';
 import 'package:penyaluran_app/app/widgets/section_header.dart';
 
 class WargaDashboardView extends GetView<WargaDashboardController> {
-  const WargaDashboardView({Key? key}) : super(key: key);
+  const WargaDashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/pengaduan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
-import 'package:penyaluran_app/app/routes/app_pages.dart';
 
 class PengaduanView extends GetView<PengaduanController> {
   const PengaduanView({super.key});

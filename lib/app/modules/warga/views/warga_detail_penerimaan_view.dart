@@ -7,7 +7,7 @@ import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/widgets/status_badge.dart';
 
 class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
-  const WargaDetailPenerimaanView({Key? key}) : super(key: key);
+  const WargaDetailPenerimaanView({super.key});
 
   @override
   Widget build(BuildContext context) {
