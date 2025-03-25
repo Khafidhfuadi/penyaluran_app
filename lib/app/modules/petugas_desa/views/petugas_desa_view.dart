@@ -93,6 +93,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                   ),
               ],
             );
+
             // Tampilkan tombol riwayat hanya jika tab Penitipan aktif
             if (activeTab == 2) {
               return Row(
@@ -167,145 +168,332 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
         children: [
-          DrawerHeader(
+          Container(
             decoration: BoxDecoration(
               gradient: AppTheme.primaryGradient,
             ),
+            padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 16,
+                bottom: 24,
+                left: 16,
+                right: 16),
+            width: double.infinity,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.white,
-                  child: const Icon(
-                    Icons.person,
-                    size: 40,
-                    color: AppTheme.primaryColor,
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Hero(
+                    tag: 'profile-photo',
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.white70,
+                      backgroundImage: controller.profilePhotoUrl != null
+                          ? NetworkImage(controller.profilePhotoUrl!)
+                          : null,
+                      child: controller.profilePhotoUrl == null
+                          ? Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 40,
+                            )
+                          : null,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 16),
+                Text(
+                  'Halo,',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                  ),
+                ),
                 Text(
                   controller.nama,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  controller.user?.desa?.nama != null
-                      ? '${controller.formattedRole} - ${controller.user!.desa!.nama}'
-                      : controller.formattedRole,
                   style: TextStyle(
-                    color: Colors.white.withAlpha(200),
-                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
+                SizedBox(height: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        controller.formattedRole,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            controller.desa,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.dashboard_outlined),
-            title: const Text('Dashboard'),
-            selected: controller.activeTabIndex.value == 0,
-            selectedColor: AppTheme.primaryColor,
-            onTap: () {
-              Navigator.pop(context);
-              controller.changeTab(0);
-            },
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                _buildMenuCategory('Menu Utama'),
+                Obx(() => _buildMenuItem(
+                      icon: Icons.dashboard_outlined,
+                      activeIcon: Icons.dashboard,
+                      title: 'Dashboard',
+                      isSelected: controller.activeTabIndex.value == 0,
+                      onTap: () {
+                        Navigator.pop(context);
+                        controller.changeTab(0);
+                      },
+                    )),
+                Obx(() => _buildMenuItem(
+                      icon: Icons.handshake_outlined,
+                      activeIcon: Icons.handshake,
+                      title: 'Penyaluran',
+                      isSelected: controller.activeTabIndex.value == 1,
+                      onTap: () {
+                        Navigator.pop(context);
+                        controller.changeTab(1);
+                      },
+                    )),
+                Obx(() => _buildMenuItem(
+                      icon: Icons.inventory_2_outlined,
+                      activeIcon: Icons.inventory_2,
+                      title: 'Penitipan',
+                      isSelected: controller.activeTabIndex.value == 2,
+                      onTap: () {
+                        Navigator.pop(context);
+                        controller.changeTab(2);
+                      },
+                    )),
+                Obx(() => _buildMenuItem(
+                      icon: Icons.warning_amber_outlined,
+                      activeIcon: Icons.warning_amber,
+                      title: 'Pengaduan',
+                      isSelected: controller.activeTabIndex.value == 3,
+                      badge: controller.jumlahDiproses.value > 0
+                          ? controller.jumlahDiproses.value.toString()
+                          : null,
+                      onTap: () {
+                        Navigator.pop(context);
+                        controller.changeTab(3);
+                      },
+                    )),
+                Obx(() => _buildMenuItem(
+                      icon: Icons.inventory_outlined,
+                      activeIcon: Icons.inventory,
+                      title: 'Stok Bantuan',
+                      isSelected: controller.activeTabIndex.value == 4,
+                      onTap: () {
+                        Navigator.pop(context);
+                        controller.changeTab(4);
+                      },
+                    )),
+                _buildMenuCategory('Kelola Data'),
+                _buildMenuItem(
+                  icon: Icons.person_add_outlined,
+                  activeIcon: Icons.person_add,
+                  title: 'Kelola Penerima',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.toNamed('/daftar-penerima');
+                  },
+                ),
+                _buildMenuItem(
+                  icon: Icons.people_outlined,
+                  activeIcon: Icons.people,
+                  title: 'Kelola Donatur',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.toNamed('/daftar-donatur');
+                  },
+                ),
+                _buildMenuItem(
+                  icon: Icons.description_outlined,
+                  activeIcon: Icons.description,
+                  title: 'Laporan Penyaluran',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.toNamed('/laporan-penyaluran');
+                  },
+                ),
+                _buildMenuCategory('Pengaturan'),
+                _buildMenuItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  title: 'Profil',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.toNamed('/profile');
+                  },
+                ),
+                _buildMenuItem(
+                  icon: Icons.logout,
+                  title: 'Keluar',
+                  onTap: () {
+                    Navigator.pop(context);
+                    controller.logout();
+                  },
+                  isLogout: true,
+                ),
+              ],
+            ),
           ),
-          ListTile(
-            leading: const Icon(Icons.handshake_outlined),
-            title: const Text('Penyaluran'),
-            selected: controller.activeTabIndex.value == 1,
-            selectedColor: AppTheme.primaryColor,
-            onTap: () {
-              Navigator.pop(context);
-              controller.changeTab(1);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.inventory_2_outlined),
-            title: const Text('Penitipan'),
-            selected: controller.activeTabIndex.value == 2,
-            selectedColor: AppTheme.primaryColor,
-            onTap: () {
-              Navigator.pop(context);
-              controller.changeTab(2);
-            },
-          ),
-          Obx(() => ListTile(
-                leading: controller.jumlahDiproses.value > 0
-                    ? Badge(
-                        label: Text(controller.jumlahDiproses.value.toString()),
-                        backgroundColor: Colors.red,
-                        child: const Icon(Icons.warning_amber_outlined),
-                      )
-                    : const Icon(Icons.warning_amber_outlined),
-                title: const Text('Pengaduan'),
-                selected: controller.activeTabIndex.value == 3,
-                selectedColor: AppTheme.primaryColor,
-                onTap: () {
-                  Navigator.pop(context);
-                  controller.changeTab(3);
-                },
-              )),
-          ListTile(
-            leading: const Icon(Icons.inventory_outlined),
-            title: const Text('Stok Bantuan'),
-            selected: controller.activeTabIndex.value == 4,
-            selectedColor: AppTheme.primaryColor,
-            onTap: () {
-              Navigator.pop(context);
-              controller.changeTab(4);
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.person_add_outlined),
-            title: const Text('Kelola Penerima'),
-            onTap: () {
-              Navigator.pop(context);
-              Get.toNamed('/daftar-penerima');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.people_outlined),
-            title: const Text('Kelola Donatur'),
-            onTap: () {
-              Navigator.pop(context);
-              Get.toNamed('/daftar-donatur');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: const Text('Laporan Penyaluran'),
-            onTap: () {
-              Navigator.pop(context);
-              Get.toNamed('/laporan-penyaluran');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.person_outline),
-            title: const Text('Profil'),
-            onTap: () {
-              Navigator.pop(context);
-              Get.toNamed('/profile');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Keluar'),
-            onTap: () {
-              Navigator.pop(context);
-              controller.logout();
-            },
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              '© ${DateTime.now().year} Aplikasi Penyaluran Bantuan',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMenuCategory(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey[600],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    IconData? activeIcon,
+    required String title,
+    bool isSelected = false,
+    String? badge,
+    required Function() onTap,
+    bool isLogout = false,
+  }) {
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppTheme.primaryColor.withOpacity(0.1)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: ListTile(
+        leading: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(
+              isSelected ? (activeIcon ?? icon) : icon,
+              color: isSelected
+                  ? AppTheme.primaryColor
+                  : isLogout
+                      ? Colors.red
+                      : Colors.grey[700],
+              size: 24,
+            ),
+            if (badge != null)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    badge,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected
+                ? AppTheme.primaryColor
+                : isLogout
+                    ? Colors.red
+                    : Colors.grey[800],
+            fontSize: 14,
+          ),
+        ),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        visualDensity: VisualDensity.compact,
+        selectedTileColor: AppTheme.primaryColor.withOpacity(0.1),
+        selected: isSelected,
       ),
     );
   }
@@ -456,29 +644,31 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               children: [
                 const Icon(Icons.report_problem_outlined),
                 // Selalu tampilkan badge untuk debugging
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 12,
-                      minHeight: 12,
-                    ),
-                    child: Text(
-                      controller.jumlahDiproses.value.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
+
+                if (controller.jumlahDiproses.value > 0)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
                       ),
-                      textAlign: TextAlign.center,
+                      constraints: const BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: Text(
+                        controller.jumlahDiproses.value.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
             activeIcon: Stack(

@@ -17,6 +17,7 @@ class WargaModel {
   final String? kategoriEkonomi;
   final String? status;
   final String? catatan;
+  final String? fotoProfil;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DesaModel? desa;
@@ -36,6 +37,7 @@ class WargaModel {
     this.kategoriEkonomi,
     this.status = 'AKTIF',
     this.catatan,
+    this.fotoProfil,
     this.createdAt,
     this.updatedAt,
     this.desa,
@@ -69,6 +71,7 @@ class WargaModel {
       kategoriEkonomi: json["kategori_ekonomi"],
       status: json["status"] ?? 'AKTIF',
       catatan: json["catatan"],
+      fotoProfil: json["foto_profil"],
       createdAt: json["created_at"] != null
           ? DateTime.parse(json["created_at"])
           : null,
@@ -94,6 +97,7 @@ class WargaModel {
         "kategori_ekonomi": kategoriEkonomi,
         "status": status,
         "catatan": catatan,
+        "foto_profil": fotoProfil,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };

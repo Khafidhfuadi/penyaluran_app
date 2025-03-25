@@ -27,6 +27,9 @@ class PetugasDesaController extends GetxController {
   // Data profil pengguna dari cache
   final RxMap<String, dynamic> userProfile = RxMap<String, dynamic>({});
 
+  // Variabel untuk foto profil
+  final RxString fotoProfil = ''.obs;
+
   // Model desa dari cache
   final Rx<DesaModel?> desaModel = Rx<DesaModel?>(null);
 
@@ -100,6 +103,33 @@ class PetugasDesaController extends GetxController {
 
     // 5. Default fallback
     return 'Petugas Desa';
+  }
+
+  // Getter untuk foto profil
+  String? get profilePhotoUrl {
+    // 1. Coba ambil dari fotoProfil yang sudah disimpan
+    if (fotoProfil.isNotEmpty) {
+      return fotoProfil.value;
+    }
+
+    // 2. Coba ambil dari roleData jika merupakan PetugasDesaModel
+    final userData = _authController.userData;
+    if (userData != null && userData.roleData is PetugasDesaModel) {
+      final petugasData = userData.roleData as PetugasDesaModel;
+      if (petugasData.fotoProfil != null &&
+          petugasData.fotoProfil!.isNotEmpty) {
+        return petugasData.fotoProfil;
+      }
+    }
+
+    // 3. Coba ambil dari role_data di userProfile
+    if (userProfile['role_data'] != null &&
+        userProfile['role_data'] is Map<String, dynamic> &&
+        userProfile['role_data']['foto_profil'] != null) {
+      return userProfile['role_data']['foto_profil'];
+    }
+
+    return null;
   }
 
   // Getter untuk counter dari CounterService
@@ -212,6 +242,14 @@ class PetugasDesaController extends GetxController {
                 'desa': petugasData.desa?.toJson(),
               };
 
+              // Ambil foto profil jika ada
+              if (petugasData.fotoProfil != null &&
+                  petugasData.fotoProfil!.isNotEmpty) {
+                fotoProfil.value = petugasData.fotoProfil!;
+                print(
+                    'DEBUG: Foto profil dari petugasData: ${fotoProfil.value}');
+              }
+
               return; // Data sudah lengkap, tidak perlu fetch lagi
             }
           }
@@ -222,6 +260,14 @@ class PetugasDesaController extends GetxController {
         final baseProfile = await _supabaseService.getUserProfile();
         if (baseProfile != null) {
           userProfile.value = baseProfile;
+
+          // Cek dan ambil foto profil
+          if (baseProfile['role_data'] != null &&
+              baseProfile['role_data'] is Map<String, dynamic> &&
+              baseProfile['role_data']['foto_profil'] != null) {
+            fotoProfil.value = baseProfile['role_data']['foto_profil'];
+            print('DEBUG: Foto profil dari API: ${fotoProfil.value}');
+          }
 
           if (baseProfile['desa'] != null &&
               baseProfile['desa'] is Map<String, dynamic>) {
@@ -594,7 +640,9 @@ class PetugasDesaController extends GetxController {
 
   // Metode untuk mengubah tab aktif
   void changeTab(int index) {
+    print('Mengubah tab ke index: $index (dari: ${activeTabIndex.value})');
     activeTabIndex.value = index;
+    print('activeTabIndex sekarang: ${activeTabIndex.value}');
 
     // Jika tab penitipan dipilih, muat ulang data penitipan
     if (index == 2) {
@@ -621,6 +669,8 @@ class PetugasDesaController extends GetxController {
         print('Error saat memanggil onTabReactivated: $e');
       }
     }
+    // Paksa update UI
+    activeTabIndex.refresh();
   }
 
   // Metode untuk logout

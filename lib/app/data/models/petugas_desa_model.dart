@@ -10,6 +10,7 @@ class PetugasDesaModel {
   final String? email;
   final String? jabatan;
   final String? nip;
+  final String? fotoProfil;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DesaModel? desa;
@@ -23,6 +24,7 @@ class PetugasDesaModel {
     this.email,
     this.jabatan,
     this.nip,
+    this.fotoProfil,
     this.createdAt,
     this.updatedAt,
     this.desa,
@@ -48,6 +50,7 @@ class PetugasDesaModel {
       email: json["email"],
       jabatan: json["jabatan"],
       nip: json["nip"],
+      fotoProfil: json["foto_profil"],
       createdAt: json["created_at"] != null
           ? DateTime.parse(json["created_at"])
           : null,
@@ -67,6 +70,7 @@ class PetugasDesaModel {
         "email": email,
         "jabatan": jabatan,
         "nip": nip,
+        "foto_profil": fotoProfil,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };

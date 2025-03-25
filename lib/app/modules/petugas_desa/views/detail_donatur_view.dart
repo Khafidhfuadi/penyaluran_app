@@ -79,12 +79,263 @@ class DetailDonaturView extends GetView<DonaturController> {
     final totalNilaiDonasiUangFormatted =
         controller.formatRupiah(totalNilaiDonasiUang);
 
+    // Pilih warna berdasarkan jenis donatur
+    Color jenisColor = donatur.jenis == 'Perusahaan'
+        ? Colors.blue
+        : donatur.jenis == 'Organisasi'
+            ? Colors.green
+            : Colors.orange;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header dengan informasi utama donatur
+          // Header dengan informasi utama donatur - desain yang lebih menarik
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: jenisColor.withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Card(
+              elevation: 0,
+              margin: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white,
+                      jenisColor.withOpacity(0.05),
+                    ],
+                  ),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Avatar dan nama donatur dengan layout yang lebih baik
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: jenisColor.withOpacity(0.7), width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: jenisColor.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Hero(
+                            tag: 'donatur-${donatur.id}',
+                            child: CircleAvatar(
+                              radius: 45,
+                              backgroundColor: jenisColor.withOpacity(0.1),
+                              backgroundImage: donatur.fotoProfil != null &&
+                                      donatur.fotoProfil!.isNotEmpty
+                                  ? NetworkImage(donatur.fotoProfil!)
+                                  : null,
+                              child: (donatur.fotoProfil == null ||
+                                      donatur.fotoProfil!.isEmpty)
+                                  ? Icon(
+                                      jenisIcon,
+                                      size: 45,
+                                      color: jenisColor.withOpacity(0.8),
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                donatur.nama ?? 'Tanpa Nama',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey.shade800,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: jenisColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: jenisColor.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      jenisIcon,
+                                      size: 16,
+                                      color: jenisColor,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      donatur.jenis ?? 'Tidak Diketahui',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: jenisColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: donatur.status == 'AKTIF'
+                                      ? Colors.green.withOpacity(0.1)
+                                      : Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: donatur.status == 'AKTIF'
+                                        ? Colors.green.withOpacity(0.3)
+                                        : Colors.red.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      donatur.status == 'AKTIF'
+                                          ? Icons.check_circle
+                                          : Icons.cancel,
+                                      size: 16,
+                                      color: donatur.status == 'AKTIF'
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      donatur.status == 'AKTIF'
+                                          ? 'Aktif'
+                                          : 'Tidak Aktif',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: donatur.status == 'AKTIF'
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Summary cards for donations
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSummaryCard(
+                            title: 'Total Donasi',
+                            value: jumlahDonasi.toString(),
+                            icon: Icons.volunteer_activism,
+                            color: jenisColor,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildSummaryCard(
+                            title: 'Donasi Uang',
+                            value: jumlahDonasiUang.toString(),
+                            icon: Icons.attach_money,
+                            color: jenisColor,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildSummaryCard(
+                            title: 'Donasi Barang',
+                            value: jumlahDonasiBarang.toString(),
+                            icon: Icons.inventory_2,
+                            color: jenisColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Total nilai donasi
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: jenisColor.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: jenisColor.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Total Nilai Donasi Uang',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            totalNilaiDonasiUangFormatted,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: jenisColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Informasi kontak
           Card(
             elevation: 2,
             shape: RoundedRectangleBorder(
@@ -94,104 +345,6 @@ class DetailDonaturView extends GetView<DonaturController> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Avatar dan nama donatur
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                        child: Icon(
-                          jenisIcon,
-                          size: 40,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              donatur.nama ?? 'Tanpa Nama',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: donatur.jenis == 'Perusahaan'
-                                    ? Colors.blue.withOpacity(0.1)
-                                    : donatur.jenis == 'Organisasi'
-                                        ? Colors.green.withOpacity(0.1)
-                                        : Colors.orange.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                donatur.jenis ?? 'Tidak Diketahui',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: donatur.jenis == 'Perusahaan'
-                                      ? Colors.blue
-                                      : donatur.jenis == 'Organisasi'
-                                          ? Colors.green
-                                          : Colors.orange,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: donatur.status == 'AKTIF'
-                                        ? Colors.green.withOpacity(0.1)
-                                        : Colors.red.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        donatur.status == 'AKTIF'
-                                            ? Icons.check_circle
-                                            : Icons.cancel,
-                                        size: 12,
-                                        color: donatur.status == 'AKTIF'
-                                            ? Colors.green
-                                            : Colors.red,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        donatur.status ?? 'TIDAK AKTIF',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: donatur.status == 'AKTIF'
-                                              ? Colors.green
-                                              : Colors.red,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Informasi kontak
                   const Divider(),
                   const SizedBox(height: 8),
                   _buildInfoItem(Icons.location_on, 'Alamat',
@@ -209,85 +362,6 @@ class DetailDonaturView extends GetView<DonaturController> {
                     donatur.createdAt != null
                         ? DateTimeHelper.formatDate(donatur.createdAt!)
                         : 'Tidak diketahui',
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Ringkasan donasi
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Ringkasan Donasi',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatItem(
-                          'Total Donasi',
-                          '$jumlahDonasi',
-                          Icons.volunteer_activism,
-                          Colors.blue,
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildStatItem(
-                          'Donasi Uang',
-                          '$jumlahDonasiUang',
-                          Icons.monetization_on,
-                          Colors.green,
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildStatItem(
-                          'Donasi Barang',
-                          '$jumlahDonasiBarang',
-                          Icons.inventory_2,
-                          Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.monetization_on,
-                        color: Colors.green,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Total Nilai Donasi Uang:',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        totalNilaiDonasiUangFormatted,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -314,12 +388,6 @@ class DetailDonaturView extends GetView<DonaturController> {
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          // Navigasi ke halaman riwayat donasi lengkap
-                        },
-                        child: const Text('Lihat Semua'),
                       ),
                     ],
                   ),
@@ -368,37 +436,51 @@ class DetailDonaturView extends GetView<DonaturController> {
     );
   }
 
-  Widget _buildStatItem(
-      String label, String value, IconData icon, Color color) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 25,
-          backgroundColor: color.withOpacity(0.1),
-          child: Icon(
+  Widget _buildSummaryCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
             icon,
-            color: color,
+            size: 24,
+            color: color.withOpacity(0.7),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: color,
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade600,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
-          textAlign: TextAlign.center,
-        ),
-      ],
+        ],
+      ),
     );
   }
 

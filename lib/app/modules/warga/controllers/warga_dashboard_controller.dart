@@ -3,6 +3,7 @@ import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:penyaluran_app/app/data/models/pengaduan_model.dart';
 import 'package:penyaluran_app/app/data/models/pengajuan_kelayakan_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
+import 'package:penyaluran_app/app/data/models/warga_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,9 @@ class WargaDashboardController extends GetxController {
   final SupabaseService _supabaseService = SupabaseService.to;
 
   final Rx<BaseUserModel?> currentUser = Rx<BaseUserModel?>(null);
+
+  // Variabel untuk foto profil
+  final RxString fotoProfil = ''.obs;
 
   // Indeks tab yang aktif di bottom navigation bar
   final RxInt activeTabIndex = 0.obs;
@@ -55,6 +59,48 @@ class WargaDashboardController extends GetxController {
 
   String? get desa => user?.desa?.nama;
 
+  // Getter untuk alamat dan noHp
+  String? get alamat {
+    if (_authController.isWarga && _authController.roleData != null) {
+      return (_authController.roleData as WargaModel).alamat;
+    }
+    return null;
+  }
+
+  String? get noHp {
+    if (_authController.isWarga && _authController.roleData != null) {
+      return (_authController.roleData as WargaModel).noHp;
+    }
+    return null;
+  }
+
+  // Getter untuk foto profil
+  String? get profilePhotoUrl {
+    // 1. Coba ambil dari fotoProfil yang sudah disimpan
+    if (fotoProfil.isNotEmpty) {
+      return fotoProfil.value;
+    }
+
+    // 2. Coba ambil dari roleData jika merupakan WargaModel
+    if (_authController.isWarga && _authController.roleData != null) {
+      final wargaData = _authController.roleData as WargaModel;
+      if (wargaData.fotoProfil != null && wargaData.fotoProfil!.isNotEmpty) {
+        return wargaData.fotoProfil;
+      }
+    }
+
+    // 3. Coba ambil dari userData.roleData.fotoProfil
+    final userData = _authController.userData;
+    if (userData != null && userData.roleData is WargaModel) {
+      final wargaData = userData.roleData as WargaModel;
+      if (wargaData.fotoProfil != null && wargaData.fotoProfil!.isNotEmpty) {
+        return wargaData.fotoProfil;
+      }
+    }
+
+    return null;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -81,11 +127,44 @@ class WargaDashboardController extends GetxController {
         print('DEBUG WARGA: User adalah warga');
         var wargaData = _authController.roleData;
         print('DEBUG WARGA: Data warga: ${wargaData?.namaLengkap}');
+
+        // Ambil foto profil dari wargaData jika ada
+        if (wargaData != null &&
+            wargaData.fotoProfil != null &&
+            wargaData.fotoProfil!.isNotEmpty) {
+          fotoProfil.value = wargaData.fotoProfil!;
+          print('DEBUG WARGA: Foto profil: ${fotoProfil.value}');
+        }
       } else {
         print('DEBUG WARGA: User bukan warga');
       }
     } else {
       print('DEBUG WARGA: userData null');
+    }
+
+    // Cek dan ambil foto profil jika belum ada
+    if (fotoProfil.isEmpty) {
+      _fetchProfilePhoto();
+    }
+  }
+
+  // Metode untuk mengambil foto profil
+  Future<void> _fetchProfilePhoto() async {
+    try {
+      if (user?.id == null) return;
+
+      final wargaData = await _supabaseService.client
+          .from('warga')
+          .select('foto_profil')
+          .eq('user_id', user!.id)
+          .single();
+
+      if (wargaData != null && wargaData['foto_profil'] != null) {
+        fotoProfil.value = wargaData['foto_profil'];
+        print('DEBUG WARGA: Foto profil dari API: ${fotoProfil.value}');
+      }
+    } catch (e) {
+      print('Error fetching profile photo: $e');
     }
   }
 

@@ -2,9 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/profile/controllers/profile_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
+import 'dart:io';
 
 class ProfileView extends GetView<ProfileController> {
   const ProfileView({super.key});
+
+  // Helper untuk mengkonversi nilai role ke tampilan yang lebih baik
+  String _formatRoleName(String? role) {
+    if (role == null) return 'Pengguna';
+
+    switch (role.toLowerCase()) {
+      case 'warga':
+        return 'Warga';
+      case 'petugas_desa':
+        return 'Petugas Desa';
+      case 'admin_desa':
+        return 'Admin Desa';
+      case 'donatur':
+        return 'Donatur';
+      case 'admin':
+        return 'Administrator';
+      default:
+        // Kapitalisasi setiap kata dan ganti underscore dengan spasi
+        return role
+            .split('_')
+            .map((word) => word.isEmpty
+                ? ''
+                : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}')
+            .join(' ');
+    }
+  }
+
+  // Helper untuk mendapatkan warna berdasarkan role
+  Color _getRoleColor(String? role) {
+    if (role == null) return AppTheme.primaryColor;
+
+    switch (role.toLowerCase()) {
+      case 'warga':
+        return AppTheme.infoColor;
+      case 'petugas_desa':
+        return AppTheme.primaryColor;
+
+      case 'donatur':
+        return AppTheme.successColor;
+
+      default:
+        return AppTheme.primaryColor;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,15 +98,71 @@ class ProfileView extends GetView<ProfileController> {
     return Center(
       child: Column(
         children: [
-          const CircleAvatar(
-            radius: 50,
-            backgroundColor: AppTheme.primaryColor,
-            child: Icon(
-              Icons.person,
-              size: 60,
-              color: Colors.white,
-            ),
-          ),
+          Obx(() {
+            // Jika user sedang dalam mode edit dan sudah memilih foto baru
+            if (controller.isEditing.value &&
+                controller.fotoProfilPath.isNotEmpty) {
+              return _buildProfileImage(
+                isLocalFile: true,
+                imagePath: controller.fotoProfilPath.value,
+              );
+            }
+            // Jika user sudah memiliki foto profil
+            else if (controller.fotoProfil.isNotEmpty) {
+              return _buildProfileImage(
+                isLocalFile: false,
+                imagePath: controller.fotoProfil.value,
+              );
+            }
+            // Default jika tidak ada foto
+            else {
+              return _buildDefaultProfileImage();
+            }
+          }),
+
+          // Tombol edit foto (hanya muncul dalam mode edit)
+          Obx(() {
+            if (controller.isEditing.value) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Tombol ambil dari kamera
+                    _buildPhotoActionButton(
+                      icon: Icons.camera_alt,
+                      label: 'Kamera',
+                      onPressed: () => controller.pickFotoProfilFromCamera(),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Tombol ambil dari galeri
+                    _buildPhotoActionButton(
+                      icon: Icons.photo_library,
+                      label: 'Galeri',
+                      onPressed: () => controller.pickFotoProfilFromGallery(),
+                    ),
+
+                    // Tombol hapus foto (hanya jika ada foto yang dipilih)
+                    if (controller.fotoProfilPath.isNotEmpty ||
+                        controller.fotoProfil.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: _buildPhotoActionButton(
+                          icon: Icons.delete,
+                          label: 'Hapus',
+                          onPressed: () => controller.clearFotoProfil(),
+                          color: Colors.red,
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            } else {
+              return const SizedBox.shrink();
+            }
+          }),
+
           const SizedBox(height: 16),
           Obx(() => Text(
                 controller.user.value?.name ?? 'Pengguna',
@@ -71,15 +172,147 @@ class ProfileView extends GetView<ProfileController> {
                 ),
               )),
           const SizedBox(height: 4),
-          Obx(() => Text(
-                controller.user.value?.role?.toUpperCase() ?? 'PENGGUNA',
+          Obx(() {
+            final role = controller.user.value?.role;
+            final roleColor = _getRoleColor(role);
+
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: roleColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: roleColor.withOpacity(0.3)),
+              ),
+              child: Text(
+                _formatRoleName(role),
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: roleColor,
                   fontWeight: FontWeight.w500,
                 ),
-              )),
+              ),
+            );
+          }),
         ],
+      ),
+    );
+  }
+
+  // Widget foto profil default
+  Widget _buildDefaultProfileImage() {
+    return CircleAvatar(
+      radius: 60,
+      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+      child: const Icon(
+        Icons.person,
+        size: 70,
+        color: AppTheme.primaryColor,
+      ),
+    );
+  }
+
+  // Widget foto profil dengan gambar
+  Widget _buildProfileImage(
+      {required bool isLocalFile, required String imagePath}) {
+    return Stack(
+      children: [
+        // Widget untuk menampilkan foto profil
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppTheme.primaryColor.withOpacity(0.5),
+              width: 3,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(60),
+            child: isLocalFile
+                ? Image.file(
+                    File(imagePath),
+                    fit: BoxFit.cover,
+                    width: 120,
+                    height: 120,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _buildDefaultProfileImage(),
+                  )
+                : Image.network(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    width: 120,
+                    height: 120,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) =>
+                        _buildDefaultProfileImage(),
+                  ),
+          ),
+        ),
+
+        // Indikator loading saat mengupload
+        if (controller.isUploadingFoto.value)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black38,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // Widget tombol aksi foto
+  Widget _buildPhotoActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    Color? color,
+  }) {
+    final buttonColor = color ?? AppTheme.primaryColor;
+
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: buttonColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: buttonColor.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: buttonColor),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: buttonColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -222,9 +455,6 @@ class ProfileView extends GetView<ProfileController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildInfoRow(Icons.badge, 'NIP', roleData?['nip'] ?? '-'),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(
-                        Icons.work, 'Jabatan', roleData?['jabatan'] ?? '-'),
                     if (user.desa != null) ...[
                       const SizedBox(height: 8),
                       _buildInfoRow(

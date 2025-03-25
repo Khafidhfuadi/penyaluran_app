@@ -911,7 +911,7 @@ class SupabaseService extends GetxService {
       final response = await client
           .from('donatur')
           .select('*')
-          .order('nama', ascending: true);
+          .order('nama_lengkap', ascending: true);
 
       return response;
     } catch (e) {
@@ -1101,6 +1101,23 @@ class SupabaseService extends GetxService {
       return response;
     } catch (e) {
       print('Error getting penerima bantuan: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan data penyaluran bantuan berdasarkan ID warga
+  Future<List<Map<String, dynamic>>?> getPenyaluranBantuanByWargaId(
+      String wargaId) async {
+    try {
+      final response = await client
+          .from('penyaluran_bantuan')
+          .select('*, stok_bantuan:stok_bantuan_id(*)')
+          .eq('penerima_id', wargaId)
+          .order('tanggal_penyaluran', ascending: false);
+
+      return response;
+    } catch (e) {
+      print('Error getting penyaluran bantuan by warga id: $e');
       return null;
     }
   }
@@ -1616,103 +1633,108 @@ class SupabaseService extends GetxService {
   Future<void> updateWargaProfile({
     required String userId,
     required String namaLengkap,
+    required String email,
     String? noHp,
-    String? email,
-    String? alamat,
-    String? nik,
-    String? tempatLahir,
-    DateTime? tanggalLahir,
-    String? jenisKelamin,
-    String? agama,
-    String? kategoriEkonomi,
+    String? fotoProfil,
   }) async {
     try {
-      final data = {
+      // Buat map untuk update data
+      final Map<String, dynamic> updateData = {
         'nama_lengkap': namaLengkap,
+        'no_hp': noHp,
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      if (noHp != null) data['no_hp'] = noHp;
-      if (email != null) data['email'] = email;
-      if (alamat != null) data['alamat'] = alamat;
-      if (nik != null) data['nik'] = nik;
-      if (tempatLahir != null) data['tempat_lahir'] = tempatLahir;
-      if (tanggalLahir != null)
-        data['tanggal_lahir'] = tanggalLahir.toIso8601String();
-      if (jenisKelamin != null) data['jenis_kelamin'] = jenisKelamin;
-      if (agama != null) data['agama'] = agama;
-      if (kategoriEkonomi != null) data['kategori_ekonomi'] = kategoriEkonomi;
+      // Tambahkan foto profil jika ada
+      if (fotoProfil != null) {
+        updateData['foto_profil'] = fotoProfil;
+      }
 
-      await client.from('warga').update(data).eq('id', userId);
+      // Update data warga
+      await client.from('warga').update(updateData).eq('id', userId);
 
-      // Hapus cache setelah update
-      clearUserProfileCache();
+      // Update email di auth.users jika berubah
+      if (email != client.auth.currentUser?.email) {
+        // Gunakan metode updateUserEmail
+        await client.auth.updateUser(UserAttributes(
+          email: email,
+        ));
+      }
     } catch (e) {
       print('Error updating warga profile: $e');
       throw e.toString();
     }
   }
 
-  // Metode untuk update profil donatur
+  // Metode untuk memperbarui profil donatur
   Future<void> updateDonaturProfile({
     required String userId,
     required String nama,
-    String? alamat,
+    required String email,
     String? noHp,
-    String? email,
-    String? jenis,
-    String? instansi,
-    String? jabatan,
+    String? fotoProfil,
   }) async {
     try {
-      final data = {
+      // Buat map untuk update data
+      final Map<String, dynamic> updateData = {
         'nama': nama,
+        'nama_lengkap': nama, // Untuk konsistensi dengan field nama_lengkap
+        'no_hp': noHp,
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      if (alamat != null) data['alamat'] = alamat;
-      if (noHp != null) data['no_hp'] = noHp;
-      if (email != null) data['email'] = email;
-      if (jenis != null) data['jenis'] = jenis;
-      if (instansi != null) data['instansi'] = instansi;
-      if (jabatan != null) data['jabatan'] = jabatan;
+      // Tambahkan foto profil jika ada
+      if (fotoProfil != null) {
+        updateData['foto_profil'] = fotoProfil;
+      }
 
-      await client.from('donatur').update(data).eq('id', userId);
+      // Update data donatur
+      await client.from('donatur').update(updateData).eq('id', userId);
 
-      // Hapus cache setelah update
-      clearUserProfileCache();
+      // Update email di auth.users jika berubah
+      if (email != client.auth.currentUser?.email) {
+        // Gunakan metode updateUserEmail
+        await client.auth.updateUser(UserAttributes(
+          email: email,
+        ));
+      }
     } catch (e) {
       print('Error updating donatur profile: $e');
       throw e.toString();
     }
   }
 
-  // Metode untuk update profil petugas desa
+  // Metode untuk memperbarui profil petugas desa
   Future<void> updatePetugasDesaProfile({
     required String userId,
     required String nama,
-    String? alamat,
+    required String email,
     String? noHp,
-    String? email,
-    String? nip,
-    String? jabatan,
+    String? fotoProfil,
   }) async {
     try {
-      final data = {
-        'nama': nama,
+      // Buat map untuk update data
+      final Map<String, dynamic> updateData = {
+        'nama_lengkap': nama, // Untuk konsistensi dengan field nama_lengkap
+        'no_hp': noHp,
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      if (alamat != null) data['alamat'] = alamat;
-      if (noHp != null) data['no_hp'] = noHp;
-      if (email != null) data['email'] = email;
-      if (nip != null) data['nip'] = nip;
-      if (jabatan != null) data['jabatan'] = jabatan;
+      // Tambahkan foto profil jika ada
+      if (fotoProfil != null) {
+        updateData['foto_profil'] = fotoProfil;
+      }
 
-      await client.from('petugas_desa').update(data).eq('id', userId);
+      // Update data petugas desa
+      await client.from('petugas_desa').update(updateData).eq('id', userId);
 
-      // Hapus cache setelah update
-      clearUserProfileCache();
+      // Update email di auth.users jika berubah
+      if (email != client.auth.currentUser?.email) {
+        // Gunakan metode updateUserEmail
+        await client.auth.updateUser(UserAttributes(
+          email: email,
+        ));
+      }
     } catch (e) {
       print('Error updating petugas desa profile: $e');
       throw e.toString();

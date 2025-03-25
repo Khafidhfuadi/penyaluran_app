@@ -9,6 +9,7 @@ class DonaturModel {
   final String? jenis;
   final String? deskripsi;
   final String? status;
+  final String? fotoProfil;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -21,6 +22,7 @@ class DonaturModel {
     this.jenis,
     this.deskripsi,
     this.status = 'AKTIF',
+    this.fotoProfil,
     this.createdAt,
     this.updatedAt,
   });
@@ -39,6 +41,7 @@ class DonaturModel {
         jenis: json["jenis"],
         deskripsi: json["deskripsi"],
         status: json["status"] ?? 'AKTIF',
+        fotoProfil: json["foto_profil"],
         createdAt: json["created_at"] != null
             ? DateTime.parse(json["created_at"])
             : null,
@@ -56,6 +59,7 @@ class DonaturModel {
         "jenis": jenis,
         "deskripsi": deskripsi,
         "status": status ?? 'AKTIF',
+        "foto_profil": fotoProfil,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };

@@ -1,11 +1,17 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class PenerimaController extends GetxController {
   final RxList<Map<String, dynamic>> daftarPenerima =
       <Map<String, dynamic>>[].obs;
   final RxBool isLoading = false.obs;
+
+  // Variabel untuk menyimpan daftar penyaluran bantuan untuk penerima tertentu
+  final RxList<Map<String, dynamic>> daftarPenyaluran =
+      <Map<String, dynamic>>[].obs;
+  final RxBool isLoadingPenyaluran = false.obs;
 
   // Variabel untuk halaman konfirmasi penerima
   final RxBool isKonfirmasiChecked = false.obs;
@@ -37,9 +43,30 @@ class PenerimaController extends GetxController {
     super.onClose();
   }
 
-  void fetchDaftarPenerima() {
+  void fetchDaftarPenerima() async {
     isLoading.value = true;
 
+    try {
+      // Get data penerima dari database
+      final penerimaBantuan = await SupabaseService.to.getPenerimaBantuan();
+
+      if (penerimaBantuan != null) {
+        daftarPenerima.value = penerimaBantuan;
+      } else {
+        // Gunakan data dummy jika gagal mendapatkan data dari database
+        _loadDummyData();
+      }
+    } catch (e) {
+      print('Error fetching penerima: $e');
+      // Gunakan data dummy sebagai fallback
+      _loadDummyData();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Metode untuk memuat data dummy
+  void _loadDummyData() {
     // Simulasi data penerima
     Future.delayed(const Duration(milliseconds: 500), () {
       daftarPenerima.value = [
@@ -134,7 +161,6 @@ class PenerimaController extends GetxController {
           'terverifikasi': true,
         },
       ];
-      isLoading.value = false;
     });
   }
 
@@ -165,6 +191,79 @@ class PenerimaController extends GetxController {
     } catch (e) {
       return null;
     }
+  }
+
+  // Metode untuk mengambil daftar penyaluran bantuan berdasarkan ID warga
+  Future<void> fetchPenyaluranByWargaId(String wargaId) async {
+    isLoadingPenyaluran.value = true;
+    daftarPenyaluran.clear();
+
+    try {
+      final penyaluranBantuan =
+          await SupabaseService.to.getPenyaluranBantuanByWargaId(wargaId);
+
+      if (penyaluranBantuan != null && penyaluranBantuan.isNotEmpty) {
+        daftarPenyaluran.value = penyaluranBantuan;
+      } else {
+        // Gunakan data dummy jika tidak ada data dari database
+        _loadDummyPenyaluran(wargaId);
+      }
+    } catch (e) {
+      print('Error fetching penyaluran bantuan: $e');
+      // Gunakan data dummy sebagai fallback
+      _loadDummyPenyaluran(wargaId);
+    } finally {
+      isLoadingPenyaluran.value = false;
+    }
+  }
+
+  // Metode untuk memuat data dummy penyaluran
+  void _loadDummyPenyaluran(String wargaId) {
+    // Data dummy penyaluran bantuan (hanya untuk demo)
+    daftarPenyaluran.value = [
+      {
+        'id': '1',
+        'penerima_id': wargaId,
+        'tanggal_penyaluran':
+            DateTime.now().subtract(const Duration(days: 5)).toIso8601String(),
+        'status': 'TERLAKSANA',
+        'stok_bantuan': {
+          'nama': 'Paket Sembako',
+          'jenis': 'Bahan Pokok',
+          'kuantitas': '1 Paket',
+        },
+        'keterangan': 'Bantuan pangan rutin bulanan',
+        'bukti_penyaluran': 'assets/images/bukti_penyaluran.jpg',
+      },
+      {
+        'id': '2',
+        'penerima_id': wargaId,
+        'tanggal_penyaluran':
+            DateTime.now().subtract(const Duration(days: 35)).toIso8601String(),
+        'status': 'TERLAKSANA',
+        'stok_bantuan': {
+          'nama': 'Bantuan Pendidikan',
+          'jenis': 'Alat Tulis',
+          'kuantitas': '1 Paket',
+        },
+        'keterangan': 'Bantuan sekolah semester baru',
+        'bukti_penyaluran': 'assets/images/bukti_penyaluran.jpg',
+      },
+      {
+        'id': '3',
+        'penerima_id': wargaId,
+        'tanggal_penyaluran':
+            DateTime.now().add(const Duration(days: 2)).toIso8601String(),
+        'status': 'DIJADWALKAN',
+        'stok_bantuan': {
+          'nama': 'Paket Sembako',
+          'jenis': 'Bahan Pokok',
+          'kuantitas': '1 Paket',
+        },
+        'keterangan': 'Bantuan pangan rutin bulanan',
+        'bukti_penyaluran': null,
+      },
+    ];
   }
 
   // Fungsi untuk memilih tanggal penyaluran

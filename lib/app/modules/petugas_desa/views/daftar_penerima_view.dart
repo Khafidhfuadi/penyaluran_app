@@ -161,169 +161,201 @@ class DaftarPenerimaView extends GetView<PenerimaController> {
 
   Widget _buildPenerimaCard(
       BuildContext context, Map<String, dynamic> penerima) {
-    return Card(
+    final statusActive = penerima['status'] == 'AKTIF';
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      child: InkWell(
-        onTap: () {
-          // Navigasi ke halaman detail penerima
-          Get.toNamed('/daftar-penerima/detail', arguments: penerima['id']);
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Foto profil
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                child: penerima['foto'] != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(30),
-                        child: Image.asset(
-                          penerima['foto'],
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.person,
-                              size: 30,
-                              color: AppTheme.primaryColor,
-                            );
-                          },
-                        ),
-                      )
-                    : const Icon(
-                        Icons.person,
-                        size: 30,
-                        color: AppTheme.primaryColor,
-                      ),
+      child: Card(
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: InkWell(
+          onTap: () {
+            // Navigasi ke halaman detail penerima
+            Get.toNamed('/daftar-penerima/detail', arguments: penerima['id']);
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white,
+                  AppTheme.primaryColor.withOpacity(0.03),
+                ],
               ),
-              const SizedBox(width: 16),
-              // Informasi penerima
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            penerima['nama'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+            ),
+            child: Row(
+              children: [
+                // Foto profil dengan animasi hero
+                Hero(
+                  tag: 'penerima-${penerima['id']}',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: AppTheme.primaryColor.withOpacity(0.3),
+                          width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 35,
+                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                      backgroundImage: penerima['foto_profil'] != null
+                          ? NetworkImage(penerima['foto_profil'])
+                          : null,
+                      child: penerima['foto_profil'] == null
+                          ? Icon(
+                              Icons.person,
+                              size: 35,
+                              color: AppTheme.primaryColor.withOpacity(0.7),
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Informasi penerima
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              penerima['nama_lengkap'] ?? 'Tanpa Nama',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (penerima['terverifikasi'] == true)
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.verified,
+                                color: Colors.green,
+                                size: 18,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                            width: 1,
                           ),
                         ),
-                        if (penerima['terverifikasi'] == true)
+                        child: Text(
+                          'NIK: ${penerima['nik'] ?? 'Belum Ada'}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
+                              color: statusActive
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: statusActive
+                                    ? Colors.green.withOpacity(0.3)
+                                    : Colors.red.withOpacity(0.3),
+                                width: 1,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
-                                  Icons.verified,
-                                  size: 14,
-                                  color: Colors.green,
+                                Icon(
+                                  statusActive
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                                  size: 12,
+                                  color:
+                                      statusActive ? Colors.green : Colors.red,
                                 ),
                                 const SizedBox(width: 4),
-                                const Text(
-                                  'Terverifikasi',
+                                Text(
+                                  statusActive ? 'Aktif' : 'Tidak Aktif',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.green,
+                                    fontWeight: FontWeight.w500,
+                                    color: statusActive
+                                        ? Colors.green
+                                        : Colors.red,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'NIK: ${penerima['nik'] ?? ''}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryColor.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_forward_ios,
+                              size: 12,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-
-                    _buildStatusBadge(penerima['status']),
-                    // const SizedBox(height: 8),
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //   children: [
-                    //     Text(
-                    //       penerima['alamatLengkap'] ?? '',
-                    //       style: TextStyle(
-                    //         fontSize: 12,
-                    //         color: Colors.grey[600],
-                    //       ),
-                    //       maxLines: 1,
-                    //       overflow: TextOverflow.ellipsis,
-                    //     ),
-                    //     _buildStatusBadge(penerima['status']),
-                    //   ],
-                    // ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(String? status) {
-    Color backgroundColor;
-    Color textColor;
-
-    switch (status) {
-      case 'Selesai':
-        backgroundColor = Colors.green.withOpacity(0.1);
-        textColor = Colors.green;
-        break;
-      case 'Terjadwal':
-        backgroundColor = Colors.blue.withOpacity(0.1);
-        textColor = Colors.blue;
-        break;
-      case 'Belum disalurkan':
-        backgroundColor = Colors.orange.withOpacity(0.1);
-        textColor = Colors.orange;
-        break;
-      default:
-        backgroundColor = Colors.grey.withOpacity(0.1);
-        textColor = Colors.grey;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        status ?? 'Tidak diketahui',
-        style: TextStyle(
-          fontSize: 12,
-          color: textColor,
         ),
       ),
     );
@@ -369,7 +401,7 @@ class PenerimaSearchDelegate extends SearchDelegate {
 
   Widget _buildSearchResults() {
     final filteredList = daftarPenerima.where((penerima) {
-      final nama = penerima['nama']?.toString().toLowerCase() ?? '';
+      final nama = penerima['nama_lengkap']?.toString().toLowerCase() ?? '';
       final nik = penerima['nik']?.toString().toLowerCase() ?? '';
       final alamat = penerima['alamatLengkap']?.toString().toLowerCase() ?? '';
       final searchLower = query.toLowerCase();
@@ -403,13 +435,18 @@ class PenerimaSearchDelegate extends SearchDelegate {
             },
             leading: CircleAvatar(
               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-              child: const Icon(
-                Icons.person,
-                color: AppTheme.primaryColor,
-              ),
+              backgroundImage: penerima['foto_profil'] != null
+                  ? NetworkImage(penerima['foto_profil'])
+                  : null,
+              child: penerima['foto_profil'] == null
+                  ? const Icon(
+                      Icons.person,
+                      color: AppTheme.primaryColor,
+                    )
+                  : null,
             ),
             title: Text(
-              penerima['nama'] ?? '',
+              penerima['nama_lengkap'] ?? '',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
               ),
