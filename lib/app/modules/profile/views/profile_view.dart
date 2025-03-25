@@ -58,17 +58,22 @@ class ProfileView extends GetView<ProfileController> {
         title: const Text('Profil'),
         actions: [
           Obx(() {
-            if (controller.isEditing.value) {
-              return IconButton(
-                icon: const Icon(Icons.save),
-                onPressed: controller.updateProfile,
-              );
-            } else {
-              return IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: controller.toggleEditMode,
-              );
+            // Hanya tampilkan tombol edit jika user bukan warga
+            if (controller.user.value?.role?.toLowerCase() != 'warga') {
+              if (controller.isEditing.value) {
+                return IconButton(
+                  icon: const Icon(Icons.save),
+                  onPressed: controller.updateProfile,
+                );
+              } else {
+                return IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: controller.toggleEditMode,
+                );
+              }
             }
+            return const SizedBox
+                .shrink(); // Jangan tampilkan apapun untuk warga
           }),
         ],
       ),
@@ -122,7 +127,8 @@ class ProfileView extends GetView<ProfileController> {
 
           // Tombol edit foto (hanya muncul dalam mode edit)
           Obx(() {
-            if (controller.isEditing.value) {
+            if (controller.isEditing.value &&
+                controller.user.value?.role?.toLowerCase() != 'warga') {
               return Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Row(
@@ -164,13 +170,36 @@ class ProfileView extends GetView<ProfileController> {
           }),
 
           const SizedBox(height: 16),
-          Obx(() => Text(
-                controller.user.value?.name ?? 'Pengguna',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              )),
+          // Menggunakan Obx untuk reaktif memperbarui nama
+          Obx(() {
+            // Mengambil nama dari roleData jika ada, atau dari user
+            String displayName = '';
+
+            final roleDataValue = controller.roleData.value;
+            final userValue = controller.user.value;
+
+            if (roleDataValue != null) {
+              // Prioritaskan data dari roleData karena lebih spesifik
+              if (roleDataValue['nama_lengkap'] != null) {
+                displayName = roleDataValue['nama_lengkap'];
+              } else if (roleDataValue['nama'] != null) {
+                displayName = roleDataValue['nama'];
+              }
+            }
+
+            // Gunakan data dari user jika tidak ada di roleData
+            if (displayName.isEmpty && userValue != null) {
+              displayName = userValue.name ?? 'Pengguna';
+            }
+
+            return Text(
+              displayName,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            );
+          }),
           const SizedBox(height: 4),
           Obx(() {
             final role = controller.user.value?.role;
@@ -235,8 +264,10 @@ class ProfileView extends GetView<ProfileController> {
                     fit: BoxFit.cover,
                     width: 120,
                     height: 120,
-                    errorBuilder: (context, error, stackTrace) =>
-                        _buildDefaultProfileImage(),
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Error loading local image: $error');
+                      return _buildDefaultProfileImage();
+                    },
                   )
                 : Image.network(
                     imagePath,
@@ -254,8 +285,11 @@ class ProfileView extends GetView<ProfileController> {
                         ),
                       );
                     },
-                    errorBuilder: (context, error, stackTrace) =>
-                        _buildDefaultProfileImage(),
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Error loading network image: $error');
+                      print('Failed image URL: $imagePath');
+                      return _buildDefaultProfileImage();
+                    },
                   ),
           ),
         ),
@@ -321,157 +355,273 @@ class ProfileView extends GetView<ProfileController> {
     return Obx(() {
       final isEditing = controller.isEditing.value;
       final user = controller.user.value;
+      // Form tidak bisa diedit jika usernya warga
+      final bool canEdit = isEditing && user?.role?.toLowerCase() != 'warga';
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Informasi Pribadi',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+              border: Border.all(color: Colors.grey.withOpacity(0.1)),
             ),
-          ),
-          const SizedBox(height: 16),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.person_outline, color: AppTheme.primaryColor),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Informasi Pribadi',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
 
-          // Nama
-          TextField(
-            controller: controller.nameController,
-            decoration: InputDecoration(
-              labelText: 'Nama Lengkap',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.person),
-              enabled: isEditing,
-            ),
-          ),
-          const SizedBox(height: 16),
+                // Menampilkan notifikasi khusus untuk warga
+                if (user?.role?.toLowerCase() == 'warga') ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline,
+                            color: Colors.amber[800], size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Data warga hanya dapat diubah melalui aplikasi verifikasi data warga. Silakan hubungi petugas desa untuk perubahan data.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.amber[900],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
-          // Email
-          TextField(
-            controller: controller.emailController,
-            decoration: InputDecoration(
-              labelText: 'Email',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.email),
-              enabled: false, // Email tidak bisa diubah
-            ),
-            keyboardType: TextInputType.emailAddress,
-          ),
-          const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-          // Nomor Telepon
-          TextField(
-            controller: controller.phoneController,
-            decoration: InputDecoration(
-              labelText: 'Nomor Telepon',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.phone),
-              enabled: isEditing,
+                // Nama
+                TextField(
+                  controller: controller.nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Nama Lengkap',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.person),
+                    enabled: canEdit,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Email
+                TextField(
+                  controller: controller.emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.email),
+                    enabled: false, // Email tidak bisa diubah
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+
+                // Nomor Telepon
+                TextField(
+                  controller: controller.phoneController,
+                  decoration: InputDecoration(
+                    labelText: 'Nomor Telepon',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: Icon(Icons.phone),
+                    enabled: canEdit,
+                  ),
+                  keyboardType: TextInputType.phone,
+                ),
+              ],
             ),
-            keyboardType: TextInputType.phone,
           ),
-          const SizedBox(height: 16),
 
           // Informasi tambahan sesuai role
           if (user != null) ...[
             if (user.role?.toLowerCase() == 'warga') ...[
               const SizedBox(height: 24),
-              const Text(
-                'Informasi Warga',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.infoColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border:
+                      Border.all(color: AppTheme.infoColor.withOpacity(0.2)),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Obx(() {
-                final roleData = controller.roleData.value;
-                return Column(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInfoRow(
-                        Icons.perm_identity, 'NIK', roleData?['nik'] ?? '-'),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(Icons.wc, 'Jenis Kelamin',
-                        roleData?['jenis_kelamin'] ?? '-'),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(
-                        Icons.home, 'Alamat', roleData?['alamat'] ?? '-'),
-                    if (user.desa != null) ...[
-                      const SizedBox(height: 8),
-                      _buildInfoRow(
-                          Icons.location_city, 'Desa', user.desa!.nama),
-                      const SizedBox(height: 8),
-                      _buildInfoRow(Icons.location_on, 'Kecamatan',
-                          user.desa!.kecamatan ?? ''),
-                      const SizedBox(height: 8),
-                      _buildInfoRow(Icons.location_on, 'Kabupaten',
-                          user.desa!.kabupaten ?? ''),
-                      const SizedBox(height: 8),
-                      _buildInfoRow(Icons.location_on, 'Provinsi',
-                          user.desa!.provinsi ?? ''),
-                    ],
+                    Row(
+                      children: [
+                        Icon(Icons.person_pin_circle,
+                            color: AppTheme.infoColor),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Informasi Lainnya',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Obx(() {
+                      final roleData = controller.roleData.value;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildInfoRow(Icons.perm_identity, 'NIK',
+                              roleData?['nik'] ?? '-'),
+                          _buildInfoRow(Icons.wc, 'Jenis Kelamin',
+                              roleData?['jenis_kelamin'] ?? '-'),
+                          _buildInfoRow(
+                              Icons.home, 'Alamat', roleData?['alamat'] ?? '-'),
+                          if (user.desa != null) ...[
+                            _buildInfoRow(
+                                Icons.location_city, 'Desa', user.desa!.nama),
+                            _buildInfoRow(Icons.location_on, 'Kecamatan',
+                                user.desa!.kecamatan ?? ''),
+                            _buildInfoRow(Icons.location_on, 'Kabupaten',
+                                user.desa!.kabupaten ?? ''),
+                            _buildInfoRow(Icons.location_on, 'Provinsi',
+                                user.desa!.provinsi ?? ''),
+                          ],
+                        ],
+                      );
+                    }),
                   ],
-                );
-              }),
+                ),
+              ),
             ],
             if (user.role?.toLowerCase() == 'donatur') ...[
               const SizedBox(height: 24),
-              const Text(
-                'Informasi Donatur',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.successColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border:
+                      Border.all(color: AppTheme.successColor.withOpacity(0.2)),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Obx(() {
-                final roleData = controller.roleData.value;
-                return Column(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInfoRow(Icons.business, 'Instansi',
-                        roleData?['instansi'] ?? '-'),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(
-                        Icons.work, 'Jabatan', roleData?['jabatan'] ?? '-'),
+                    Row(
+                      children: [
+                        Icon(Icons.volunteer_activism,
+                            color: AppTheme.successColor),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Informasi Donatur',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Obx(() {
+                      final roleData = controller.roleData.value;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildInfoRow(Icons.business, 'Instansi',
+                              roleData?['instansi'] ?? '-'),
+                          _buildInfoRow(Icons.work, 'Jabatan',
+                              roleData?['jabatan'] ?? '-'),
+                        ],
+                      );
+                    }),
                   ],
-                );
-              }),
+                ),
+              ),
             ],
             if (user.role?.toLowerCase() == 'petugas_desa') ...[
               const SizedBox(height: 24),
-              const Text(
-                'Informasi Petugas Desa',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border:
+                      Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Obx(() {
-                final roleData = controller.roleData.value;
-                return Column(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInfoRow(Icons.badge, 'NIP', roleData?['nip'] ?? '-'),
-                    if (user.desa != null) ...[
-                      const SizedBox(height: 8),
-                      _buildInfoRow(
-                          Icons.location_city, 'Desa', user.desa!.nama),
-                      const SizedBox(height: 8),
-                      _buildInfoRow(Icons.location_on, 'Kecamatan',
-                          user.desa!.kecamatan ?? ''),
-                      const SizedBox(height: 8),
-                      _buildInfoRow(Icons.location_on, 'Kabupaten',
-                          user.desa!.kabupaten ?? ''),
-                      const SizedBox(height: 8),
-                      _buildInfoRow(Icons.location_on, 'Provinsi',
-                          user.desa!.provinsi ?? ''),
-                    ],
+                    Row(
+                      children: [
+                        Icon(Icons.badge, color: AppTheme.primaryColor),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Informasi Petugas Desa',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Obx(() {
+                      final roleData = controller.roleData.value;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildInfoRow(
+                              Icons.badge, 'NIP', roleData?['nip'] ?? '-'),
+                          if (user.desa != null) ...[
+                            _buildInfoRow(
+                                Icons.location_city, 'Desa', user.desa!.nama),
+                            _buildInfoRow(Icons.location_on, 'Kecamatan',
+                                user.desa!.kecamatan ?? ''),
+                            _buildInfoRow(Icons.location_on, 'Kabupaten',
+                                user.desa!.kabupaten ?? ''),
+                            _buildInfoRow(Icons.location_on, 'Provinsi',
+                                user.desa!.provinsi ?? ''),
+                          ],
+                        ],
+                      );
+                    }),
                   ],
-                );
-              }),
+                ),
+              ),
             ],
           ],
         ],
@@ -480,28 +630,54 @@ class ProfileView extends GetView<ProfileController> {
   }
 
   Widget _buildPasswordSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Keamanan',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
           ),
-        ),
-        const SizedBox(height: 16),
-        ElevatedButton.icon(
-          onPressed: () => _showChangePasswordDialog(context),
-          icon: const Icon(Icons.lock),
-          label: const Text('Ubah Password'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryColor,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 50),
+        ],
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.security, color: AppTheme.primaryColor),
+              const SizedBox(width: 10),
+              const Text(
+                'Keamanan',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () => _showChangePasswordDialog(context),
+            icon: const Icon(Icons.lock),
+            label: const Text('Ubah Password'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -512,34 +688,52 @@ class ProfileView extends GetView<ProfileController> {
 
     Get.dialog(
       AlertDialog(
-        title: const Text('Ubah Password'),
+        title: Row(
+          children: [
+            Icon(Icons.lock_reset, color: AppTheme.primaryColor),
+            const SizedBox(width: 10),
+            const Text('Ubah Password'),
+          ],
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: currentPasswordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password Saat Ini',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.key),
                 ),
                 obscureText: true,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: newPasswordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password Baru',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.lock),
                 ),
                 obscureText: true,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: confirmPasswordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Konfirmasi Password Baru',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.lock_clock),
                 ),
                 obscureText: true,
               ),
@@ -550,6 +744,9 @@ class ProfileView extends GetView<ProfileController> {
           TextButton(
             onPressed: () => Get.back(),
             child: const Text('Batal'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.grey[700],
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -561,6 +758,11 @@ class ProfileView extends GetView<ProfileController> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
             ),
             child: const Text('Simpan'),
           ),
@@ -570,21 +772,65 @@ class ProfileView extends GetView<ProfileController> {
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 18, color: Colors.grey[700]),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            '$label: $value',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-            ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
           ),
+        ],
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                size: 22,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value.isEmpty ? '-' : value,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

@@ -57,7 +57,7 @@ class AppPages {
     ),
     GetPage(
       name: Routes.wargaDashboard,
-      page: () => const WargaView(),
+      page: () => WargaView(),
       binding: WargaBinding(),
     ),
     GetPage(
@@ -65,7 +65,7 @@ class AppPages {
       page: () {
         final controller = Get.find<WargaDashboardController>();
         controller.activeTabIndex.value = 1;
-        return const WargaView();
+        return WargaView();
       },
       binding: WargaBinding(),
     ),
@@ -74,7 +74,7 @@ class AppPages {
       page: () {
         final controller = Get.find<WargaDashboardController>();
         controller.activeTabIndex.value = 2;
-        return const WargaView();
+        return WargaView();
       },
       binding: WargaBinding(),
     ),

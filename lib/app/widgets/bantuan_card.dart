@@ -105,7 +105,7 @@ class BantuanCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     StatusBadge(
-                      status: item.statusPenerimaan ?? 'MENUNGGU',
+                      status: item.statusPenerimaan ?? 'BELUMMENERIMA',
                       fontSize: 10,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -177,7 +177,7 @@ class BantuanCard extends StatelessWidget {
                     children: [
                       StatusBadge(status: item.statusPenyaluran ?? ""),
                       StatusBadge(
-                        status: item.statusPenerimaan ?? 'MENUNGGU',
+                        status: item.statusPenerimaan ?? 'BELUMMENERIMA',
                       ),
                     ],
                   ),

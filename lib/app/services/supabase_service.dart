@@ -423,21 +423,38 @@ class SupabaseService extends GetxService {
     }
   }
 
-  Future<int?> getTotalBantuan() async {
+  // Metode untuk mendapatkan data penerima terbaru
+  Future<List<Map<String, dynamic>>?> getPenerimaTerbaru() async {
     try {
-      final response = await client.from('stok_bantuan').select('jumlah');
+      final response = await client
+          .from('warga')
+          .select('*')
+          .eq('status', 'AKTIF')
+          .order('created_at', ascending: false)
+          .limit(5);
 
-      double total = 0;
-      for (var item in response) {
-        total += (item['jumlah'] ?? 0);
-      }
-
-      return total.toInt();
+      return response;
     } catch (e) {
-      print('Error getting total bantuan: $e');
+      print('Error getting penerima terbaru: $e');
       return null;
     }
   }
+
+  // Future<int?> getTotalBantuan() async {
+  //   try {
+  //     final response = await client.from('stok_bantuan').select('jumlah');
+
+  //     double total = 0;
+  //     for (var item in response) {
+  //       total += (item['jumlah'] ?? 0);
+  //     }
+
+  //     return total.toInt();
+  //   } catch (e) {
+  //     print('Error getting total bantuan: $e');
+  //     return null;
+  //   }
+  // }
 
   Future<int?> getTotalPenyaluran() async {
     try {
@@ -449,6 +466,18 @@ class SupabaseService extends GetxService {
       return response.length;
     } catch (e) {
       print('Error getting total penyaluran: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan total semua penyaluran (termasuk semua status)
+  Future<int?> getTotalSemuaPenyaluran() async {
+    try {
+      final response = await client.from('penyaluran_bantuan').select('id');
+
+      return response.length;
+    } catch (e) {
+      print('Error getting total semua penyaluran: $e');
       return null;
     }
   }
@@ -484,7 +513,13 @@ class SupabaseService extends GetxService {
 
       final response = await client
           .from('penyaluran_bantuan')
-          .select('*')
+          .select('''
+            *,
+            kategori_bantuan(*),
+            lokasi_penyaluran:lokasi_penyaluran_id(
+              id, nama, alamat_lengkap
+            )
+          ''')
           .gte('tanggal_penyaluran', todayUtc)
           .lt('tanggal_penyaluran', tomorrowUtc)
           .inFilter('status', ['AKTIF', 'DIJADWALKAN']);
@@ -709,6 +744,21 @@ class SupabaseService extends GetxService {
       return response;
     } catch (e) {
       print('Error getting penitipan bantuan: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan total penitipan terverifikasi
+  Future<int?> getTotalPenitipanTerverifikasi() async {
+    try {
+      final response = await client
+          .from('penitipan_bantuan')
+          .select('id')
+          .eq('status', 'TERVERIFIKASI');
+
+      return response.length;
+    } catch (e) {
+      print('Error getting total penitipan terverifikasi: $e');
       return null;
     }
   }
@@ -1109,11 +1159,31 @@ class SupabaseService extends GetxService {
   Future<List<Map<String, dynamic>>?> getPenyaluranBantuanByWargaId(
       String wargaId) async {
     try {
-      final response = await client
-          .from('penyaluran_bantuan')
-          .select('*, stok_bantuan:stok_bantuan_id(*)')
-          .eq('penerima_id', wargaId)
-          .order('tanggal_penyaluran', ascending: false);
+      // Pertama, cari warga berdasarkan NIP untuk mendapatkan UUID-nya
+      final wargaResponse = await client
+          .from('warga')
+          .select('id')
+          .eq('id', wargaId)
+          .maybeSingle();
+
+      if (wargaResponse == null) {
+        print('Warning: Warga dengan NIP $wargaId tidak ditemukan');
+        return [];
+      }
+
+      final wargaUuid = wargaResponse['id'];
+
+      // Kemudian gunakan UUID untuk mencari penyaluran bantuan
+      final response = await client.from('penerima_penyaluran').select('''
+            *,
+            penyaluran_bantuan:penyaluran_bantuan_id(
+              *,
+              kategori_bantuan(*),
+              lokasi_penyaluran:lokasi_penyaluran_id(
+                id, nama, alamat_lengkap
+              )
+            )
+          ''').eq('warga_id', wargaUuid).order('created_at', ascending: false);
 
       return response;
     } catch (e) {
@@ -1335,6 +1405,53 @@ class SupabaseService extends GetxService {
       });
     } catch (e) {
       print('Error creating donatur profile: $e');
+      throw e.toString();
+    }
+  }
+
+  // Metode untuk memperbarui profil donatur
+  Future<void> updateDonaturProfile({
+    required String userId,
+    required String nama,
+    required String email,
+    String? noHp,
+    String? fotoProfil,
+  }) async {
+    try {
+      // Buat map untuk update data
+      final Map<String, dynamic> updateData = {
+        'nama': nama,
+        'nama_lengkap': nama, // Untuk konsistensi dengan field nama_lengkap
+        'no_hp': noHp,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      // Tambahkan foto profil jika ada
+      if (fotoProfil != null) {
+        // Jika string kosong, set null untuk menghapus foto profil
+        if (fotoProfil.isEmpty) {
+          updateData['foto_profil'] = null;
+        } else {
+          updateData['foto_profil'] = fotoProfil;
+        }
+      }
+
+      // Update data donatur
+      await client.from('donatur').update(updateData).eq('id', userId);
+
+      // Update email di auth.users jika berubah
+      if (email != client.auth.currentUser?.email) {
+        // Gunakan metode updateUserEmail
+        await client.auth.updateUser(UserAttributes(
+          email: email,
+        ));
+      }
+
+      // Hapus cache user profile
+      _cachedUserProfile = null;
+      print('Cache profil user dihapus setelah update donatur');
+    } catch (e) {
+      print('Error updating donatur profile: $e');
       throw e.toString();
     }
   }
@@ -1647,7 +1764,12 @@ class SupabaseService extends GetxService {
 
       // Tambahkan foto profil jika ada
       if (fotoProfil != null) {
-        updateData['foto_profil'] = fotoProfil;
+        // Jika string kosong, set null untuk menghapus foto profil
+        if (fotoProfil.isEmpty) {
+          updateData['foto_profil'] = null;
+        } else {
+          updateData['foto_profil'] = fotoProfil;
+        }
       }
 
       // Update data warga
@@ -1660,46 +1782,12 @@ class SupabaseService extends GetxService {
           email: email,
         ));
       }
+
+      // Hapus cache user profile
+      _cachedUserProfile = null;
+      print('Cache profil user dihapus setelah update warga');
     } catch (e) {
       print('Error updating warga profile: $e');
-      throw e.toString();
-    }
-  }
-
-  // Metode untuk memperbarui profil donatur
-  Future<void> updateDonaturProfile({
-    required String userId,
-    required String nama,
-    required String email,
-    String? noHp,
-    String? fotoProfil,
-  }) async {
-    try {
-      // Buat map untuk update data
-      final Map<String, dynamic> updateData = {
-        'nama': nama,
-        'nama_lengkap': nama, // Untuk konsistensi dengan field nama_lengkap
-        'no_hp': noHp,
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
-      // Tambahkan foto profil jika ada
-      if (fotoProfil != null) {
-        updateData['foto_profil'] = fotoProfil;
-      }
-
-      // Update data donatur
-      await client.from('donatur').update(updateData).eq('id', userId);
-
-      // Update email di auth.users jika berubah
-      if (email != client.auth.currentUser?.email) {
-        // Gunakan metode updateUserEmail
-        await client.auth.updateUser(UserAttributes(
-          email: email,
-        ));
-      }
-    } catch (e) {
-      print('Error updating donatur profile: $e');
       throw e.toString();
     }
   }
@@ -1722,7 +1810,12 @@ class SupabaseService extends GetxService {
 
       // Tambahkan foto profil jika ada
       if (fotoProfil != null) {
-        updateData['foto_profil'] = fotoProfil;
+        // Jika string kosong, set null untuk menghapus foto profil
+        if (fotoProfil.isEmpty) {
+          updateData['foto_profil'] = null;
+        } else {
+          updateData['foto_profil'] = fotoProfil;
+        }
       }
 
       // Update data petugas desa
@@ -1735,6 +1828,10 @@ class SupabaseService extends GetxService {
           email: email,
         ));
       }
+
+      // Hapus cache user profile
+      _cachedUserProfile = null;
+      print('Cache profil user dihapus setelah update petugas desa');
     } catch (e) {
       print('Error updating petugas desa profile: $e');
       throw e.toString();

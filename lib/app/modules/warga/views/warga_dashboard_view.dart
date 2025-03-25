@@ -29,6 +29,8 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
               children: [
                 _buildWelcomeSection(),
                 const SizedBox(height: 24),
+                _buildStatisticSection(),
+                const SizedBox(height: 24),
                 _buildPenerimaanSummary(),
                 const SizedBox(height: 24),
                 _buildRecentPenerimaan(),
@@ -296,6 +298,144 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
     );
   }
 
+  Widget _buildStatisticSection() {
+    // Data untuk statistik
+    final totalBantuan = controller.penerimaPenyaluran.length;
+    final totalDiterima = controller.penerimaPenyaluran
+        .where((item) => item.statusPenerimaan == 'DITERIMA')
+        .length;
+    final totalBelumMenerima = controller.penerimaPenyaluran
+        .where((item) => item.statusPenerimaan == 'BELUMMENERIMA')
+        .length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: 'Statistik Bantuan',
+          titleStyle: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue.shade800,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatisticCard(
+                icon: Icons.check_circle,
+                color: Colors.green,
+                title: 'Diterima',
+                value: totalDiterima.toString(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatisticCard(
+                icon: Icons.do_not_disturb,
+                color: Colors.red,
+                title: 'Belum Menerima',
+                value: totalBelumMenerima.toString(),
+              ),
+            ),
+          ],
+        ),
+        // Progress bar untuk persentase bantuan yang diterima
+        if (totalBantuan > 0) ...[
+          const SizedBox(height: 16),
+          Text(
+            'Kemajuan Penerimaan Bantuan',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: totalDiterima / totalBantuan,
+              minHeight: 12,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${(totalDiterima / totalBantuan * 100).toStringAsFixed(0)}% bantuan telah diterima',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildStatisticCard({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: color,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPenerimaanSummary() {
     final currencyFormat = NumberFormat.currency(
       locale: 'id',
@@ -324,49 +464,93 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
       }
     }
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade50, Colors.white],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SectionHeader(
               title: 'Ringkasan Bantuan',
-              titleStyle: const TextStyle(
+              titleStyle: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: Colors.blue.shade800,
               ),
+              padding: EdgeInsets.zero,
             ),
             const SizedBox(height: 16),
-            if (totalUang > 0)
-              _buildSummaryItem(
-                icon: Icons.attach_money,
-                color: Colors.green,
-                title: 'Total Bantuan Uang',
-                value: currencyFormat.format(totalUang),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
-            if (totalNonUang.isNotEmpty) ...[
-              if (totalUang > 0) const SizedBox(height: 12),
-              ...totalNonUang.entries.map((entry) {
-                return _buildSummaryItem(
-                  icon: Icons.inventory_2,
-                  color: Colors.blue,
-                  title: 'Total Bantuan ${entry.key}',
-                  value: '${entry.value} ${entry.key}',
-                );
-              }),
-            ],
-            if (totalUang == 0 && totalNonUang.isEmpty)
-              _buildSummaryItem(
-                icon: Icons.info_outline,
-                color: Colors.grey,
-                title: 'Belum Ada Bantuan',
-                value: 'Anda belum menerima bantuan',
+              child: Column(
+                children: [
+                  if (totalUang > 0)
+                    _buildSummaryItem(
+                      icon: Icons.attach_money,
+                      color: Colors.green,
+                      title: 'Total Bantuan Uang',
+                      value: currencyFormat.format(totalUang),
+                    ),
+                  if (totalNonUang.isNotEmpty) ...[
+                    if (totalUang > 0)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(height: 1),
+                      ),
+                    ...totalNonUang.entries.map((entry) {
+                      return Column(
+                        children: [
+                          _buildSummaryItem(
+                            icon: Icons.inventory_2,
+                            color: Colors.blue,
+                            title: 'Total Bantuan ${entry.key}',
+                            value: '${entry.value} ${entry.key}',
+                          ),
+                          if (entry != totalNonUang.entries.last)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Divider(height: 1),
+                            ),
+                        ],
+                      );
+                    }).toList(),
+                  ],
+                  if (totalUang == 0 && totalNonUang.isEmpty)
+                    _buildSummaryItem(
+                      icon: Icons.info_outline,
+                      color: Colors.grey,
+                      title: 'Belum Ada Bantuan',
+                      value: 'Anda belum menerima bantuan',
+                    ),
+                ],
               ),
+            ),
           ],
         ),
       ),
@@ -422,53 +606,140 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
 
   Widget _buildRecentPenerimaan() {
     if (controller.penerimaPenyaluran.isEmpty) {
-      return const SizedBox.shrink();
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            SectionHeader(
+              title: 'Bantuan Terbaru',
+              titleStyle: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue.shade800,
+              ),
+              padding: EdgeInsets.zero,
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 48,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Belum Ada Bantuan',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Data bantuan akan muncul di sini ketika Anda menerima bantuan.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     final maxItems = controller.penerimaPenyaluran.length > 2
         ? 2
         : controller.penerimaPenyaluran.length;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(
-          title: 'Bantuan Terbaru',
-          viewAllText: 'Lihat Semua',
-          onViewAll: () {
-            Get.toNamed(Routes.wargaPenerimaan);
-          },
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: maxItems,
-          itemBuilder: (context, index) {
-            final item = controller.penerimaPenyaluran[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: BantuanCard(
-                item: item,
-                isCompact: true,
-                onTap: () {
-                  Get.toNamed('/warga/detail-penerimaan',
-                      arguments: {'id': item.id});
-                },
-              ),
-            );
-          },
-        ),
-        if (controller.penerimaPenyaluran.length > 2)
-          Center(
-            child: TextButton.icon(
-              onPressed: () {
-                Get.toNamed('/warga-penerimaan');
-              },
-              icon: const Icon(Icons.list),
-              label: const Text('Lihat Semua Bantuan'),
-            ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
-      ],
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            title: 'Bantuan Terbaru',
+            viewAllText: 'Lihat Semua',
+            onViewAll: () {
+              Get.toNamed(Routes.wargaPenerimaan);
+            },
+            titleStyle: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue.shade800,
+            ),
+            padding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: 16),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: maxItems,
+            itemBuilder: (context, index) {
+              final item = controller.penerimaPenyaluran[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: BantuanCard(
+                  item: item,
+                  isCompact: true,
+                  onTap: () {
+                    Get.toNamed('/warga/detail-penerimaan',
+                        arguments: {'id': item.id});
+                  },
+                ),
+              );
+            },
+          ),
+          if (controller.penerimaPenyaluran.length > 2)
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Get.toNamed(Routes.wargaPenerimaan);
+                },
+                icon: const Icon(Icons.list),
+                label: const Text('Lihat Semua Bantuan'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

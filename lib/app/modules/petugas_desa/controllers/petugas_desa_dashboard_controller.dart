@@ -18,11 +18,17 @@ class PetugasDesaDashboardController extends GetxController {
   final RxInt totalPenerima = 0.obs;
   final RxInt totalBantuan = 0.obs;
   final RxInt totalPenyaluran = 0.obs;
+  final RxInt totalSemuaPenyaluran = 0.obs;
+  final RxInt totalPenitipanTerverifikasi = 0.obs;
   final RxDouble progressPenyaluran = 0.0.obs;
 
   // Data untuk notifikasi
   final RxList<NotifikasiModel> notifikasiBelumDibaca = <NotifikasiModel>[].obs;
   final RxInt jumlahNotifikasiBelumDibaca = 0.obs;
+
+  // Data untuk jadwal hari ini
+  final RxList<Map<String, dynamic>> jadwalHariIni =
+      <Map<String, dynamic>>[].obs;
 
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
@@ -45,6 +51,7 @@ class PetugasDesaDashboardController extends GetxController {
     loadUserProfile();
     loadDashboardData();
     loadNotifikasiData();
+    loadJadwalHariIni();
   }
 
   @override
@@ -76,18 +83,24 @@ class PetugasDesaDashboardController extends GetxController {
       final penerimaData = await _supabaseService.getTotalPenerima();
       totalPenerima.value = penerimaData ?? 0;
 
-      // Mengambil data total bantuan
-      final bantuanData = await _supabaseService.getTotalBantuan();
-      totalBantuan.value = bantuanData ?? 0;
+      // Mengambil data total penitipan terverifikasi
+      final penitipanData =
+          await _supabaseService.getTotalPenitipanTerverifikasi();
+      totalPenitipanTerverifikasi.value = penitipanData ?? 0;
 
-      // Mengambil data total penyaluran
+      // Mengambil data total penyaluran terlaksana
       final penyaluranData = await _supabaseService.getTotalPenyaluran();
       totalPenyaluran.value = penyaluranData ?? 0;
 
-      // Menghitung progress penyaluran
-      if (totalBantuan.value > 0) {
+      // Mengambil data total semua penyaluran
+      final semuaPenyaluranData =
+          await _supabaseService.getTotalSemuaPenyaluran();
+      totalSemuaPenyaluran.value = semuaPenyaluranData ?? 0;
+
+      // Menghitung progress penyaluran (persentase penyaluran yang terlaksana dari total semua penyaluran)
+      if (totalSemuaPenyaluran.value > 0) {
         progressPenyaluran.value =
-            (totalPenyaluran.value / totalBantuan.value) * 100;
+            (totalPenyaluran.value / totalSemuaPenyaluran.value) * 100;
       } else {
         progressPenyaluran.value = 0.0;
       }
@@ -114,11 +127,28 @@ class PetugasDesaDashboardController extends GetxController {
     }
   }
 
+  Future<void> loadJadwalHariIni() async {
+    try {
+      final jadwalData = await _supabaseService.getJadwalHariIni();
+      if (jadwalData != null) {
+        jadwalHariIni.value = jadwalData;
+      }
+    } catch (e) {
+      print('Error loading jadwal hari ini: $e');
+    }
+  }
+
   Future<void> refreshData() async {
     isLoading.value = true;
     try {
-      await loadDashboardData();
-      await loadNotifikasiData();
+      await Future.wait([
+        loadUserProfile(),
+        loadDashboardData(),
+        loadNotifikasiData(),
+        loadJadwalHariIni(),
+      ]);
+    } catch (e) {
+      print('Error refreshing data: $e');
     } finally {
       isLoading.value = false;
     }

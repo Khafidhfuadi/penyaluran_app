@@ -46,6 +46,9 @@ class ProfileController extends GetxController {
   Future<void> loadUserData() async {
     isLoading.value = true;
     try {
+      // Hapus cache data user sebelum mengambil data baru
+      _supabaseService.clearUserProfileCache();
+
       // Mendapatkan data user dari service
       final userData = await _supabaseService.getUserProfile();
       if (userData != null) {
@@ -67,9 +70,15 @@ class ProfileController extends GetxController {
           if (roleData.value?['foto_profil'] != null) {
             fotoProfil.value = roleData.value?['foto_profil'] ?? '';
             print(fotoProfil.value);
+          } else {
+            // Reset foto profil jika tidak ada data
+            fotoProfil.value = '';
           }
         }
       }
+
+      // Muat ulang data user di AuthController untuk memastikan konsistensi
+      await _authController.refreshUserData();
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -140,6 +149,95 @@ class ProfileController extends GetxController {
   // Metode untuk menghapus foto profil
   void clearFotoProfil() {
     fotoProfilPath.value = '';
+    if (isEditing.value) {
+      // Cek jika user adalah warga
+      if (user.value?.role?.toLowerCase() == 'warga') {
+        Get.snackbar(
+          'Tidak Diizinkan',
+          'Data warga hanya dapat diubah melalui aplikasi verifikasi data warga. Silakan hubungi petugas desa untuk perubahan data.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.amber,
+          colorText: Colors.black,
+          duration: const Duration(seconds: 5),
+        );
+        return;
+      }
+
+      // Tandai bahwa foto profil akan dihapus saat menyimpan perubahan
+      Get.dialog(
+        AlertDialog(
+          title: const Text('Konfirmasi'),
+          content: const Text('Apakah Anda yakin ingin menghapus foto profil?'),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Get.back();
+                try {
+                  final userData = user.value;
+                  if (userData == null) return;
+
+                  // Update data profil dengan foto kosong
+                  switch (userData.role?.toLowerCase() ?? 'unknown') {
+                    case 'donatur':
+                      await _supabaseService.updateDonaturProfile(
+                        userId: userData.id,
+                        nama: nameController.text,
+                        noHp: phoneController.text,
+                        email: emailController.text,
+                        fotoProfil:
+                            '', // Kosongkan foto profil dengan string kosong
+                      );
+                      break;
+                    case 'petugas_desa':
+                      await _supabaseService.updatePetugasDesaProfile(
+                        userId: userData.id,
+                        nama: nameController.text,
+                        noHp: phoneController.text,
+                        email: emailController.text,
+                        fotoProfil:
+                            '', // Kosongkan foto profil dengan string kosong
+                      );
+                      break;
+                    default:
+                      break;
+                  }
+
+                  // Hapus cache dan refresh data
+                  _supabaseService.clearUserProfileCache();
+                  fotoProfil.value = '';
+                  await _authController.refreshUserData();
+                  await loadUserData();
+
+                  Get.snackbar(
+                    'Sukses',
+                    'Foto profil berhasil dihapus',
+                    snackPosition: SnackPosition.TOP,
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                  );
+                } catch (e) {
+                  Get.snackbar(
+                    'Error',
+                    'Gagal menghapus foto profil: ${e.toString()}',
+                    snackPosition: SnackPosition.TOP,
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('Hapus'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   // Metode untuk mengupload foto profil
@@ -179,11 +277,34 @@ class ProfileController extends GetxController {
       return;
     }
 
+    final userData = user.value;
+    if (userData == null) {
+      Get.snackbar(
+        'Error',
+        'Data user tidak ditemukan',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Cek jika user adalah warga, maka tidak diperbolehkan mengubah profil
+    if (userData.role?.toLowerCase() == 'warga') {
+      Get.snackbar(
+        'Tidak Diizinkan',
+        'Data warga hanya dapat diubah melalui aplikasi verifikasi data warga. Silakan hubungi petugas desa untuk perubahan data.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.amber,
+        colorText: Colors.black,
+        duration: const Duration(seconds: 5),
+      );
+      isEditing.value = false;
+      return;
+    }
+
     isLoading.value = true;
     try {
-      final userData = user.value;
-      if (userData == null) throw 'Data user tidak ditemukan';
-
       // Upload foto profil jika ada
       String? fotoProfilUrl;
       if (fotoProfilPath.isNotEmpty) {
@@ -195,15 +316,6 @@ class ProfileController extends GetxController {
 
       // Update data sesuai role
       switch (userData.role?.toLowerCase() ?? 'unknown') {
-        case 'warga':
-          await _supabaseService.updateWargaProfile(
-            userId: userData.id,
-            namaLengkap: nameController.text,
-            noHp: phoneController.text,
-            email: emailController.text,
-            fotoProfil: fotoProfilUrl,
-          );
-          break;
         case 'donatur':
           await _supabaseService.updateDonaturProfile(
             userId: userData.id,
@@ -226,14 +338,17 @@ class ProfileController extends GetxController {
           throw 'Role tidak valid';
       }
 
-      // Refresh data lokal
-      await loadUserData();
+      // Hapus cache data profil sebelum refresh
+      _supabaseService.clearUserProfileCache();
+
+      // Reset path foto setelah update
+      fotoProfilPath.value = '';
 
       // Refresh data di AuthController untuk menyebarkan perubahan ke seluruh aplikasi
       await _authController.refreshUserData();
 
-      // Reset path foto setelah update
-      fotoProfilPath.value = '';
+      // Refresh data lokal
+      await loadUserData();
 
       // Keluar dari mode edit
       isEditing.value = false;

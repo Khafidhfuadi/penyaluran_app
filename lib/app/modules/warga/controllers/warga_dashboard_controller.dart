@@ -106,6 +106,16 @@ class WargaDashboardController extends GetxController {
     super.onInit();
     fetchData();
     loadUserData();
+
+    // Atau gunakan timer untuk refresh data secara periodik
+    // Timer.periodic(Duration(seconds: 60), (_) => loadUserData());
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    // Perbarui data user dan foto profil saat halaman siap
+    loadUserData();
   }
 
   void loadUserData() {
@@ -133,7 +143,7 @@ class WargaDashboardController extends GetxController {
             wargaData.fotoProfil != null &&
             wargaData.fotoProfil!.isNotEmpty) {
           fotoProfil.value = wargaData.fotoProfil!;
-          print('DEBUG WARGA: Foto profil: ${fotoProfil.value}');
+          print('DEBUG WARGA: Foto profil dari roleData: ${fotoProfil.value}');
         }
       } else {
         print('DEBUG WARGA: User bukan warga');
@@ -142,10 +152,8 @@ class WargaDashboardController extends GetxController {
       print('DEBUG WARGA: userData null');
     }
 
-    // Cek dan ambil foto profil jika belum ada
-    if (fotoProfil.isEmpty) {
-      _fetchProfilePhoto();
-    }
+    // Ambil foto profil dari database
+    _fetchProfilePhoto();
   }
 
   // Metode untuk mengambil foto profil
@@ -156,12 +164,14 @@ class WargaDashboardController extends GetxController {
       final wargaData = await _supabaseService.client
           .from('warga')
           .select('foto_profil')
-          .eq('user_id', user!.id)
-          .single();
+          .eq('id', user!.id) // Menggunakan id, bukan user_id
+          .maybeSingle();
 
       if (wargaData != null && wargaData['foto_profil'] != null) {
         fotoProfil.value = wargaData['foto_profil'];
         print('DEBUG WARGA: Foto profil dari API: ${fotoProfil.value}');
+      } else {
+        print('DEBUG WARGA: Foto profil tidak ditemukan atau null');
       }
     } catch (e) {
       print('Error fetching profile photo: $e');
@@ -585,5 +595,14 @@ class WargaDashboardController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // Metode untuk refresh data setelah update profil atau kembali ke halaman
+  Future<void> refreshData() async {
+    print('DEBUG WARGA: Memulai refresh data...');
+    await _authController.refreshUserData(); // Refresh data dari server
+    loadUserData(); // Muat ulang data ke variabel lokal
+    fetchData(); // Ambil data terkait lainnya
+    print('DEBUG WARGA: Refresh data selesai');
   }
 }

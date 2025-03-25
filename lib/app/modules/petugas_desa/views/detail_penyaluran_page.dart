@@ -1744,8 +1744,8 @@ class DetailPenyaluranPage extends StatelessWidget {
         if (status == 'DITERIMA') {
           return item.statusPenerimaan?.toUpperCase() == 'DITERIMA';
         } else {
-          // Filter untuk yang belum menerima
-          return item.statusPenerimaan?.toUpperCase() != 'DITERIMA';
+          // Semua status selain DITERIMA dianggap sebagai BELUMMENERIMA
+          return item.statusPenerimaan?.toUpperCase() == 'BELUMMENERIMA';
         }
       }).toList();
     }

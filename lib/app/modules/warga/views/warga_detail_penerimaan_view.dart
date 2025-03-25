@@ -328,8 +328,8 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
                                 ),
                                 const SizedBox(height: 8),
                                 StatusBadge(
-                                  status:
-                                      penyaluran.statusPenerimaan ?? 'MENUNGGU',
+                                  status: penyaluran.statusPenerimaan ??
+                                      'BELUMMENERIMA',
                                   fontSize: 14,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
@@ -423,7 +423,7 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
                 ),
                 const SizedBox(width: 8),
                 StatusBadge(
-                  status: penyaluran.statusPenerimaan ?? 'MENUNGGU',
+                  status: penyaluran.statusPenerimaan ?? 'BELUMMENERIMA',
                   fontSize: 12,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penerima_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:intl/intl.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class DetailPenerimaView extends GetView<PenerimaController> {
   const DetailPenerimaView({super.key});
@@ -53,9 +54,6 @@ class DetailPenerimaView extends GetView<PenerimaController> {
 
               // Detail informasi penerima
               _buildDetailInfo(penerima),
-
-              // Status penyaluran
-              _buildStatusSection(penerima),
 
               // Riwayat Penyaluran Bantuan
               _buildRiwayatPenyaluran(),
@@ -127,7 +125,7 @@ class DetailPenerimaView extends GetView<PenerimaController> {
 
           // Nama penerima dengan stroke effect
           Text(
-            penerima['nama'] ?? '',
+            penerima['nama_lengkap'] ?? '',
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -203,7 +201,7 @@ class DetailPenerimaView extends GetView<PenerimaController> {
             ),
 
           // Informasi status aktif
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -255,27 +253,26 @@ class DetailPenerimaView extends GetView<PenerimaController> {
                 children: [
                   _buildInfoRow('NIK', penerima['nik'] ?? '-'),
                   const Divider(),
-                  _buildInfoRow('No KK', penerima['noKK'] ?? '-'),
+                  _buildInfoRow('No KK', penerima['no_kk'] ?? '-'),
                   const Divider(),
-                  _buildInfoRow('No Handphone', penerima['noHandphone'] ?? '-'),
+                  _buildInfoRow('No Handphone', penerima['no_hp'] ?? '-'),
                   const Divider(),
                   _buildInfoRow('Email', penerima['email'] ?? '-'),
                   const Divider(),
                   _buildInfoRow(
-                      'Jenis Kelamin', penerima['jenisKelamin'] ?? '-'),
+                      'Jenis Kelamin', penerima['jenis_kelamin'] ?? '-'),
                   const Divider(),
                   _buildInfoRow('Agama', penerima['agama'] ?? '-'),
                   const Divider(),
-                  _buildInfoRow('Tempat, Tanggal Lahir',
-                      penerima['tempatTanggalLahir'] ?? '-'),
-                  const Divider(),
                   _buildInfoRow(
-                      'Alamat Lengkap', penerima['alamatLengkap'] ?? '-'),
+                      'Tempat, Tanggal Lahir', penerima['tempat_lahir'] ?? '-'),
+                  const Divider(),
+                  _buildInfoRow('Alamat Lengkap', penerima['alamat'] ?? '-'),
                   const Divider(),
                   _buildInfoRow('Pekerjaan', penerima['pekerjaan'] ?? '-'),
                   const Divider(),
-                  _buildInfoRow('Pendidikan Terakhir',
-                      penerima['pendidikanTerakhir'] ?? '-'),
+                  _buildInfoRow(
+                      'Pendidikan Terakhir', penerima['pendidikan'] ?? '-'),
                 ],
               ),
             ),
@@ -315,111 +312,6 @@ class DetailPenerimaView extends GetView<PenerimaController> {
     );
   }
 
-  Widget _buildStatusSection(Map<String, dynamic> penerima) {
-    Color statusColor;
-    IconData statusIcon;
-
-    switch (penerima['status']) {
-      case 'Selesai':
-        statusColor = AppTheme.completedColor;
-        statusIcon = Icons.check_circle;
-        break;
-      case 'Terjadwal':
-        statusColor = AppTheme.processedColor;
-        statusIcon = Icons.event;
-        break;
-      case 'Belum disalurkan':
-        statusColor = AppTheme.warningColor;
-        statusIcon = Icons.pending;
-        break;
-      default:
-        statusColor = Colors.grey;
-        statusIcon = Icons.help;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Status Penyaluran',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      statusIcon,
-                      color: statusColor,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          penerima['status'] ?? 'Tidak diketahui',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: statusColor,
-                          ),
-                        ),
-                        if (penerima['status'] == 'Belum disalurkan')
-                          const Text(
-                            'Penerima ini belum dijadwalkan penyaluran bantuan',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        if (penerima['status'] == 'Terjadwal')
-                          const Text(
-                            'Penerima ini sudah dijadwalkan penyaluran bantuan',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        if (penerima['status'] == 'Selesai')
-                          const Text(
-                            'Penerima ini sudah menerima bantuan',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Widget untuk menampilkan riwayat penyaluran bantuan
   Widget _buildRiwayatPenyaluran() {
     return Container(
@@ -436,6 +328,11 @@ class DetailPenerimaView extends GetView<PenerimaController> {
           ),
           const SizedBox(height: 16),
           Obx(() {
+            // Debug prints
+            print('Loading state: ${controller.isLoadingPenyaluran.value}');
+            print(
+                'Daftar penyaluran length: ${controller.daftarPenyaluran.length}');
+
             if (controller.isLoadingPenyaluran.value) {
               return const Center(
                 child: Padding(
@@ -475,8 +372,18 @@ class DetailPenerimaView extends GetView<PenerimaController> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: controller.daftarPenyaluran.length,
               itemBuilder: (context, index) {
-                final penyaluran = controller.daftarPenyaluran[index];
-                return _buildPenyaluranItem(penyaluran);
+                try {
+                  final penyaluran = controller.daftarPenyaluran[index];
+                  return _buildPenyaluranItem(penyaluran);
+                } catch (e) {
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text('Terjadi kesalahan: $e'),
+                    ),
+                  );
+                }
               },
             );
           }),
@@ -487,137 +394,98 @@ class DetailPenerimaView extends GetView<PenerimaController> {
 
   // Widget untuk menampilkan item penyaluran bantuan
   Widget _buildPenyaluranItem(Map<String, dynamic> penyaluran) {
-    final DateTime tanggalPenyaluran =
-        DateTime.parse(penyaluran['tanggal_penyaluran']);
-    final String formattedDate =
-        DateFormat('dd MMMM yyyy', 'id_ID').format(tanggalPenyaluran);
+    // Status penerimaan dengan nilai default
+    final String statusPenerimaan =
+        penyaluran['status_penerimaan'] ?? 'BELUMMENERIMA';
 
-    final Color statusColor = penyaluran['status'] == 'TERLAKSANA'
+    final Color statusColor = statusPenerimaan == 'DITERIMA'
         ? AppTheme.completedColor
-        : penyaluran['status'] == 'DIJADWALKAN'
+        : statusPenerimaan == 'BELUMMENERIMA'
             ? AppTheme.processedColor
             : AppTheme.warningColor;
 
-    final IconData statusIcon = penyaluran['status'] == 'TERLAKSANA'
+    final IconData statusIcon = statusPenerimaan == 'DITERIMA'
         ? Icons.check_circle
-        : penyaluran['status'] == 'DIJADWALKAN'
-            ? Icons.event
-            : Icons.pending;
+        : statusPenerimaan == 'BELUMMENERIMA'
+            ? Icons.hourglass_empty
+            : Icons.help;
 
-    final Map<String, dynamic> stokBantuan =
-        penyaluran['stok_bantuan'] as Map<String, dynamic>;
+    // Data penyaluran bantuan
+    final Map<String, dynamic> penyaluranBantuan =
+        penyaluran['penyaluran_bantuan'] as Map<String, dynamic>? ?? {};
+
+    // Format tanggal menggunakan DateTimeHelper
+    final tanggalPenerimaan = penyaluran['tanggal_penerimaan'] != null
+        ? DateTime.parse(penyaluran['tanggal_penerimaan'])
+        : null;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
+      elevation: 3,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Baris atas dengan status dan tanggal
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Status penyaluran
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        statusIcon,
-                        color: statusColor,
-                        size: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      penyaluran['status'] == 'TERLAKSANA'
-                          ? 'Terlaksana'
-                          : penyaluran['status'] == 'DIJADWALKAN'
-                              ? 'Terjadwal'
-                              : 'Menunggu',
-                      style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Tanggal penyaluran
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 16,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      formattedDate,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header dengan nama program dan status
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
             ),
-
-            const Divider(height: 24),
-
-            // Informasi bantuan
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                // Ikon bantuan
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.inventory_2_outlined,
-                    color: AppTheme.primaryColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                // Detail bantuan
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        stokBantuan['nama'] ?? 'Bantuan',
+                        penyaluranBantuan['nama'] ?? 'Program Bantuan',
                         style: const TextStyle(
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      if (penyaluranBantuan['deskripsi'] != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            penyaluranBantuan['deskripsi'],
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        statusIcon,
+                        size: 16,
+                        color: statusColor,
+                      ),
+                      const SizedBox(width: 6),
                       Text(
-                        '${stokBantuan['jenis'] ?? 'Umum'} • ${stokBantuan['kuantitas'] ?? '1 Paket'}',
+                        statusPenerimaan,
                         style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        penyaluran['keterangan'] ?? '',
-                        style: const TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
                       ),
@@ -626,45 +494,255 @@ class DetailPenerimaView extends GetView<PenerimaController> {
                 ),
               ],
             ),
+          ),
 
-            // Tampilkan bukti penyaluran jika ada dan status TERLAKSANA
-            if (penyaluran['status'] == 'TERLAKSANA' &&
-                penyaluran['bukti_penyaluran'] != null)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Divider(height: 24),
-                  const Text(
-                    'Bukti Penyaluran',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Informasi waktu dan jumlah
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildInfoItem(
+                        Icons.calendar_today,
+                        'Tanggal Penerimaan',
+                        DateTimeHelper.formatDateTime(tanggalPenerimaan),
+                      ),
                     ),
+                    Expanded(
+                      child: _buildInfoItem(
+                        Icons.inventory_2,
+                        'Jumlah Diterima',
+                        '${penyaluran['jumlah_bantuan'] ?? '0'} paket',
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                if (penyaluranBantuan['lokasi_penyaluran'] != null) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildInfoItem(
+                          Icons.location_on,
+                          'Lokasi Penyaluran',
+                          penyaluranBantuan['lokasi_penyaluran']['nama'] ??
+                              'Tidak tersedia',
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildInfoItem(
+                          Icons.map,
+                          'Alamat Lokasi',
+                          penyaluranBantuan['lokasi_penyaluran']
+                                  ['alamat_lengkap'] ??
+                              'Tidak tersedia',
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      penyaluran['bukti_penyaluran'],
-                      height: 120,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 120,
-                          width: double.infinity,
-                          color: Colors.grey[200],
-                          child: const Center(
-                            child: Text('Gambar tidak tersedia'),
+                ],
+                const SizedBox(height: 16),
+
+                // Bukti penerimaan dan tanda tangan
+                if (penyaluran['bukti_penerimaan'] != null ||
+                    penyaluran['tanda_tangan'] != null)
+                  Row(
+                    children: [
+                      if (penyaluran['bukti_penerimaan'] != null)
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Bukti Penerimaan',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  penyaluran['bukti_penerimaan'],
+                                  height: 100,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
+                        ),
+                      if (penyaluran['bukti_penerimaan'] != null &&
+                          penyaluran['tanda_tangan'] != null)
+                        const SizedBox(width: 16),
+                      if (penyaluran['tanda_tangan'] != null)
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Tanda Tangan',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  penyaluran['tanda_tangan'],
+                                  height: 100,
+                                  width: double.infinity,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+
+                // QR Code
+                if (penyaluran['qr_code_hash'] != null) ...[
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Column(
+                      children: [
+                        const Text(
+                          'QR Code Verifikasi',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.2),
+                                spreadRadius: 1,
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Image.network(
+                            'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${penyaluran['qr_code_hash']}',
+                            height: 120,
+                            width: 120,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 120,
+                                width: 120,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.qr_code_2,
+                                    color: Colors.grey,
+                                    size: 40,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
-          ],
-        ),
+              ],
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildInfoItem(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: AppTheme.primaryColor,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

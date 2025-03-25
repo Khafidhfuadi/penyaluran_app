@@ -287,7 +287,7 @@ class PelaksanaanPenyaluranController extends GetxController {
   // Metode untuk mendapatkan warna status penerimaan
   Color getStatusColor(String status) {
     switch (status.toUpperCase()) {
-      case 'SUDAHMENERIMA':
+      case 'DITERIMA':
         return AppTheme.successColor;
       case 'BELUMMENERIMA':
         return AppTheme.warningColor;
@@ -299,7 +299,7 @@ class PelaksanaanPenyaluranController extends GetxController {
   // Metode untuk mendapatkan ikon status penerimaan
   IconData getStatusIcon(String status) {
     switch (status.toUpperCase()) {
-      case 'SUDAHMENERIMA':
+      case 'DITERIMA':
         return Icons.check_circle;
       case 'BELUMMENERIMA':
         return Icons.event_available;
@@ -311,7 +311,7 @@ class PelaksanaanPenyaluranController extends GetxController {
   // Metode untuk mendapatkan teks status penerimaan
   String getStatusText(String status) {
     switch (status.toUpperCase()) {
-      case 'SUDAHMENERIMA':
+      case 'DITERIMA':
         return 'Sudah Menerima';
       case 'BELUMMENERIMA':
         return 'Belum Menerima';
@@ -373,7 +373,7 @@ class PelaksanaanPenyaluranController extends GetxController {
           createdAt: penerimaPenyaluran[index].createdAt,
           penyaluranBantuanId: penerimaPenyaluran[index].penyaluranBantuanId,
           wargaId: penerimaPenyaluran[index].wargaId,
-          statusPenerimaan: 'SUDAHMENERIMA',
+          statusPenerimaan: 'DITERIMA',
           tanggalPenerimaan: penerimaPenyaluran[index].tanggalPenerimaan,
           buktiPenerimaan: penerimaPenyaluran[index].buktiPenerimaan,
           keterangan: penerimaPenyaluran[index].keterangan,
