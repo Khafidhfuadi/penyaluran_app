@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/laporan_penyaluran/controllers/laporan_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
+import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 import 'package:penyaluran_app/app/widgets/custom_app_bar.dart';
 import 'package:penyaluran_app/app/widgets/section_header.dart';
 import 'package:penyaluran_app/app/widgets/status_badge.dart';
@@ -185,15 +186,15 @@ class LaporanPenyaluranDetailView extends GetView<LaporanPenyaluranController> {
                         _buildInfoRow(
                           'Tanggal Penyaluran',
                           penyaluran.tanggalPenyaluran != null
-                              ? DateFormat('dd/MM/yyyy')
-                                  .format(penyaluran.tanggalPenyaluran!)
+                              ? DateTimeHelper.formatDateTime(
+                                  penyaluran.tanggalPenyaluran!)
                               : '-',
                         ),
                         _buildInfoRow(
                           'Tanggal Selesai',
                           penyaluran.tanggalSelesai != null
-                              ? DateFormat('dd/MM/yyyy')
-                                  .format(penyaluran.tanggalSelesai!)
+                              ? DateTimeHelper.formatDateTime(
+                                  penyaluran.tanggalSelesai!)
                               : '-',
                         ),
                         _buildInfoRow('Jumlah Penerima',
@@ -525,7 +526,7 @@ class LaporanPenyaluranDetailView extends GetView<LaporanPenyaluranController> {
                                   Expanded(
                                     flex: 3,
                                     child: Text(
-                                      'Nama Penerima',
+                                      'NIK',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold),
                                     ),
@@ -533,7 +534,7 @@ class LaporanPenyaluranDetailView extends GetView<LaporanPenyaluranController> {
                                   Expanded(
                                     flex: 3,
                                     child: Text(
-                                      'Jenis Bantuan',
+                                      'Nama Penerima',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold),
                                     ),
@@ -568,12 +569,13 @@ class LaporanPenyaluranDetailView extends GetView<LaporanPenyaluranController> {
                               itemBuilder: (context, index) {
                                 final penerima =
                                     controller.daftarPenerima[index];
+                                final wargaNik = penerima.warga != null
+                                    ? penerima.warga!['nik'] ?? '-'
+                                    : '-';
                                 final wargaNama = penerima.warga != null
                                     ? penerima.warga!['nama_lengkap'] ?? '-'
                                     : '-';
-                                final stokNama = penerima.stokBantuan != null
-                                    ? penerima.stokBantuan!['nama'] ?? '-'
-                                    : '-';
+
                                 final jumlah = penerima.jumlahBantuan != null
                                     ? '${penerima.jumlahBantuan} ${penerima.satuan ?? ''}'
                                     : '-';
@@ -591,11 +593,11 @@ class LaporanPenyaluranDetailView extends GetView<LaporanPenyaluranController> {
                                     children: [
                                       Expanded(
                                         flex: 3,
-                                        child: Text(wargaNama),
+                                        child: Text(wargaNik),
                                       ),
                                       Expanded(
                                         flex: 3,
-                                        child: Text(stokNama),
+                                        child: Text(wargaNama),
                                       ),
                                       Expanded(
                                         flex: 2,
@@ -867,9 +869,7 @@ class LaporanPenyaluranDetailView extends GetView<LaporanPenyaluranController> {
               ),
               const SizedBox(height: 6),
               Text(
-                tanggalLaporan != null
-                    ? DateFormat('dd/MM/yyyy').format(tanggalLaporan)
-                    : '-',
+                DateTimeHelper.formatDateTime(tanggalLaporan),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,

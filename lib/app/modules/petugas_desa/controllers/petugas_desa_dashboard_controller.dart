@@ -27,7 +27,7 @@ class PetugasDesaDashboardController extends GetxController {
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
 
-  UserModel? get user => _authController.user;
+  BaseUserModel? get user => _authController.baseUser;
   String get role => user?.role ?? 'PETUGASDESA';
   String get nama => user?.name ?? 'Petugas Desa';
 

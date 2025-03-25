@@ -918,9 +918,8 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                                         style: const TextStyle(
                                             fontWeight: FontWeight.bold),
                                       ),
-                                      if (selectedDonatur.value!.telepon !=
-                                          null)
-                                        Text(selectedDonatur.value!.telepon!),
+                                      if (selectedDonatur.value!.noHp != null)
+                                        Text(selectedDonatur.value!.noHp!),
                                     ],
                                   ),
                                 ),
@@ -984,9 +983,9 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                                   return ListTile(
                                     title:
                                         Text(donatur.nama ?? 'Tidak ada nama'),
-                                    subtitle: donatur.telepon != null
-                                        ? Text(donatur.telepon!)
-                                        : null,
+                                    subtitle: donatur.noHp != null
+                                        ? Text(donatur.noHp!)
+                                        : const Text('Tidak ada nomor telepon'),
                                     dense: true,
                                     onTap: () {
                                       selectedDonatur.value = donatur;
@@ -1300,7 +1299,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
       BuildContext context, Function(String) onDonaturAdded) {
     final formKey = GlobalKey<FormState>();
     final TextEditingController namaController = TextEditingController();
-    final TextEditingController teleponController = TextEditingController();
+    final TextEditingController noHpController = TextEditingController();
     final TextEditingController alamatController = TextEditingController();
     final TextEditingController emailController = TextEditingController();
     final TextEditingController jenisController = TextEditingController();
@@ -1352,24 +1351,24 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
 
                   // Telepon
                   Text(
-                    'Nomor Telepon',
+                    'Nomor HP',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
                   TextFormField(
-                    controller: teleponController,
+                    controller: noHpController,
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      hintText: 'Masukkan nomor telepon',
+                      hintText: 'Masukkan nomor HP',
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Nomor telepon harus diisi';
+                        return 'Nomor HP harus diisi';
                       }
                       return null;
                     },
@@ -1396,24 +1395,16 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                         : jenisController.text,
                     items: const [
                       DropdownMenuItem<String>(
-                        value: 'Perorangan',
-                        child: Text('Perorangan'),
+                        value: 'Individu',
+                        child: Text('Individu'),
                       ),
                       DropdownMenuItem<String>(
                         value: 'Perusahaan',
                         child: Text('Perusahaan'),
                       ),
                       DropdownMenuItem<String>(
-                        value: 'Lembaga',
-                        child: Text('Lembaga'),
-                      ),
-                      DropdownMenuItem<String>(
-                        value: 'Komunitas',
-                        child: Text('Komunitas'),
-                      ),
-                      DropdownMenuItem<String>(
-                        value: 'Lainnya',
-                        child: Text('Lainnya'),
+                        value: 'Organisasi',
+                        child: Text('Organisasi'),
                       ),
                     ],
                     onChanged: (value) {
@@ -1478,7 +1469,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                           if (formKey.currentState!.validate()) {
                             final donaturId = await controller.tambahDonatur(
                               nama: namaController.text,
-                              telepon: teleponController.text,
+                              noHp: noHpController.text,
                               alamat: alamatController.text.isEmpty
                                   ? null
                                   : alamatController.text,

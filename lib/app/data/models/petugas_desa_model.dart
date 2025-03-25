@@ -1,26 +1,31 @@
 import 'dart:convert';
+import 'package:penyaluran_app/app/data/models/desa_model.dart';
 
 class PetugasDesaModel {
-  final String? id;
-  final String? nama;
-  final String? alamatLengkap;
-  final String? noTelp;
+  final String id; // Primary key yang juga foreign key ke auth.users(id)
+  final String? desaId;
+  final String? namaLengkap;
+  final String? alamat;
+  final String? noHp;
   final String? email;
   final String? jabatan;
-  final String? userId;
+  final String? nip;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DesaModel? desa;
 
   PetugasDesaModel({
-    this.id,
-    this.nama,
-    this.alamatLengkap,
-    this.noTelp,
+    required this.id,
+    this.desaId,
+    this.namaLengkap,
+    this.alamat,
+    this.noHp,
     this.email,
     this.jabatan,
-    this.userId,
+    this.nip,
     this.createdAt,
     this.updatedAt,
+    this.desa,
   });
 
   factory PetugasDesaModel.fromRawJson(String str) =>
@@ -28,32 +33,44 @@ class PetugasDesaModel {
 
   String toRawJson() => json.encode(toJson());
 
-  factory PetugasDesaModel.fromJson(Map<String, dynamic> json) =>
-      PetugasDesaModel(
-        id: json["id"],
-        nama: json["nama"],
-        alamatLengkap: json["alamat_lengkap"],
-        noTelp: json["no_telp"],
-        email: json["email"],
-        jabatan: json["jabatan"],
-        userId: json["user_id"],
-        createdAt: json["created_at"] != null
-            ? DateTime.parse(json["created_at"])
-            : null,
-        updatedAt: json["updated_at"] != null
-            ? DateTime.parse(json["updated_at"])
-            : null,
-      );
+  factory PetugasDesaModel.fromJson(Map<String, dynamic> json) {
+    DesaModel? desa;
+    if (json["desa"] != null && json["desa"] is Map<String, dynamic>) {
+      desa = DesaModel.fromJson(json["desa"]);
+    }
+
+    return PetugasDesaModel(
+      id: json["id"],
+      desaId: json["desa_id"],
+      namaLengkap: json["nama_lengkap"],
+      alamat: json["alamat"],
+      noHp: json["no_hp"],
+      email: json["email"],
+      jabatan: json["jabatan"],
+      nip: json["nip"],
+      createdAt: json["created_at"] != null
+          ? DateTime.parse(json["created_at"])
+          : null,
+      updatedAt: json["updated_at"] != null
+          ? DateTime.parse(json["updated_at"])
+          : null,
+      desa: desa,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "nama": nama,
-        "alamat_lengkap": alamatLengkap,
-        "no_telp": noTelp,
+        "desa_id": desaId,
+        "nama_lengkap": namaLengkap,
+        "alamat": alamat,
+        "no_hp": noHp,
         "email": email,
         "jabatan": jabatan,
-        "user_id": userId,
+        "nip": nip,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
+
+  // Helper method untuk mendapatkan nama yang ditampilkan
+  String get displayName => namaLengkap ?? 'Petugas Desa';
 }

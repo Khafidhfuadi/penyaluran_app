@@ -7,15 +7,17 @@ class AuthService extends GetxService {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  final Rx<User?> currentUser = Rx<User?>(null);
+  final Rx<BaseUserModel?> currentUser = Rx<BaseUserModel?>(null);
+  String? _token;
 
   // Mendapatkan data user saat ini
-  Future<User?> getCurrentUser() async {
+  Future<BaseUserModel?> getCurrentUser() async {
     try {
       // Implementasi untuk mendapatkan data user dari API atau local storage
       // Contoh implementasi sederhana:
       final token = await _storage.read(key: 'token');
       if (token == null) return null;
+      _token = token;
 
       final response = await _dio.get(
         '/api/user/profile',
@@ -27,7 +29,7 @@ class AuthService extends GetxService {
       );
 
       if (response.statusCode == 200) {
-        final user = User.fromJson(response.data['data']);
+        final user = BaseUserModel.fromJson(response.data['data']);
         currentUser.value = user;
         return user;
       }
@@ -40,7 +42,7 @@ class AuthService extends GetxService {
   }
 
   // Update profil user
-  Future<bool> updateProfile(User user) async {
+  Future<bool> updateProfile(BaseUserModel user) async {
     try {
       final token = await _storage.read(key: 'token');
       if (token == null) return false;
@@ -50,7 +52,7 @@ class AuthService extends GetxService {
         data: {
           'name': user.name,
           'email': user.email,
-          'phone': user.phone,
+          // 'phone' tidak tersedia di BaseUserModel, jadi kita hilangkan atau gunakan parameter lain
         },
         options: Options(
           headers: {
@@ -100,7 +102,7 @@ class AuthService extends GetxService {
   }
 
   // Login
-  Future<User?> login(String email, String password) async {
+  Future<BaseUserModel?> login(String email, String password) async {
     try {
       final response = await _dio.post(
         '/api/auth/login',
@@ -111,11 +113,13 @@ class AuthService extends GetxService {
       );
 
       if (response.statusCode == 200) {
-        final user = User.fromJson(response.data['data']);
+        final user = BaseUserModel.fromJson(response.data['data']);
 
-        // Simpan token
-        if (user.token != null) {
-          await _storage.write(key: 'token', value: user.token);
+        // Simpan token yang datang dari respons
+        if (response.data['token'] != null) {
+          final token = response.data['token'].toString();
+          await _storage.write(key: 'token', value: token);
+          _token = token;
         }
 
         currentUser.value = user;
@@ -148,11 +152,18 @@ class AuthService extends GetxService {
     } finally {
       // Hapus token dan user data
       await _storage.delete(key: 'token');
+      _token = null;
       currentUser.value = null;
 
       // Navigasi ke halaman login
       Get.offAllNamed('/login');
     }
+  }
+
+  // Mendapatkan token autentikasi
+  Future<String?> getToken() async {
+    if (_token != null) return _token;
+    return await _storage.read(key: 'token');
   }
 
   // Inisialisasi service

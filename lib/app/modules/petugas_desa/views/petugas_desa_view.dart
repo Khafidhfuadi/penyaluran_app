@@ -151,7 +151,6 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
             return const DashboardView();
           case 1:
             return const PenyaluranView();
-
           case 2:
             return const PenitipanView();
           case 3:
@@ -182,22 +181,15 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.white,
-                  backgroundImage: controller.user?.avatar != null &&
-                          controller.user!.avatar!.isNotEmpty
-                      ? NetworkImage(controller.user!.avatar!)
-                      : null,
-                  child: controller.user?.avatar == null ||
-                          controller.user!.avatar!.isEmpty
-                      ? const Icon(
-                          Icons.person,
-                          size: 40,
-                          color: AppTheme.primaryColor,
-                        )
-                      : null,
+                  child: const Icon(
+                    Icons.person,
+                    size: 40,
+                    color: AppTheme.primaryColor,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  controller.user?.name ?? 'Petugas Desa',
+                  controller.nama,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -206,8 +198,8 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                 ),
                 Text(
                   controller.user?.desa?.nama != null
-                      ? '${controller.user?.role} - ${controller.user!.desa!.nama}'
-                      : controller.user?.role ?? 'PETUGAS_DESA',
+                      ? '${controller.formattedRole} - ${controller.user!.desa!.nama}'
+                      : controller.formattedRole,
                   style: TextStyle(
                     color: Colors.white.withAlpha(200),
                     fontSize: 14,
@@ -251,9 +243,9 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                     ? Badge(
                         label: Text(controller.jumlahDiproses.value.toString()),
                         backgroundColor: Colors.red,
-                        child: const Icon(Icons.support_outlined),
+                        child: const Icon(Icons.warning_amber_outlined),
                       )
-                    : const Icon(Icons.support_outlined),
+                    : const Icon(Icons.warning_amber_outlined),
                 title: const Text('Pengaduan'),
                 selected: controller.activeTabIndex.value == 3,
                 selectedColor: AppTheme.primaryColor,
@@ -272,6 +264,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               controller.changeTab(4);
             },
           ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.person_add_outlined),
             title: const Text('Kelola Penerima'),
@@ -296,7 +289,6 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
               Get.toNamed('/laporan-penyaluran');
             },
           ),
-          const Divider(),
           ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Profil'),

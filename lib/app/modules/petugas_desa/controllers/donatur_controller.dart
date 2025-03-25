@@ -275,7 +275,7 @@ class DonaturController extends GetxController {
 
     try {
       final donatur = daftarDonatur.firstWhere((d) => d.id == donaturId);
-      return donatur.nama;
+      return donatur.namaLengkap;
     } catch (e) {
       return null;
     }

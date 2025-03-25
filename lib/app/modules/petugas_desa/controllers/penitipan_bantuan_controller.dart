@@ -53,7 +53,7 @@ class PenitipanBantuanController extends GetxController {
   // Tambahkan properti untuk waktu terakhir update
   final Rx<DateTime> lastUpdateTime = DateTime.now().obs;
 
-  UserModel? get user => _authController.user;
+  BaseUserModel? get user => _authController.baseUser;
 
   // Getter untuk counter dari CounterService
   RxInt get jumlahMenunggu => _counterService.jumlahMenunggu;
@@ -72,10 +72,9 @@ class PenitipanBantuanController extends GetxController {
 
     loadPenitipanData();
     loadKategoriBantuanData();
-    // Tambahkan delay untuk memastikan data petugas desa dimuat setelah penitipan
-    Future.delayed(const Duration(seconds: 1), () {
-      loadAllPetugasDesaData();
-    });
+
+    // Hapus delay dan muat data petugas desa langsung
+    loadAllPetugasDesaData();
 
     // Listener untuk pencarian donatur
     donaturSearchController.addListener(() {
@@ -123,25 +122,24 @@ class PenitipanBantuanController extends GetxController {
         // Muat informasi petugas desa untuk item yang terverifikasi
         print(
             'Memuat informasi petugas desa untuk ${daftarPenitipan.length} penitipan');
+
+        List<Future> petugasLoaders = [];
+
         for (var item in daftarPenitipan) {
           if (item.status == 'TERVERIFIKASI' && item.petugasDesaId != null) {
             print(
                 'Memuat informasi petugas desa untuk penitipan ID: ${item.id}, petugasDesaId: ${item.petugasDesaId}');
-            final petugasData = await getPetugasDesaInfo(item.petugasDesaId);
-            if (petugasData != null) {
-              print(
-                  'Berhasil memuat data petugas desa: ${petugasData['name']} untuk ID: ${item.petugasDesaId}');
-            } else {
-              print(
-                  'Gagal memuat data petugas desa untuk ID: ${item.petugasDesaId}');
-            }
+            petugasLoaders.add(getPetugasDesaInfo(item.petugasDesaId));
           }
         }
+
+        // Tunggu semua data petugas desa selesai dimuat
+        await Future.wait(petugasLoaders);
 
         // Debug: print semua data petugas desa yang sudah dimuat
         print('Data petugas desa yang sudah dimuat:');
         petugasDesaCache.forEach((key, value) {
-          print('ID: $key, Nama: $value');
+          print('ID: $key, Nama: ${value['nama_lengkap']}');
         });
 
         // Update waktu terakhir refresh
@@ -490,7 +488,8 @@ class PenitipanBantuanController extends GetxController {
         final donaturId = item.donaturId;
         String donaturNama = '';
         if (donaturId != null && donaturCache.containsKey(donaturId)) {
-          donaturNama = donaturCache[donaturId]?.nama?.toLowerCase() ?? '';
+          donaturNama =
+              donaturCache[donaturId]?.namaLengkap?.toLowerCase() ?? '';
         }
         final donaturMatch = donaturNama.contains(searchText);
 
@@ -551,25 +550,37 @@ class PenitipanBantuanController extends GetxController {
     if (!petugasDesaCache.containsKey(petugasDesaId)) {
       print(
           'Data petugas desa tidak ditemukan di cache untuk ID: $petugasDesaId');
-      // Jadwalkan pengambilan data untuk nanti
+      // Muat data petugas dan perbarui UI
       loadPetugasDesaData(petugasDesaId);
-      return 'Memuat...';
+
+      // Coba cek lagi setelah pemuatan
+      if (petugasDesaCache.containsKey(petugasDesaId)) {
+        // Akses nama dari struktur data petugas_desa
+        final nama = petugasDesaCache[petugasDesaId]?['nama_lengkap'];
+        return nama ?? 'Tidak diketahui';
+      }
+
+      return 'Memuat data...';
     }
 
     // Sekarang data seharusnya ada di cache
-    final nama = petugasDesaCache[petugasDesaId]?['name'];
+    // Akses nama dari struktur data petugas_desa
+    final nama = petugasDesaCache[petugasDesaId]?['nama_lengkap'];
     print('Nama petugas desa: $nama untuk ID: $petugasDesaId');
     return nama ?? 'Tidak diketahui';
   }
 
   // Fungsi untuk memuat data petugas desa dan memperbarui UI
-  void loadPetugasDesaData(String petugasDesaId) async {
+  Future<void> loadPetugasDesaData(String petugasDesaId) async {
     try {
+      print('Memuat data petugas desa untuk ID: $petugasDesaId');
       final petugasData = await getPetugasDesaInfo(petugasDesaId);
       if (petugasData != null) {
         // Data sudah dimasukkan ke cache oleh getPetugasDesaInfo
-        // Refresh UI
-        update();
+        print('Berhasil memuat data petugas: ${petugasData['nama_lengkap']}');
+
+        // Refresh UI segera
+        update(['petugas_data']);
       } else {
         print(
             'Gagal mengambil data petugas desa dari server untuk ID: $petugasDesaId');
@@ -597,7 +608,7 @@ class PenitipanBantuanController extends GetxController {
       // Debug: print semua data petugas desa yang sudah dimuat
       print('Data petugas desa yang sudah dimuat setelah reload:');
       petugasDesaCache.forEach((key, value) {
-        print('ID: $key, Nama: $value');
+        print('ID: $key, Nama: ${value['nama_lengkap']}');
       });
     } catch (e) {
       print('Error saat memuat ulang data petugas desa: $e');
@@ -643,15 +654,15 @@ class PenitipanBantuanController extends GetxController {
 
   Future<String?> tambahDonatur({
     required String nama,
-    required String telepon,
+    required String noHp,
     String? alamat,
     String? email,
     String? jenis,
   }) async {
     try {
       final donaturData = {
-        'nama': nama,
-        'telepon': telepon,
+        'nama_lengkap': nama,
+        'no_hp': noHp,
         'alamat': alamat,
         'email': email,
         'jenis': jenis,

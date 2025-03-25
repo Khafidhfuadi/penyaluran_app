@@ -1223,8 +1223,11 @@ class DetailPenyaluranPage extends StatelessWidget {
                       const Divider(height: 24),
                       if (warga != null) ...[
                         _buildInfoRow('NIK', warga['nik'] ?? '-'),
-                        _buildInfoRow('Alamat Lengkap',
-                            '${warga['alamat'] ?? '-'} Desa ${warga['desa'] ?? '-'} Kecamatan ${warga['kecamatan'] ?? '-'} Kabupaten ${warga['kabupaten'] ?? '-'} Provinsi ${warga['provinsi'] ?? '-'}'),
+                        _buildInfoRow('Alamat', warga['alamat'] ?? '-'),
+                        _buildInfoRow('Desa', warga['desa'] ?? '-'),
+                        _buildInfoRow('Kecamatan', warga['kecamatan'] ?? '-'),
+                        _buildInfoRow('Kabupaten', warga['kabupaten'] ?? '-'),
+                        _buildInfoRow('Provinsi', warga['provinsi'] ?? '-'),
                         _buildInfoRow(
                             'Jenis Kelamin', warga['jenis_kelamin'] ?? '-'),
                         _buildInfoRow('No. Telepon', warga['no_hp'] ?? '-'),

@@ -34,6 +34,7 @@ class LaporanPenyaluranController extends GetxController {
   final RxMap<String, dynamic> lokasiPenyaluran = RxMap<String, dynamic>();
   final RxMap<String, dynamic> desaData = RxMap<String, dynamic>();
   final RxMap<String, dynamic> kategoriBantuan = RxMap<String, dynamic>();
+  final RxMap<String, dynamic> petugasData = RxMap<String, dynamic>();
 
   // Form controllers
   final TextEditingController judulController = TextEditingController();
@@ -53,8 +54,8 @@ class LaporanPenyaluranController extends GetxController {
   final RxString filterStatus = 'SEMUA'.obs;
 
   // Getter untuk data user
-  get user => _authController.user;
-  String get role => user?.role ?? 'WARGA';
+  dynamic get user => _authController.baseUser;
+  String get role => _authController.role;
 
   @override
   void onInit() {
@@ -168,6 +169,8 @@ class LaporanPenyaluranController extends GetxController {
           .single();
 
       selectedPenyaluran.value = PenyaluranBantuanModel.fromJson(response);
+      print(
+          'PenyaluranDetail - petugasId: ${selectedPenyaluran.value?.petugasId}');
 
       // Ambil data penerima terkait
       await fetchPenerimaPenyaluran(penyaluranId);
@@ -176,6 +179,11 @@ class LaporanPenyaluranController extends GetxController {
       if (selectedPenyaluran.value?.lokasiPenyaluranId != null) {
         await fetchLokasiPenyaluran(
             selectedPenyaluran.value!.lokasiPenyaluranId!);
+      }
+
+      // Ambil data petugas jika ada
+      if (selectedPenyaluran.value?.petugasId != null) {
+        await fetchPetugasData(selectedPenyaluran.value!.petugasId!);
       }
 
       // Hitung penggunaan stok bantuan
@@ -248,6 +256,22 @@ class LaporanPenyaluranController extends GetxController {
       kategoriBantuan.value = response;
     } catch (e) {
       print('Error fetching kategori bantuan: $e');
+    }
+  }
+
+  // Mendapatkan data petugas
+  Future<void> fetchPetugasData(String petugasId) async {
+    try {
+      final response = await _supabaseService.client
+          .from('petugas_desa')
+          .select('*, desa(nama)')
+          .eq('id', petugasId)
+          .single();
+
+      petugasData.value = response;
+      print('Data petugas berhasil diambil: $petugasData');
+    } catch (e) {
+      print('Error fetching petugas data: $e');
     }
   }
 
@@ -563,7 +587,8 @@ class LaporanPenyaluranController extends GetxController {
       // Load logo - tidak perlu menampilkan error jika logo tidak ada
       pw.MemoryImage? logoImage;
       try {
-        final logoBytes = await rootBundle.load('assets/img/logo.png');
+        final logoBytes =
+            await rootBundle.load('assets/images/penyaluran-icon.png');
         logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
       } catch (e) {
         // Logo tidak ditemukan - tidak perlu print error
@@ -600,7 +625,7 @@ class LaporanPenyaluranController extends GetxController {
                   children: [
                     logoImage != null
                         ? pw.Image(logoImage, width: 60, height: 60)
-                        : pw.SizedBox(width: 60),
+                        : pw.SizedBox(width: 10, height: 10),
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.end,
                       children: [
@@ -924,10 +949,7 @@ class LaporanPenyaluranController extends GetxController {
                                 isHeader: true,
                                 align: pw.TextAlign.center,
                                 color: PdfColors.blue900),
-                            _buildPdfTableCell('Satuan', ttfBold,
-                                isHeader: true,
-                                align: pw.TextAlign.center,
-                                color: PdfColors.blue900),
+
                             _buildPdfTableCell('Status', ttfBold,
                                 isHeader: true,
                                 align: pw.TextAlign.center,
@@ -947,13 +969,19 @@ class LaporanPenyaluranController extends GetxController {
                               ? '${penerima.jumlahBantuan} ${penerima.satuan ?? ''}'
                               : '-';
 
+                          final isUang =
+                              penerima.satuan?.toLowerCase() == 'rupiah';
+                          final jumlahBantuan = penerima.jumlahBantuan ?? 0;
+
+                          final formattedJumlah = isUang
+                              ? 'Rp ${NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0).format(jumlahBantuan)}'
+                              : '$jumlahBantuan ${penerima.satuan ?? ''}';
+
                           return pw.TableRow(
                             children: [
                               _buildPdfTableCell(nik, ttf),
                               _buildPdfTableCell(wargaNama, ttf),
-                              _buildPdfTableCell(jumlah, ttf,
-                                  align: pw.TextAlign.center),
-                              _buildPdfTableCell(penerima.satuan ?? '-', ttf,
+                              _buildPdfTableCell(formattedJumlah, ttf,
                                   align: pw.TextAlign.center),
                               _buildPdfTableCell(
                                   penerima.statusPenerimaan ?? '-', ttf,
@@ -1005,12 +1033,17 @@ class LaporanPenyaluranController extends GetxController {
                           'Dokumentasi dapat diakses melalui tautan berikut:',
                           style: pw.TextStyle(font: ttf)),
                       pw.SizedBox(height: 3),
-                      pw.Text(laporan.dokumentasiUrl!,
+                      pw.UrlLink(
+                        destination: laporan.dokumentasiUrl!,
+                        child: pw.Text(
+                          laporan.dokumentasiUrl!,
                           style: pw.TextStyle(
                             font: ttf,
                             color: PdfColors.blue,
                             decoration: pw.TextDecoration.underline,
-                          )),
+                          ),
+                        ),
+                      ),
                       if (laporan.beritaAcaraUrl != null)
                         pw.SizedBox(height: 10),
                     ],
@@ -1024,12 +1057,17 @@ class LaporanPenyaluranController extends GetxController {
                           'Berita acara dapat diakses melalui tautan berikut:',
                           style: pw.TextStyle(font: ttf)),
                       pw.SizedBox(height: 3),
-                      pw.Text(laporan.beritaAcaraUrl!,
+                      pw.UrlLink(
+                        destination: laporan.beritaAcaraUrl!,
+                        child: pw.Text(
+                          laporan.beritaAcaraUrl!,
                           style: pw.TextStyle(
                             font: ttf,
                             color: PdfColors.blue,
                             decoration: pw.TextDecoration.underline,
-                          )),
+                          ),
+                        ),
+                      ),
                     ],
                   ],
                   ttfBold,
@@ -1046,7 +1084,9 @@ class LaporanPenyaluranController extends GetxController {
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
                       pw.Text(
-                        'Penanggung Jawab,',
+                        petugasData.isNotEmpty
+                            ? 'Petugas ${petugasData['desa'] != null ? "Desa " + (petugasData['desa']['nama'] ?? '') : ''}'
+                            : 'Penanggung Jawab,',
                         style: pw.TextStyle(font: ttf),
                       ),
                       pw.SizedBox(height: 50), // Ruang untuk tanda tangan
@@ -1057,11 +1097,22 @@ class LaporanPenyaluranController extends GetxController {
                                 top: pw.BorderSide(color: PdfColors.black))),
                         padding: const pw.EdgeInsets.only(top: 5),
                         child: pw.Text(
-                          // Sesuaikan dengan properti yang ada di model user
-                          user?.email ?? 'Admin Sistem',
+                          // Gunakan data petugas dari penyaluran, jika tidak ada gunakan data user
+                          petugasData.isNotEmpty
+                              ? petugasData['nama_lengkap'] ?? 'Petugas Desa'
+                              : user?.nama ?? 'Admin Sistem',
                           style: pw.TextStyle(font: ttfBold),
                           textAlign: pw.TextAlign.center,
                         ),
+                      ),
+
+                      // NIP atau nomor identitas petugas
+                      pw.Text(
+                        petugasData.isNotEmpty
+                            ? petugasData['nip'] ?? '-'
+                            : user?.nip ?? '-',
+                        style: pw.TextStyle(font: ttf),
+                        textAlign: pw.TextAlign.center,
                       ),
                     ],
                   ),

@@ -47,7 +47,7 @@ class JadwalPenyaluranController extends GetxController {
   // Controller untuk pencarian
   final TextEditingController searchController = TextEditingController();
 
-  UserModel? get user => _authController.user;
+  BaseUserModel? get user => _authController.baseUser;
 
   @override
   void onInit() {

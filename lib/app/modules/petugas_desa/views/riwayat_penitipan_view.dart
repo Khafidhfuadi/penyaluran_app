@@ -310,11 +310,15 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                 if (item.status == 'TERVERIFIKASI' &&
                     item.petugasDesaId != null)
                   Expanded(
-                    child: _buildItemDetail(
-                      context,
-                      icon: Icons.person,
-                      label: 'Diverifikasi Oleh',
-                      value: controller.getPetugasDesaNama(item.petugasDesaId),
+                    child: GetBuilder<PenitipanBantuanController>(
+                      id: 'petugas_data',
+                      builder: (controller) => _buildItemDetail(
+                        context,
+                        icon: Icons.person,
+                        label: 'Diverifikasi Oleh',
+                        value:
+                            controller.getPetugasDesaNama(item.petugasDesaId),
+                      ),
                     ),
                   ),
               ],

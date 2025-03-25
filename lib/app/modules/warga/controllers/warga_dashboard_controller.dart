@@ -11,7 +11,7 @@ class WargaDashboardController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   final SupabaseService _supabaseService = SupabaseService.to;
 
-  final Rx<UserModel?> currentUser = Rx<UserModel?>(null);
+  final Rx<BaseUserModel?> currentUser = Rx<BaseUserModel?>(null);
 
   // Indeks tab yang aktif di bottom navigation bar
   final RxInt activeTabIndex = 0.obs;
@@ -41,9 +41,18 @@ class WargaDashboardController extends GetxController {
   final RxInt jumlahNotifikasiBelumDibaca = 0.obs;
 
   // Getter untuk data user
-  UserModel? get user => _authController.user;
+  BaseUserModel? get user => _authController.baseUser;
   String get role => user?.role ?? 'WARGA';
-  String get nama => user?.name ?? 'Warga';
+  String get nama {
+    // Gunakan namaLengkap dari roleData jika tersedia
+    if (_authController.isWarga && _authController.roleData != null) {
+      return _authController.roleData.namaLengkap ??
+          _authController.displayName;
+    }
+    // Gunakan displayName dari AuthController
+    return _authController.displayName;
+  }
+
   String? get desa => user?.desa?.nama;
 
   @override
@@ -54,7 +63,30 @@ class WargaDashboardController extends GetxController {
   }
 
   void loadUserData() {
-    currentUser.value = _authController.user;
+    currentUser.value = _authController.baseUser;
+
+    // Tambahkan log debugging
+    print('DEBUG WARGA: Memuat data user dari AuthController');
+    print('DEBUG WARGA: baseUser: ${_authController.baseUser}');
+    print('DEBUG WARGA: roleData: ${_authController.roleData}');
+    print('DEBUG WARGA: nama yang akan ditampilkan: ${nama}');
+    print(
+        'DEBUG WARGA: displayName dari auth controller: ${_authController.displayName}');
+
+    if (_authController.userData != null) {
+      print(
+          'DEBUG WARGA: userData ada, role: ${_authController.userData!.baseUser.roleName}');
+
+      if (_authController.isWarga) {
+        print('DEBUG WARGA: User adalah warga');
+        var wargaData = _authController.roleData;
+        print('DEBUG WARGA: Data warga: ${wargaData?.namaLengkap}');
+      } else {
+        print('DEBUG WARGA: User bukan warga');
+      }
+    } else {
+      print('DEBUG WARGA: userData null');
+    }
   }
 
   void fetchData() async {
@@ -90,14 +122,8 @@ class WargaDashboardController extends GetxController {
       // Reset data terlebih dahulu untuk memastikan tidak ada data lama yang tersimpan
       penerimaPenyaluran.clear();
 
-      // Pertama, cari warga_id berdasarkan user_id
-      final wargaResponse = await _supabaseService.client
-          .from('warga')
-          .select('id')
-          .eq('user_id', user!.id)
-          .single();
-
-      final wargaId = wargaResponse['id'];
+      // Gunakan langsung ID pengguna sebagai warga_id
+      final wargaId = user!.id;
 
       // Ambil data penerima penyaluran dengan join ke warga, stok bantuan, dan penyaluran bantuan
       final response =
@@ -221,14 +247,8 @@ class WargaDashboardController extends GetxController {
   // Fungsi untuk mengambil data pengajuan kelayakan
   Future<void> fetchPengajuanKelayakan() async {
     try {
-      // Pertama, cari warga_id berdasarkan user_id
-      final wargaResponse = await _supabaseService.client
-          .from('warga')
-          .select('id')
-          .eq('user_id', user!.id)
-          .single();
-
-      final wargaId = wargaResponse['id'];
+      // Gunakan langsung ID pengguna sebagai warga_id
+      final wargaId = user!.id;
 
       final response = await _supabaseService.client
           .from('xx02_pengajuan_kelayakan_bantuan')
@@ -257,19 +277,17 @@ class WargaDashboardController extends GetxController {
       totalPengajuanDitolak.value =
           pengajuan.where((p) => p.status == StatusKelayakan.DITOLAK).length;
     } catch (e) {
-      print('Error fetching pengajuan kelayakan: $e');
+      print('Error fetchPengajuanKelayakan: $e');
     }
   }
 
   // Fungsi untuk mengambil data pengaduan
   Future<void> fetchPengaduan() async {
     try {
-      final wargaData = await _supabaseService.getWargaByUserId();
-      if (wargaData == null) {
-        return;
-      }
+      // Gunakan langsung ID user dari AuthController, bukan getWargaByUserId()
+      String wargaId = user!.id;
+      print('DEBUG WARGA: Mengambil pengaduan untuk warga ID: $wargaId');
 
-      final String wargaId = wargaData['id'];
       final response = await _supabaseService
           .getPengaduanWargaWithPenerimaPenyaluran(wargaId);
 
@@ -287,15 +305,21 @@ class WargaDashboardController extends GetxController {
             .length;
         totalPengaduanSelesai.value =
             pengaduanList.where((p) => p.status == 'SELESAI').length;
+
+        print(
+            'DEBUG WARGA: Berhasil mendapatkan ${pengaduanList.length} pengaduan');
+      } else {
+        print('DEBUG WARGA: Tidak ada pengaduan yang ditemukan');
       }
     } catch (e) {
-      print('Error fetching pengaduan: $e');
+      print('DEBUG WARGA: Error fetching pengaduan: $e');
     }
   }
 
   // Fungsi untuk mengambil data notifikasi
   Future<void> fetchNotifikasi() async {
     try {
+      // Notifikasi masih menggunakan user_id karena tabelnya terpisah
       final response = await _supabaseService.client
           .from('notifikasi')
           .select('*')
@@ -429,13 +453,8 @@ class WargaDashboardController extends GetxController {
     try {
       isLoading.value = true;
 
-      // Cari warga_id berdasarkan user_id
-      final wargaData = await _supabaseService.getWargaByUserId();
-      if (wargaData == null) {
-        throw Exception('Data warga tidak ditemukan');
-      }
-
-      final String wargaId = wargaData['id'];
+      // Gunakan langsung ID pengguna sebagai warga_id
+      final String wargaId = user!.id;
 
       // Upload foto pengaduan jika ada
       List<String> fotoPengaduanUrls = [];

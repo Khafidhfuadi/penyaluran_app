@@ -32,7 +32,7 @@ class PenerimaBantuanController extends GetxController {
   // Form key
   final GlobalKey<FormState> penerimaFormKey = GlobalKey<FormState>();
 
-  UserModel? get user => _authController.user;
+  BaseUserModel? get user => _authController.baseUser;
 
   @override
   void onInit() {
@@ -79,19 +79,21 @@ class PenerimaBantuanController extends GetxController {
 
     isLoading.value = true;
     try {
-      final penerima = WargaModel(
-        nama: namaController.text,
-        nik: nikController.text,
-        alamat: alamatController.text,
-        telepon: teleponController.text,
-        email: emailController.text,
-        catatan: catatanController.text,
-        status: 'AKTIF',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      // Biarkan Supabase yang akan menghasilkan ID saat insert
+      // Kita hanya perlu menyediakan data lainnya
+      final penerima = {
+        'nama_lengkap': namaController.text,
+        'nik': nikController.text,
+        'alamat': alamatController.text,
+        'no_hp': teleponController.text,
+        'email': emailController.text,
+        'catatan': catatanController.text,
+        'status': 'AKTIF',
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
 
-      await _supabaseService.tambahPenerima(penerima.toJson());
+      await _supabaseService.tambahPenerima(penerima);
 
       // Clear form
       clearForm();
@@ -125,18 +127,17 @@ class PenerimaBantuanController extends GetxController {
 
     isLoading.value = true;
     try {
-      final penerima = WargaModel(
-        id: penerimaId,
-        nama: namaController.text,
-        nik: nikController.text,
-        alamat: alamatController.text,
-        telepon: teleponController.text,
-        email: emailController.text,
-        catatan: catatanController.text,
-        updatedAt: DateTime.now(),
-      );
+      final penerima = {
+        'nama_lengkap': namaController.text,
+        'nik': nikController.text,
+        'alamat': alamatController.text,
+        'no_hp': teleponController.text,
+        'email': emailController.text,
+        'catatan': catatanController.text,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
 
-      await _supabaseService.updatePenerima(penerimaId, penerima.toJson());
+      await _supabaseService.updatePenerima(penerimaId, penerima);
 
       // Clear form
       clearForm();
@@ -218,10 +219,10 @@ class PenerimaBantuanController extends GetxController {
   }
 
   void setFormData(WargaModel penerima) {
-    namaController.text = penerima.nama ?? '';
+    namaController.text = penerima.namaLengkap ?? '';
     nikController.text = penerima.nik ?? '';
     alamatController.text = penerima.alamat ?? '';
-    teleponController.text = penerima.telepon ?? '';
+    teleponController.text = penerima.noHp ?? '';
     emailController.text = penerima.email ?? '';
     catatanController.text = penerima.catatan ?? '';
   }

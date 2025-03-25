@@ -198,7 +198,7 @@ class DetailDonaturView extends GetView<DonaturController> {
                       donatur.alamat ?? 'Tidak ada alamat'),
                   const SizedBox(height: 8),
                   _buildInfoItem(Icons.phone, 'Telepon',
-                      donatur.telepon ?? 'Tidak ada telepon'),
+                      donatur.noHp ?? 'Tidak ada telepon'),
                   const SizedBox(height: 8),
                   _buildInfoItem(
                       Icons.email, 'Email', donatur.email ?? 'Tidak ada email'),

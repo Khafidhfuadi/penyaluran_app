@@ -87,6 +87,7 @@ class ProfileView extends GetView<ProfileController> {
   Widget _buildProfileForm() {
     return Obx(() {
       final isEditing = controller.isEditing.value;
+      final user = controller.user.value;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,7 +120,7 @@ class ProfileView extends GetView<ProfileController> {
               labelText: 'Email',
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.email),
-              enabled: isEditing,
+              enabled: false, // Email tidak bisa diubah
             ),
             keyboardType: TextInputType.emailAddress,
           ),
@@ -136,6 +137,113 @@ class ProfileView extends GetView<ProfileController> {
             ),
             keyboardType: TextInputType.phone,
           ),
+          const SizedBox(height: 16),
+
+          // Informasi tambahan sesuai role
+          if (user != null) ...[
+            if (user.role?.toLowerCase() == 'warga') ...[
+              const SizedBox(height: 24),
+              const Text(
+                'Informasi Warga',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Obx(() {
+                final roleData = controller.roleData.value;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoRow(
+                        Icons.perm_identity, 'NIK', roleData?['nik'] ?? '-'),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(Icons.wc, 'Jenis Kelamin',
+                        roleData?['jenis_kelamin'] ?? '-'),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                        Icons.home, 'Alamat', roleData?['alamat'] ?? '-'),
+                    if (user.desa != null) ...[
+                      const SizedBox(height: 8),
+                      _buildInfoRow(
+                          Icons.location_city, 'Desa', user.desa!.nama),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(Icons.location_on, 'Kecamatan',
+                          user.desa!.kecamatan ?? ''),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(Icons.location_on, 'Kabupaten',
+                          user.desa!.kabupaten ?? ''),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(Icons.location_on, 'Provinsi',
+                          user.desa!.provinsi ?? ''),
+                    ],
+                  ],
+                );
+              }),
+            ],
+            if (user.role?.toLowerCase() == 'donatur') ...[
+              const SizedBox(height: 24),
+              const Text(
+                'Informasi Donatur',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Obx(() {
+                final roleData = controller.roleData.value;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoRow(Icons.business, 'Instansi',
+                        roleData?['instansi'] ?? '-'),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                        Icons.work, 'Jabatan', roleData?['jabatan'] ?? '-'),
+                  ],
+                );
+              }),
+            ],
+            if (user.role?.toLowerCase() == 'petugas_desa') ...[
+              const SizedBox(height: 24),
+              const Text(
+                'Informasi Petugas Desa',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Obx(() {
+                final roleData = controller.roleData.value;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoRow(Icons.badge, 'NIP', roleData?['nip'] ?? '-'),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                        Icons.work, 'Jabatan', roleData?['jabatan'] ?? '-'),
+                    if (user.desa != null) ...[
+                      const SizedBox(height: 8),
+                      _buildInfoRow(
+                          Icons.location_city, 'Desa', user.desa!.nama),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(Icons.location_on, 'Kecamatan',
+                          user.desa!.kecamatan ?? ''),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(Icons.location_on, 'Kabupaten',
+                          user.desa!.kabupaten ?? ''),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(Icons.location_on, 'Provinsi',
+                          user.desa!.provinsi ?? ''),
+                    ],
+                  ],
+                );
+              }),
+            ],
+          ],
         ],
       );
     });
@@ -228,6 +336,25 @@ class ProfileView extends GetView<ProfileController> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: Colors.grey[700]),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            '$label: $value',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

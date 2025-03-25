@@ -101,20 +101,16 @@ class TindakanPengaduanModel {
 
   // Getter untuk mendapatkan nama petugas
   String get namaPetugas {
-    if (petugas != null && petugas!['nama'] != null) {
-      return petugas!['nama'];
-    } else if (petugas != null && petugas!['name'] != null) {
-      return petugas!['name'];
+    if (petugas != null && petugas!['nama_lengkap'] != null) {
+      return petugas!['nama_lengkap'];
     }
     return 'Petugas';
   }
 
   // Getter untuk mendapatkan nama verifikator
   String get namaVerifikator {
-    if (verifikator != null && verifikator!['nama'] != null) {
-      return verifikator!['nama'];
-    } else if (verifikator != null && verifikator!['name'] != null) {
-      return verifikator!['name'];
+    if (verifikator != null && verifikator!['nama_lengkap'] != null) {
+      return verifikator!['nama_lengkap'];
     }
     return 'Belum diverifikasi';
   }

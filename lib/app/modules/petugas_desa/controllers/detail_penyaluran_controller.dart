@@ -54,12 +54,12 @@ class DetailPenyaluranController extends GetxController {
       final user = _supabaseService.client.auth.currentUser;
       if (user != null) {
         final userData = await _supabaseService.client
-            .from('users')
+            .from('user_profile')
             .select('role')
             .eq('id', user.id)
             .single();
 
-        if (userData['role'] == 'petugas_desa') {
+        if (userData['role'] == 'PETUGASDESA') {
           isPetugasDesa.value = true;
         }
       }

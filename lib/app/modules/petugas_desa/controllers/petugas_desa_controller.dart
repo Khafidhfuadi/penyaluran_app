@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/desa_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
+import 'package:penyaluran_app/app/data/models/petugas_desa_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/counter_service.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
@@ -49,9 +50,57 @@ class PetugasDesaController extends GetxController {
   // Variabel untuk pencarian dan filter
   final searchQuery = ''.obs;
 
-  UserModel? get user => _authController.user;
-  String get role => user?.role ?? 'PETUGASDESA';
-  String get nama => user?.name ?? 'Petugas Desa';
+  BaseUserModel? get user => _authController.baseUser;
+  String get role => user?.roleName ?? 'PETUGAS_DESA';
+
+  // Helper method untuk format role agar lebih rapi
+  String get formattedRole {
+    final roleText = role.toLowerCase();
+    if (roleText.contains('_')) {
+      return roleText
+          .split('_')
+          .map((word) =>
+              word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : '')
+          .join(' ');
+    }
+    return roleText.isNotEmpty
+        ? roleText[0].toUpperCase() + roleText.substring(1)
+        : 'Petugas Desa';
+  }
+
+  String get nama {
+    // 1. Coba ambil dari AuthController displayName yang paling lengkap
+    final authDisplayName = _authController.displayName;
+    if (authDisplayName != null &&
+        authDisplayName != 'Pengguna' &&
+        authDisplayName != user?.email) {
+      return authDisplayName;
+    }
+
+    // 2. Coba ambil dari roleData jika merupakan PetugasDesaModel
+    final userData = _authController.userData;
+    if (userData != null && userData.roleData is PetugasDesaModel) {
+      final petugasData = userData.roleData as PetugasDesaModel;
+      if (petugasData.namaLengkap != null &&
+          petugasData.namaLengkap!.isNotEmpty) {
+        return petugasData.namaLengkap!;
+      }
+    }
+
+    // 3. Coba ambil dari user.name
+    if (user?.name != null && user!.name!.isNotEmpty) {
+      return user!.name!;
+    }
+
+    // 4. Fallback ke nama dari userProfile
+    if (userProfile['name'] != null &&
+        userProfile['name'].toString().isNotEmpty) {
+      return userProfile['name'];
+    }
+
+    // 5. Default fallback
+    return 'Petugas Desa';
+  }
 
   // Getter untuk counter dari CounterService
   RxInt get jumlahNotifikasiBelumDibaca =>
@@ -64,6 +113,13 @@ class PetugasDesaController extends GetxController {
 
   // Getter untuk nama desa dari profil pengguna
   String get desa {
+    // Debug info
+    print('DEBUG: Memeriksa data desa...');
+    if (user != null) {
+      print('DEBUG: User ID: ${user!.id}, User email: ${user!.email}');
+      print('DEBUG: User desa: ${user!.desa}');
+    }
+
     // Prioritaskan model desa dari user
     if (user?.desa != null) {
       print('DEBUG: Menggunakan desa dari user model: ${user!.desa!.nama}');
@@ -77,9 +133,15 @@ class PetugasDesaController extends GetxController {
       return desaNama;
     }
 
+    // Jika masih tidak ada, coba dari desaModel
+    if (desaModel.value != null) {
+      print('DEBUG: Menggunakan desa dari desaModel: ${desaModel.value!.nama}');
+      return desaModel.value!.nama;
+    }
+
     // Fallback ke nilai default
     print('DEBUG: Menggunakan nilai default untuk desa');
-    return userProfile['desa_id'] != null ? 'Desa' : 'Desa';
+    return 'Desa';
   }
 
   @override
@@ -109,34 +171,76 @@ class PetugasDesaController extends GetxController {
   // Metode untuk memuat data profil pengguna dari cache
   Future<void> loadUserProfile() async {
     try {
-      // Jika user sudah ada di AuthController, tidak perlu mengambil data lagi
+      // Jika user sudah ada di AuthController, gunakan data yang ada
       if (user != null) {
         print('DEBUG: User ditemukan di AuthController: ${user!.email}');
         print('DEBUG: User desa: ${user!.desa?.nama}');
 
-        // Ambil data tambahan jika diperlukan, tapi gunakan cache
-        final profileData = await _supabaseService.getUserProfile();
-        if (profileData != null) {
-          print('DEBUG: Profile data ditemukan: ${profileData['name']}');
-          userProfile.value = profileData;
+        // Tidak perlu mengambil data tambahan jika user.desa sudah ada
+        if (user!.desa != null) {
+          print(
+              'DEBUG: Menggunakan desa dari AuthController: ${user!.desa!.nama}');
+          desaModel.value = user!.desa;
 
-          // Parse data desa jika ada
-          if (profileData['desa'] != null &&
-              profileData['desa'] is Map<String, dynamic>) {
+          // Perbarui userProfile untuk konsistensi
+          if (userProfile.isEmpty) {
+            userProfile.value = {
+              'name': user!.name ?? _authController.displayName,
+              'desa': user!.desa?.toJson(),
+            };
+          }
+
+          return; // Data sudah lengkap, tidak perlu fetch lagi
+        }
+
+        print(
+            'DEBUG: Data desa tidak ditemukan di AuthController, mencoba ambil dari cache');
+
+        // Jika tidak ada desa di AuthController, coba ambil dari userData roleData
+        final userData = _authController.userData;
+        if (userData != null) {
+          if (userData.roleData is PetugasDesaModel) {
+            final petugasData = userData.roleData as PetugasDesaModel;
+            if (petugasData.desa != null) {
+              print(
+                  'DEBUG: Menggunakan desa dari roleData: ${petugasData.desa!.nama}');
+              desaModel.value = petugasData.desa;
+
+              // Perbarui userProfile untuk konsistensi
+              userProfile.value = {
+                'name': petugasData.displayName,
+                'desa': petugasData.desa?.toJson(),
+              };
+
+              return; // Data sudah lengkap, tidak perlu fetch lagi
+            }
+          }
+        }
+
+        // Jika tidak ada di cache, ambil dari API hanya jika benar-benar diperlukan
+        print('DEBUG: Data desa tidak ditemukan di cache, mengambil dari API');
+        final baseProfile = await _supabaseService.getUserProfile();
+        if (baseProfile != null) {
+          userProfile.value = baseProfile;
+
+          if (baseProfile['desa'] != null &&
+              baseProfile['desa'] is Map<String, dynamic>) {
             try {
-              final desaData = profileData['desa'] as Map<String, dynamic>;
-              print('DEBUG: Desa data ditemukan: $desaData');
+              final desaData = baseProfile['desa'] as Map<String, dynamic>;
+              print('DEBUG: Desa data ditemukan dari API: $desaData');
+              desaModel.value = DesaModel.fromJson(desaData);
             } catch (e) {
               print('Error parsing desa data: $e');
             }
           } else {
-            print('DEBUG: Desa data tidak ditemukan atau bukan Map');
+            print('DEBUG: Desa data tidak ditemukan di API');
           }
         } else {
-          print('DEBUG: Profile data tidak ditemukan');
+          print('DEBUG: Profile data tidak ditemukan dari API');
         }
       } else {
-        print('DEBUG: User tidak ditemukan di AuthController');
+        print(
+            'DEBUG: User tidak ditemukan di AuthController, mungkin belum login');
       }
     } catch (e) {
       print('Error loading user profile: $e');

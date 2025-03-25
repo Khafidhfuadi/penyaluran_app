@@ -1,41 +1,44 @@
 import 'dart:convert';
+import 'package:penyaluran_app/app/data/models/desa_model.dart';
 
 // warga == penerima bantuan
 class WargaModel {
-  final String? id;
-  final String? nama;
-  final String? nik;
+  final String id; // Primary key yang juga foreign key ke auth.users(id)
+  final String? desaId;
+  final String? namaLengkap;
   final String? alamat;
-  final String? desa;
-  final String? kecamatan;
-  final String? kabupaten;
-  final String? provinsi;
-  final String? telepon;
+  final String? noHp;
   final String? email;
+  final String? nik;
+  final String? tempatLahir;
+  final DateTime? tanggalLahir;
+  final String? jenisKelamin;
+  final String? agama;
+  final String? kategoriEkonomi;
+  final String? status;
   final String? catatan;
-  final String? kategori; // Contoh: 'lansia', 'disabilitas', 'miskin', dll
-  final String? status; // Contoh: 'AKTIF', 'NONAKTIF'
-  final String? lokasiPenyaluranId; // Referensi ke LokasiPenyaluran
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DesaModel? desa;
 
   WargaModel({
-    this.id,
-    this.nama,
-    this.nik,
+    required this.id,
+    this.desaId,
+    this.namaLengkap,
     this.alamat,
-    this.desa,
-    this.kecamatan,
-    this.kabupaten,
-    this.provinsi,
-    this.telepon,
+    this.noHp,
     this.email,
+    this.nik,
+    this.tempatLahir,
+    this.tanggalLahir,
+    this.jenisKelamin,
+    this.agama,
+    this.kategoriEkonomi,
+    this.status = 'AKTIF',
     this.catatan,
-    this.kategori,
-    this.status,
-    this.lokasiPenyaluranId,
     this.createdAt,
     this.updatedAt,
+    this.desa,
   });
 
   factory WargaModel.fromRawJson(String str) =>
@@ -43,45 +46,58 @@ class WargaModel {
 
   String toRawJson() => json.encode(toJson());
 
-  factory WargaModel.fromJson(Map<String, dynamic> json) => WargaModel(
-        id: json["id"],
-        nama: json["nama"],
-        nik: json["nik"],
-        alamat: json["alamat"],
-        desa: json["desa"],
-        kecamatan: json["kecamatan"],
-        kabupaten: json["kabupaten"],
-        provinsi: json["provinsi"],
-        telepon: json["telepon"] ?? json["no_telp"],
-        email: json["email"],
-        catatan: json["catatan"],
-        kategori: json["kategori"],
-        status: json["status"],
-        lokasiPenyaluranId: json["lokasi_penyaluran_id"],
-        createdAt: json["created_at"] != null
-            ? DateTime.parse(json["created_at"])
-            : null,
-        updatedAt: json["updated_at"] != null
-            ? DateTime.parse(json["updated_at"])
-            : null,
-      );
+  factory WargaModel.fromJson(Map<String, dynamic> json) {
+    DesaModel? desa;
+    if (json["desa"] != null && json["desa"] is Map<String, dynamic>) {
+      desa = DesaModel.fromJson(json["desa"]);
+    }
+
+    return WargaModel(
+      id: json["id"],
+      desaId: json["desa_id"],
+      namaLengkap: json["nama_lengkap"],
+      alamat: json["alamat"],
+      noHp: json["no_hp"],
+      email: json["email"],
+      nik: json["nik"],
+      tempatLahir: json["tempat_lahir"],
+      tanggalLahir: json["tanggal_lahir"] != null
+          ? DateTime.parse(json["tanggal_lahir"])
+          : null,
+      jenisKelamin: json["jenis_kelamin"],
+      agama: json["agama"],
+      kategoriEkonomi: json["kategori_ekonomi"],
+      status: json["status"] ?? 'AKTIF',
+      catatan: json["catatan"],
+      createdAt: json["created_at"] != null
+          ? DateTime.parse(json["created_at"])
+          : null,
+      updatedAt: json["updated_at"] != null
+          ? DateTime.parse(json["updated_at"])
+          : null,
+      desa: desa,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "nama": nama,
-        "nik": nik,
+        "desa_id": desaId,
+        "nama_lengkap": namaLengkap,
         "alamat": alamat,
-        "desa": desa,
-        "kecamatan": kecamatan,
-        "kabupaten": kabupaten,
-        "provinsi": provinsi,
-        "telepon": telepon,
+        "no_hp": noHp,
         "email": email,
-        "catatan": catatan,
-        "kategori": kategori,
+        "nik": nik,
+        "tempat_lahir": tempatLahir,
+        "tanggal_lahir": tanggalLahir?.toIso8601String(),
+        "jenis_kelamin": jenisKelamin,
+        "agama": agama,
+        "kategori_ekonomi": kategoriEkonomi,
         "status": status,
-        "lokasi_penyaluran_id": lokasiPenyaluranId,
+        "catatan": catatan,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
+
+  // Helper method untuk mendapatkan nama yang ditampilkan
+  String get displayName => namaLengkap ?? 'Warga';
 }

@@ -37,7 +37,7 @@ class PengaduanController extends GetxController {
   // Image picker
   final ImagePicker _imagePicker = ImagePicker();
 
-  UserModel? get user => _authController.user;
+  BaseUserModel? get user => _authController.baseUser;
 
   @override
   void onInit() {

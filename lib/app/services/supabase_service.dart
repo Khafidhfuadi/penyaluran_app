@@ -1,4 +1,8 @@
 import 'package:get/get.dart';
+import 'package:penyaluran_app/app/data/models/donatur_model.dart';
+import 'package:penyaluran_app/app/data/models/petugas_desa_model.dart';
+import 'package:penyaluran_app/app/data/models/user_model.dart';
+import 'package:penyaluran_app/app/data/models/warga_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 
@@ -73,21 +77,6 @@ class SupabaseService extends GetxService {
     );
   }
 
-  // Metode untuk login
-  Future<AuthResponse> signIn(String email, String password) async {
-    final response = await client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
-
-    if (response.user != null) {
-      _isSessionInitialized = true;
-      print('DEBUG: Login berhasil, sesi diinisialisasi');
-    }
-
-    return response;
-  }
-
   // Metode untuk logout
   Future<void> signOut() async {
     _cachedUserProfile = null; // Hapus cache saat logout
@@ -122,45 +111,301 @@ class SupabaseService extends GetxService {
     return false;
   }
 
-  // Metode untuk mendapatkan profil pengguna
-  Future<Map<String, dynamic>?> getUserProfile() async {
+  // Metode untuk mendapatkan profil pengguna dasar
+  Future<BaseUserModel?> getBaseUserProfile() async {
     final user = currentUser;
     if (user == null) return null;
 
     try {
-      // Gunakan cache jika tersedia
-      if (_cachedUserProfile != null && _cachedUserProfile!['id'] == user.id) {
-        print('Menggunakan data profil dari cache');
+      // Gunakan auth.getUser() daripada mengakses tabel auth.users
+      final userData = await client.auth.getUser();
+
+      print('userData: ${userData.user}');
+
+      if (userData.user == null) {
+        print('Tidak ada data user ditemukan');
+        return null;
+      }
+
+      // Dapatkan role dari tabel khusus roles jika diperlukan
+      String roleName = 'warga'; // default
+      if (userData.user!.userMetadata?['role_id'] != null) {
+        try {
+          final roleResponse = await client
+              .from('roles')
+              .select('role_name')
+              .eq('id', userData.user!.userMetadata!['role_id'])
+              .maybeSingle();
+
+          print('roleResponse: $roleResponse');
+
+          if (roleResponse != null) {
+            roleName = roleResponse['role_name'];
+          }
+        } catch (e) {
+          print('Error saat mengambil role: $e');
+          // Lanjutkan dengan role default jika gagal
+        }
+      }
+
+      // Gabungkan data user dan role
+      Map<String, dynamic> combinedData = {
+        'id': userData.user!.id,
+        'email': userData.user!.email,
+        'created_at': userData.user!.createdAt,
+        'updated_at': userData.user!.updatedAt,
+        'role_id': userData.user!.userMetadata?['role_id'],
+        'roles': {'role_name': roleName}
+      };
+
+      return BaseUserModel.fromJson(combinedData);
+    } catch (e) {
+      print('Error pada getBaseUserProfile: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan profil pengguna dengan data lengkap
+  Future<Map<String, dynamic>?> getUserProfile() async {
+    try {
+      // Jika cache profil tersedia, gunakan
+      if (_cachedUserProfile != null) {
         return _cachedUserProfile;
       }
 
-      final response = await client
-          .from('user_profile')
-          .select('*, desa:desa_id(id, nama, kecamatan, kabupaten, provinsi)')
-          .eq('id', user.id)
-          .maybeSingle();
-      print('response: $response');
-
-      // Simpan ke cache
-      _cachedUserProfile = response;
-
-      // Log untuk debugging
-      if (response != null && response['desa'] != null) {
-        print('Desa data: ${response['desa']}');
-        print('Desa type: ${response['desa'].runtimeType}');
+      // Jika tidak ada cache, ambil dari database
+      final user = currentUser;
+      if (user == null) {
+        print('DEBUG: Tidak ada user yang login');
+        return null;
       }
 
-      return response;
+      final userId = user.id;
+
+      // Debug info
+      print('DEBUG: Mengambil data user profile untuk ID: $userId');
+
+      // Ambil data role dari database
+      final roleResponse = await client
+          .from('users_with_roles')
+          .select('role_name')
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (roleResponse == null) {
+        print('DEBUG: Tidak menemukan role untuk user ID: $userId');
+        return null;
+      }
+
+      final roleName = roleResponse['role_name'];
+      print('DEBUG: Role name: $roleName');
+
+      // Ambil data khusus untuk role tersebut
+      Map<String, dynamic>? roleData;
+      switch (roleName.toLowerCase()) {
+        case 'warga':
+          final wargaResponse = await client
+              .from('warga')
+              .select(
+                  '*, desa:desa_id(id, nama, kecamatan, kabupaten, provinsi)')
+              .eq('id', userId)
+              .maybeSingle();
+          roleData = wargaResponse;
+          break;
+        case 'petugas_desa':
+          final petugasResponse = await client
+              .from('petugas_desa')
+              .select(
+                  '*, desa:desa_id(id, nama, kecamatan, kabupaten, provinsi)')
+              .eq('id', userId)
+              .maybeSingle();
+          roleData = petugasResponse;
+          break;
+        case 'donatur':
+          final donaturResponse = await client
+              .from('donatur')
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle();
+          roleData = donaturResponse;
+          break;
+        default:
+          print('DEBUG: Role tidak dikenali: $roleName');
+          return null;
+      }
+
+      if (roleData == null) {
+        print('DEBUG: Tidak menemukan data untuk role: $roleName');
+        return null;
+      }
+
+      // Siapkan data kombinasi dari Supabase Auth + data dari tabel role
+      final combinedData = {
+        'id': userId,
+        'email': user.email,
+        'role': roleName,
+        'created_at': user.createdAt,
+        'updated_at': user.updatedAt,
+        'role_data': roleData,
+      };
+
+      // Tambahkan nama dari data role jika ada berdasarkan role
+      switch (roleName.toLowerCase()) {
+        case 'warga':
+          if (roleData['nama_lengkap'] != null) {
+            combinedData['name'] = roleData['nama_lengkap'];
+          }
+          break;
+        case 'petugas_desa':
+        case 'donatur':
+          if (roleData['nama'] != null) {
+            combinedData['name'] = roleData['nama'];
+          }
+          break;
+      }
+
+      // Tambahkan data role-specific
+      if (roleData != null) {
+        combinedData['role_data'] = roleData;
+
+        // Tambahkan data desa jika ada
+        if (roleData['desa'] != null) {
+          combinedData['desa'] = roleData['desa'];
+        }
+
+        // Tambahkan nama dari data role jika ada
+        if (roleData['nama_lengkap'] != null) {
+          combinedData['name'] = roleData['nama_lengkap'];
+        }
+      }
+
+      // Cache profil untuk penggunaan berikutnya
+      _cachedUserProfile = combinedData;
+      print('combinedData: $combinedData');
+      return combinedData;
     } catch (e) {
       print('Error pada getUserProfile: $e');
       return null;
     }
   }
 
-  // Metode untuk mendapatkan role pengguna
-  Future<String?> getUserRole() async {
-    final profile = await getUserProfile();
-    return profile?['role'];
+  // Metode eksplisit untuk membersihkan cache profil
+  void clearUserProfileCache() {
+    print('DEBUG: Membersihkan cache profil pengguna');
+    _cachedUserProfile = null;
+  }
+
+  // Metode untuk mendapatkan data warga
+  Future<WargaModel?> getWargaProfile(String userId) async {
+    try {
+      final response = await client
+          .from('warga')
+          .select('*, desa:desa_id(id, nama, kecamatan, kabupaten, provinsi)')
+          .eq('id', userId) // id di tabel warga = userId
+          .maybeSingle();
+
+      if (response == null) {
+        print('Data warga tidak ditemukan');
+        return null;
+      }
+
+      return WargaModel.fromJson(response);
+    } catch (e) {
+      print('Error pada getWargaProfile: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan data donatur
+  Future<DonaturModel?> getDonaturProfile(String userId) async {
+    try {
+      final response = await client
+          .from('donatur')
+          .select('*')
+          .eq('id', userId) // id di tabel donatur = userId
+          .maybeSingle();
+
+      if (response == null) {
+        print('Data donatur tidak ditemukan');
+        return null;
+      }
+
+      return DonaturModel.fromJson(response);
+    } catch (e) {
+      print('Error pada getDonaturProfile: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan data petugas desa
+  Future<PetugasDesaModel?> getPetugasDesaProfile(String userId) async {
+    try {
+      final response = await client
+          .from('petugas_desa')
+          .select('*, desa:desa_id(id, nama, kecamatan, kabupaten, provinsi)')
+          .eq('id', userId) // id di tabel petugas_desa = userId
+          .maybeSingle();
+
+      if (response == null) {
+        print('Data petugas desa tidak ditemukan');
+        return null;
+      }
+
+      return PetugasDesaModel.fromJson(response);
+    } catch (e) {
+      print('Error pada getPetugasDesaProfile: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mendapatkan data user lengkap berdasarkan role
+  // @deprecated Gunakan AuthProvider.getCurrentUser() sebagai gantinya
+  // Metode ini dipertahankan untuk kompatibilitas mundur
+  Future<UserData?> getUserData() async {
+    print(
+        'WARNING: Menggunakan metode getUserData() yang sudah deprecated. Gunakan AuthProvider.getCurrentUser() sebagai gantinya.');
+
+    final baseUser = await getBaseUserProfile();
+    if (baseUser == null) return null;
+
+    try {
+      switch (baseUser.roleName.toLowerCase()) {
+        case 'warga':
+          final wargaData = await getWargaProfile(baseUser.id);
+          if (wargaData != null) {
+            return UserData<WargaModel>(
+              baseUser: baseUser,
+              roleData: wargaData,
+            );
+          }
+          break;
+        case 'donatur':
+          final donaturData = await getDonaturProfile(baseUser.id);
+          if (donaturData != null) {
+            return UserData<DonaturModel>(
+              baseUser: baseUser,
+              roleData: donaturData,
+            );
+          }
+          break;
+        case 'petugas_desa':
+          final petugasDesaData = await getPetugasDesaProfile(baseUser.id);
+          if (petugasDesaData != null) {
+            return UserData<PetugasDesaModel>(
+              baseUser: baseUser,
+              roleData: petugasDesaData,
+            );
+          }
+          break;
+      }
+
+      // Jika data role-specific tidak ditemukan
+      print('Data spesifik tidak ditemukan untuk role: ${baseUser.roleName}');
+      return null;
+    } catch (e) {
+      print('Error pada getUserData: $e');
+      return null;
+    }
   }
 
   // ==================== PETUGAS DESA METHODS ====================
@@ -211,6 +456,7 @@ class SupabaseService extends GetxService {
   Future<List<Map<String, dynamic>>?> getNotifikasiBelumDibaca(
       String userId) async {
     try {
+      // Notifikasi masih menggunakan user_id karena tabelnya terpisah
       final response = await client
           .from('notifikasi')
           .select('*')
@@ -457,7 +703,7 @@ class SupabaseService extends GetxService {
     try {
       final response = await client
           .from('penitipan_bantuan')
-          .select('*, donatur:donatur_id(*), stok_bantuan:stok_bantuan_id(*)')
+          .select('*, donatur(*), stok_bantuan:stok_bantuan_id(*)')
           .order('tanggal_penitipan', ascending: false);
 
       return response;
@@ -472,7 +718,7 @@ class SupabaseService extends GetxService {
     try {
       final response = await client
           .from('penitipan_bantuan')
-          .select('*, donatur:donatur_id(*), stok_bantuan:stok_bantuan_id(*)')
+          .select('*, donatur(*), stok_bantuan:stok_bantuan_id(*)')
           .eq('status', 'TERVERIFIKASI')
           .order('tanggal_penitipan', ascending: false);
 
@@ -677,6 +923,12 @@ class SupabaseService extends GetxService {
   // Metode untuk menambahkan donatur baru
   Future<String?> tambahDonatur(Map<String, dynamic> donaturData) async {
     try {
+      // Pastikan field nama_lengkap ada di donaturData
+      if (donaturData.containsKey('nama')) {
+        donaturData['nama_lengkap'] = donaturData['nama'];
+        donaturData.remove('nama');
+      }
+
       final response =
           await client.from('donatur').insert(donaturData).select('id');
       if (response.isNotEmpty) {
@@ -798,8 +1050,8 @@ class SupabaseService extends GetxService {
           .from('tindakan_pengaduan')
           .select('''
             *,
-            petugas:petugas_id(id, nama, email),
-            verifikator:verifikator_id(id, nama, email)
+            petugas:petugas_id(id, nama_lengkap, nip),
+            verifikator:verifikator_id(id, nama_lengkap, nip)
           ''')
           .eq('pengaduan_id', pengaduanId)
           .order('created_at', ascending: false);
@@ -956,7 +1208,7 @@ class SupabaseService extends GetxService {
       final response = await client
           .from('warga')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('id', user.id)
           .maybeSingle();
 
       return response;
@@ -981,8 +1233,27 @@ class SupabaseService extends GetxService {
       final user = currentUser;
       if (user == null) throw 'User tidak ditemukan';
 
+      // Dapatkan role_id untuk warga
+      final roleResponse = await client
+          .from('roles')
+          .select('id')
+          .eq('role_name', 'warga')
+          .single();
+
+      if (roleResponse == null) {
+        throw 'Role warga tidak ditemukan';
+      }
+
+      final roleId = roleResponse['id'];
+
+      // Update role_id di auth.users
+      await client
+          .from('auth.users')
+          .update({'role_id': roleId}).eq('id', user.id);
+
+      // Buat profil warga
       await client.from('warga').insert({
-        'user_id': user.id,
+        'id': user.id, // Gunakan id dari auth.users sebagai id di tabel warga
         'nik': nik,
         'nama_lengkap': namaLengkap,
         'jenis_kelamin': jenisKelamin,
@@ -995,15 +1266,111 @@ class SupabaseService extends GetxService {
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       });
+    } catch (e) {
+      print('Error creating warga profile: $e');
+      throw e.toString();
+    }
+  }
 
-      // Update user profile role
-      await client.from('user_profile').upsert({
-        'id': user.id,
-        'role': 'WARGA',
+  // Metode untuk membuat profil donatur
+  Future<void> createDonaturProfile({
+    required String nama_lengkap,
+    String? alamat,
+    String? noHp,
+    String? email,
+    String? jenis,
+    String? deskripsi,
+  }) async {
+    try {
+      final user = currentUser;
+      if (user == null) throw 'User tidak ditemukan';
+
+      // Dapatkan role_id untuk donatur
+      final roleResponse = await client
+          .from('roles')
+          .select('id')
+          .eq('role_name', 'donatur')
+          .single();
+
+      if (roleResponse == null) {
+        throw 'Role donatur tidak ditemukan';
+      }
+
+      final roleId = roleResponse['id'];
+
+      // Update role_id di auth.users
+      await client
+          .from('auth.users')
+          .update({'role_id': roleId}).eq('id', user.id);
+
+      // Buat profil donatur
+      await client.from('donatur').insert({
+        'id': user.id, // Gunakan id dari auth.users sebagai id di tabel donatur
+        'nama_lengkap': nama_lengkap,
+        'alamat': alamat,
+        'no_hp': noHp,
+        'email': email,
+        'jenis': jenis,
+        'deskripsi': deskripsi,
+        'status': 'AKTIF',
+        'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      print('Error creating warga profile: $e');
+      print('Error creating donatur profile: $e');
+      throw e.toString();
+    }
+  }
+
+  // Metode untuk membuat profil petugas desa
+  Future<void> createPetugasDesaProfile({
+    required String nama_lengkap,
+    String? alamat,
+    String? noHp,
+    String? email,
+    String? jabatan,
+    String? nip,
+    required String desa_id,
+  }) async {
+    try {
+      final user = currentUser;
+      if (user == null) throw 'User tidak ditemukan';
+
+      // Dapatkan role_id untuk petugas desa
+      final roleResponse = await client
+          .from('roles')
+          .select('id')
+          .eq('role_name', 'petugas_desa')
+          .single();
+
+      if (roleResponse == null) {
+        throw 'Role petugas desa tidak ditemukan';
+      }
+
+      final roleId = roleResponse['id'];
+
+      // Update role_id di auth.users
+      await client
+          .from('auth.users')
+          .update({'role_id': roleId}).eq('id', user.id);
+
+      // Buat profil petugas desa
+      await client.from('petugas_desa').insert({
+        'id': user
+            .id, // Gunakan id dari auth.users sebagai id di tabel petugas_desa
+        'nama_lengkap': nama_lengkap,
+        'alamat': alamat,
+        'no_hp': noHp,
+        'email': email,
+        'jabatan': jabatan,
+        'nip': nip,
+        'desa_id': desa_id,
+        'status': 'AKTIF',
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      print('Error creating petugas desa profile: $e');
       throw e.toString();
     }
   }
@@ -1015,6 +1382,7 @@ class SupabaseService extends GetxService {
       final user = currentUser;
       if (user == null) return [];
 
+      // Notifikasi masih menggunakan user_id karena tabelnya terpisah
       final query = unreadOnly
           ? client
               .from('notifikasi')
@@ -1054,19 +1422,17 @@ class SupabaseService extends GetxService {
     try {
       print('Mengambil data petugas desa dengan ID: $petugasDesaId');
 
-      // Coba ambil dari tabel user_profile dulu
+      // Gunakan tabel petugas_desa sebagai pengganti user_profile
       final response = await client
-          .from('user_profile')
-          .select('*')
+          .from('petugas_desa')
+          .select('*, desa:desa_id(id, nama, kecamatan, kabupaten, provinsi)')
           .eq('id', petugasDesaId)
-          .eq('role', 'PETUGASDESA')
           .maybeSingle();
 
       print('Response: $response');
 
       if (response != null) {
-        print(
-            'Berhasil mendapatkan data petugas desa dari user_profile: $response');
+        print('Berhasil mendapatkan data petugas desa: $response');
         return response;
       }
 
@@ -1243,6 +1609,128 @@ class SupabaseService extends GetxService {
     } catch (e) {
       print('Error getting all skema bantuan: $e');
       return null;
+    }
+  }
+
+  // Metode untuk update profil warga
+  Future<void> updateWargaProfile({
+    required String userId,
+    required String namaLengkap,
+    String? noHp,
+    String? email,
+    String? alamat,
+    String? nik,
+    String? tempatLahir,
+    DateTime? tanggalLahir,
+    String? jenisKelamin,
+    String? agama,
+    String? kategoriEkonomi,
+  }) async {
+    try {
+      final data = {
+        'nama_lengkap': namaLengkap,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (noHp != null) data['no_hp'] = noHp;
+      if (email != null) data['email'] = email;
+      if (alamat != null) data['alamat'] = alamat;
+      if (nik != null) data['nik'] = nik;
+      if (tempatLahir != null) data['tempat_lahir'] = tempatLahir;
+      if (tanggalLahir != null)
+        data['tanggal_lahir'] = tanggalLahir.toIso8601String();
+      if (jenisKelamin != null) data['jenis_kelamin'] = jenisKelamin;
+      if (agama != null) data['agama'] = agama;
+      if (kategoriEkonomi != null) data['kategori_ekonomi'] = kategoriEkonomi;
+
+      await client.from('warga').update(data).eq('id', userId);
+
+      // Hapus cache setelah update
+      clearUserProfileCache();
+    } catch (e) {
+      print('Error updating warga profile: $e');
+      throw e.toString();
+    }
+  }
+
+  // Metode untuk update profil donatur
+  Future<void> updateDonaturProfile({
+    required String userId,
+    required String nama,
+    String? alamat,
+    String? noHp,
+    String? email,
+    String? jenis,
+    String? instansi,
+    String? jabatan,
+  }) async {
+    try {
+      final data = {
+        'nama': nama,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (alamat != null) data['alamat'] = alamat;
+      if (noHp != null) data['no_hp'] = noHp;
+      if (email != null) data['email'] = email;
+      if (jenis != null) data['jenis'] = jenis;
+      if (instansi != null) data['instansi'] = instansi;
+      if (jabatan != null) data['jabatan'] = jabatan;
+
+      await client.from('donatur').update(data).eq('id', userId);
+
+      // Hapus cache setelah update
+      clearUserProfileCache();
+    } catch (e) {
+      print('Error updating donatur profile: $e');
+      throw e.toString();
+    }
+  }
+
+  // Metode untuk update profil petugas desa
+  Future<void> updatePetugasDesaProfile({
+    required String userId,
+    required String nama,
+    String? alamat,
+    String? noHp,
+    String? email,
+    String? nip,
+    String? jabatan,
+  }) async {
+    try {
+      final data = {
+        'nama': nama,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (alamat != null) data['alamat'] = alamat;
+      if (noHp != null) data['no_hp'] = noHp;
+      if (email != null) data['email'] = email;
+      if (nip != null) data['nip'] = nip;
+      if (jabatan != null) data['jabatan'] = jabatan;
+
+      await client.from('petugas_desa').update(data).eq('id', userId);
+
+      // Hapus cache setelah update
+      clearUserProfileCache();
+    } catch (e) {
+      print('Error updating petugas desa profile: $e');
+      throw e.toString();
+    }
+  }
+
+  // Metode untuk ganti password
+  Future<void> changePassword(
+      String currentPassword, String newPassword) async {
+    try {
+      await client.auth.updateUser(
+        UserAttributes(
+          password: newPassword,
+        ),
+      );
+    } catch (e) {
+      print('Error changing password: $e');
+      throw e.toString();
     }
   }
 }

@@ -36,7 +36,7 @@ class StokBantuanController extends GetxController {
   // Tambahkan properti untuk waktu terakhir update
   Rx<DateTime> lastUpdateTime = DateTime.now().obs;
 
-  UserModel? get user => _authController.user;
+  BaseUserModel? get user => _authController.baseUser;
 
   @override
   void onInit() {

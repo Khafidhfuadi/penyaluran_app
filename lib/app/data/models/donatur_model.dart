@@ -1,24 +1,26 @@
 import 'dart:convert';
 
 class DonaturModel {
-  final String? id;
-  final String? nama;
+  final String id; // Primary key yang juga foreign key ke auth.users(id)
+  final String? namaLengkap;
   final String? alamat;
-  final String? telepon;
+  final String? noHp;
   final String? email;
   final String? jenis;
+  final String? deskripsi;
   final String? status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   DonaturModel({
-    this.id,
-    this.nama,
+    required this.id,
+    this.namaLengkap,
     this.alamat,
-    this.telepon,
+    this.noHp,
     this.email,
     this.jenis,
-    this.status,
+    this.deskripsi,
+    this.status = 'AKTIF',
     this.createdAt,
     this.updatedAt,
   });
@@ -30,11 +32,12 @@ class DonaturModel {
 
   factory DonaturModel.fromJson(Map<String, dynamic> json) => DonaturModel(
         id: json["id"],
-        nama: json["nama"],
+        namaLengkap: json["nama_lengkap"],
         alamat: json["alamat"],
-        telepon: json["telepon"],
+        noHp: json["no_hp"],
         email: json["email"],
         jenis: json["jenis"],
+        deskripsi: json["deskripsi"],
         status: json["status"] ?? 'AKTIF',
         createdAt: json["created_at"] != null
             ? DateTime.parse(json["created_at"])
@@ -46,13 +49,20 @@ class DonaturModel {
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "nama": nama,
+        "nama_lengkap": namaLengkap,
         "alamat": alamat,
-        "telepon": telepon,
+        "no_hp": noHp,
         "email": email,
         "jenis": jenis,
+        "deskripsi": deskripsi,
         "status": status ?? 'AKTIF',
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
+
+  // Helper method untuk mendapatkan nama yang ditampilkan
+  String get displayName => namaLengkap ?? 'Donatur';
+
+  // Getter untuk kompatibilitas dengan kode yang masih menggunakan nama
+  String? get nama => namaLengkap;
 }

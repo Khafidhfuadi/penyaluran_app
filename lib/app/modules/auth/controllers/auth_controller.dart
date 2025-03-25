@@ -1,17 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:penyaluran_app/app/data/models/donatur_model.dart';
+import 'package:penyaluran_app/app/data/models/petugas_desa_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
+import 'package:penyaluran_app/app/data/models/warga_model.dart';
 import 'package:penyaluran_app/app/data/providers/auth_provider.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
-import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
 
 class AuthController extends GetxController {
   static AuthController get to => Get.find();
 
   final AuthProvider _authProvider = AuthProvider();
 
-  final Rx<UserModel?> _user = Rx<UserModel?>(null);
-  UserModel? get user => _user.value;
+  final Rx<UserData?> _userData = Rx<UserData?>(null);
+  UserData? get userData => _userData.value;
+
+  // Getter untuk BaseUserModel
+  BaseUserModel? get baseUser => _userData.value?.baseUser;
+
+  // Getter untuk role
+  String get role => _userData.value?.baseUser.roleName.toLowerCase() ?? '';
+
+  // Getter dinamis untuk data role-specific
+  dynamic get roleData => _userData.value?.roleData;
+
+  // Getter untuk memeriksa tipe roleData
+  bool get isWarga =>
+      _userData.value?.roleData is WargaModel && role == 'warga';
+  bool get isDonatur =>
+      _userData.value?.roleData is DonaturModel && role == 'donatur';
+  bool get isPetugasDesa =>
+      _userData.value?.roleData is PetugasDesaModel && role == 'petugas_desa';
+
+  // Helper method untuk mendapatkan nama display
+  String get displayName {
+    if (roleData == null) return baseUser?.email ?? 'Pengguna';
+
+    if (isWarga) {
+      return (roleData as WargaModel).displayName;
+    } else if (isDonatur) {
+      return (roleData as DonaturModel).displayName;
+    } else if (isPetugasDesa) {
+      return (roleData as PetugasDesaModel).displayName;
+    }
+
+    return baseUser?.email ?? 'Pengguna';
+  }
 
   final RxBool isLoading = false.obs;
   final RxBool isWargaProfileComplete = false.obs;
@@ -74,21 +108,21 @@ class AuthController extends GetxController {
       print('Memeriksa status autentikasi...');
 
       // Jika user sudah ada di memori dan profil sudah diambil, gunakan data yang ada
-      if (_user.value != null && _hasLoadedProfile.value) {
+      if (_userData.value != null && _hasLoadedProfile.value) {
         print('Menggunakan data user yang sudah ada di memori');
-        _handleAuthenticatedUser(_user.value!);
+        _handleAuthenticatedUser(_userData.value!);
         return;
       }
 
       // Jika belum ada data user, ambil dari provider
-      final currentUser = await _authProvider.getCurrentUser();
+      final currentUserData = await _authProvider.getCurrentUser();
 
-      if (currentUser != null) {
+      if (currentUserData != null) {
         print(
-            'User terautentikasi: ${currentUser.email}, role: ${currentUser.role}');
-        _user.value = currentUser;
+            'User terautentikasi: ${currentUserData.baseUser.email}, role: ${currentUserData.baseUser.roleName}');
+        _userData.value = currentUserData;
         _hasLoadedProfile.value = true;
-        _handleAuthenticatedUser(currentUser);
+        _handleAuthenticatedUser(currentUserData);
       } else {
         print('Tidak ada user yang terautentikasi');
         _handleUnauthenticatedUser();
@@ -104,13 +138,13 @@ class AuthController extends GetxController {
   }
 
   // Metode untuk menangani user yang terautentikasi
-  void _handleAuthenticatedUser(UserModel user) {
+  void _handleAuthenticatedUser(UserData userData) {
     // Hindari navigasi jika sudah berada di halaman yang sesuai
     final currentRoute = Get.currentRoute;
     print('Rute saat ini: $currentRoute');
 
-    // Pastikan role tidak null, gunakan default jika null
-    final role = user.role.isNotEmpty ? user.role : 'WARGA';
+    // Dapatkan role dari BaseUserModel
+    final role = userData.baseUser.roleName.toLowerCase();
     print('Role yang digunakan: $role');
 
     // Untuk semua role, arahkan ke dashboard masing-masing
@@ -146,9 +180,8 @@ class AuthController extends GetxController {
   // Memeriksa status profil warga
   Future<void> checkWargaProfileStatus() async {
     try {
-      if (_user.value?.role == 'WARGA') {
-        final wargaData = await _authProvider.getWargaData();
-        isWargaProfileComplete.value = wargaData != null;
+      if (role == 'warga') {
+        isWargaProfileComplete.value = roleData != null;
       } else {
         isWargaProfileComplete.value = true;
       }
@@ -177,17 +210,14 @@ class AuthController extends GetxController {
     // Bersihkan dependensi form sebelum navigasi
     clearFormDependencies();
 
-    switch (role) {
-      case 'WARGA':
+    switch (role.toLowerCase()) {
+      case 'warga':
         Get.offAllNamed(Routes.wargaDashboard);
         break;
-      case 'PETUGASVERIFIKASI':
-        Get.offAllNamed(Routes.petugasVerifikasiDashboard);
-        break;
-      case 'PETUGASDESA':
+      case 'petugas_desa':
         Get.offAllNamed(Routes.petugasDesaDashboard);
         break;
-      case 'DONATUR':
+      case 'donatur':
         Get.offAllNamed(Routes.donaturDashboard);
         break;
       default:
@@ -229,88 +259,81 @@ class AuthController extends GetxController {
       isLoading.value = true;
 
       print('DEBUG: Memanggil _authProvider.signIn');
-      final user = await _authProvider.signIn(
+      final userData = await _authProvider.signIn(
         email,
         password,
       );
 
-      print('DEBUG: Hasil signIn: ${user != null ? 'Berhasil' : 'Gagal'}');
-      if (user != null) {
-        print('DEBUG: User ditemukan, role: ${user.role}');
-        _user.value = user;
+      print('DEBUG: Hasil signIn: ${userData != null ? 'Berhasil' : 'Gagal'}');
+      if (userData != null) {
+        print('DEBUG: User ditemukan, role: ${userData.baseUser.roleName}');
+        _userData.value = userData;
         _hasLoadedProfile.value = true; // Tandai bahwa profil sudah diambil
         clearControllers();
 
         // Arahkan ke dashboard sesuai peran
-        print('DEBUG: Navigasi berdasarkan peran: ${user.role}');
-        navigateBasedOnRole(user.role);
+        print(
+            'DEBUG: Navigasi berdasarkan peran: ${userData.baseUser.roleName}');
+        navigateBasedOnRole(userData.baseUser.roleName.toLowerCase());
       } else {
         print('DEBUG: User null setelah login berhasil');
+        handleLoginError(Exception('Data pengguna tidak ditemukan'));
       }
     } catch (e) {
-      print('DEBUG: Error detail pada login: $e');
-      print('DEBUG: Stack trace: ${StackTrace.current}');
-      Get.snackbar(
-        'Error',
-        'Login gagal: ${e.toString()}',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      handleLoginError(e);
     } finally {
       print('DEBUG: Mengatur isLoading ke false');
       isLoading.value = false;
     }
   }
 
-  // Metode untuk logout
-  Future<void> logout() async {
-    try {
-      // Ambil semua controller yang mungkin perlu dibersihkan
-      try {
-        final wargaController = Get.find<WargaDashboardController>();
-        wargaController.penerimaPenyaluran.clear();
-        wargaController.pengajuanKelayakan.clear();
-        wargaController.pengaduan.clear();
-      } catch (e) {
-        // Jika controller tidak ditemukan, abaikan
-        print('Controller tidak ditemukan: $e');
-      }
+  // Menangani error saat login
+  void handleLoginError(dynamic error) {
+    print('DEBUG: Error login: $error');
 
-      // Logout dari Supabase
-      await _authProvider.signOut();
+    String errorMessage = 'Terjadi kesalahan saat login. Silakan coba lagi.';
 
-      // Reset semua state
-      _user.value = null;
-      _hasLoadedProfile.value = false;
-      isWargaProfileComplete.value = false;
-
-      // Bersihkan dependensi form sebelum navigasi
-      clearFormDependencies();
-
-      // Navigasi ke halaman login
-      Get.offAllNamed(Routes.login);
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Logout gagal: ${e.toString()}',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+    if (error.toString().contains('Invalid login credentials')) {
+      errorMessage = 'Email atau password salah. Silakan coba lagi.';
+    } else if (error.toString().contains('Too many requests')) {
+      errorMessage = 'Terlalu banyak percobaan login. Silakan coba lagi nanti.';
     }
+
+    Get.snackbar(
+      'Error',
+      errorMessage,
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
   }
 
   // Metode untuk membersihkan controller
   void clearControllers() {
+    emailController.clear();
+    passwordController.clear();
+    confirmPasswordController.clear();
+  }
+
+  // Metode untuk logout
+  Future<void> logout() async {
     try {
-      if (emailController.text.isNotEmpty) emailController.clear();
-      if (passwordController.text.isNotEmpty) passwordController.clear();
-      if (confirmPasswordController.text.isNotEmpty) {
-        confirmPasswordController.clear();
-      }
+      isLoading.value = true;
+      await _authProvider.signOut();
+      _userData.value = null;
+      _hasLoadedProfile.value = false;
+      Get.offAllNamed(Routes.login);
     } catch (e) {
-      print('Error clearing controllers: $e');
+      print('Error saat logout: $e');
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan saat logout. Silakan coba lagi.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -355,16 +378,42 @@ class AuthController extends GetxController {
     }
   }
 
+  // Metode untuk refresh data user setelah update profil
+  Future<void> refreshUserData() async {
+    try {
+      print('Memperbarui data pengguna...');
+      isLoading.value = true;
+
+      // Hapus cache profil yang sudah tidak valid
+      _hasLoadedProfile.value = false;
+
+      // Ambil data user terbaru dari provider dengan menskip cache
+      final currentUserData =
+          await _authProvider.getCurrentUser(skipCache: true);
+
+      if (currentUserData != null) {
+        print(
+            'Data pengguna berhasil diperbarui: ${currentUserData.baseUser.name}');
+        _userData.value = currentUserData;
+        _hasLoadedProfile.value = true;
+      } else {
+        print('Gagal memperbarui data pengguna');
+      }
+    } catch (e) {
+      print('Error refreshing user data: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   // Mendapatkan rute target berdasarkan role
   String _getTargetRouteForRole(String role) {
-    switch (role) {
-      case 'WARGA':
+    switch (role.toLowerCase()) {
+      case 'warga':
         return Routes.wargaDashboard;
-      case 'PETUGASVERIFIKASI':
-        return Routes.petugasVerifikasiDashboard;
-      case 'PETUGASDESA':
+      case 'petugas_desa':
         return Routes.petugasDesaDashboard;
-      case 'DONATUR':
+      case 'donatur':
         return Routes.donaturDashboard;
       default:
         return Routes.home;
