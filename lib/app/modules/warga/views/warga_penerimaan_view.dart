@@ -15,13 +15,28 @@ class WargaPenerimaanView extends GetView<WargaDashboardController> {
           return const Center(child: CircularProgressIndicator());
         }
 
+        // Debug print untuk melihat jumlah item
+        print(
+            'DEBUG: Jumlah penerimaan tersedia: ${controller.penerimaPenyaluran.length}');
+
         return RefreshIndicator(
           onRefresh: () async {
-            controller.fetchData();
+            // Tambahkan delay untuk memastikan refresh indicator terlihat
+            await Future.delayed(const Duration(milliseconds: 300));
+            controller.fetchPenerimaPenyaluran();
           },
           child: controller.penerimaPenyaluran.isEmpty
-              ? _buildEmptyState()
-              : _buildPenerimaanList(),
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(
+                      height: Get.height *
+                          0.7, // Pastikan tinggi cukup untuk memungkinkan scroll
+                      child: _buildEmptyState(),
+                    ),
+                  ],
+                )
+              : _buildPenerimaanList(context),
         );
       }),
     );
@@ -86,21 +101,48 @@ class WargaPenerimaanView extends GetView<WargaDashboardController> {
     );
   }
 
-  Widget _buildPenerimaanList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: controller.penerimaPenyaluran.length,
-      itemBuilder: (context, index) {
-        final item = controller.penerimaPenyaluran[index];
+  Widget _buildPenerimaanList(BuildContext context) {
+    // Debug print untuk melihat jumlah item
+    print(
+        'DEBUG: Membangun ListView dengan ${controller.penerimaPenyaluran.length} item bantuan');
 
-        return BantuanCard(
-          item: item,
-          onTap: () {
-            // Navigasi ke detail penerimaan
-            Get.toNamed('/warga/detail-penerimaan', arguments: {'id': item.id});
-          },
-        );
-      },
+    // Menggunakan CustomScrollView dan SliverList untuk layout yang lebih stabil
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                // Pastikan index dalam batas array
+                if (index >= controller.penerimaPenyaluran.length) {
+                  return const SizedBox.shrink();
+                }
+
+                final item = controller.penerimaPenyaluran[index];
+
+                // Debug
+                print('DEBUG: Membangun item $index dengan id: ${item.id}');
+
+                // Menggunakan SizedBox untuk memberikan batas lebar dan tinggi
+                return SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: BantuanCard(
+                    item: item,
+                    onTap: () {
+                      // Navigasi ke detail penerimaan
+                      Get.toNamed('/warga/detail-penerimaan',
+                          arguments: {'id': item.id});
+                    },
+                  ),
+                );
+              },
+              childCount: controller.penerimaPenyaluran.length,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

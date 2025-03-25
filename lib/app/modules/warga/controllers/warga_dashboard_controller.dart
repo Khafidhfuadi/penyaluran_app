@@ -211,8 +211,18 @@ class WargaDashboardController extends GetxController {
       // Reset data terlebih dahulu untuk memastikan tidak ada data lama yang tersimpan
       penerimaPenyaluran.clear();
 
+      // Log untuk debugging
+      print('DEBUG PENERIMAAN: Memulai fetchPenerimaPenyaluran()');
+
+      // Pastikan user sudah login dan memiliki ID
+      if (user?.id == null) {
+        print('DEBUG PENERIMAAN: User ID null, tidak bisa mengambil data');
+        return [];
+      }
+
       // Gunakan langsung ID pengguna sebagai warga_id
       final wargaId = user!.id;
+      print('DEBUG PENERIMAAN: Mengambil data untuk warga ID: $wargaId');
 
       // Ambil data penerima penyaluran dengan join ke warga, stok bantuan, dan penyaluran bantuan
       final response =
@@ -230,105 +240,126 @@ class WargaDashboardController extends GetxController {
             )
           ''').eq('warga_id', wargaId).order('created_at', ascending: false);
 
+      print(
+          'DEBUG PENERIMAAN: Respons diterima dengan ${response.length} item');
+
       final List<PenerimaPenyaluranModel> penerima = [];
 
       // Loop melalui setiap data penerima
       for (var item in response) {
-        // Pastikan data penerima sesuai dengan tipe data yang diharapkan
-        Map<String, dynamic> sanitizedPenerimaData =
-            Map<String, dynamic>.from(item);
+        try {
+          // Pastikan data penerima sesuai dengan tipe data yang diharapkan
+          Map<String, dynamic> sanitizedPenerimaData =
+              Map<String, dynamic>.from(item);
 
-        // Konversi jumlah_bantuan ke double jika bertipe String
-        if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
-          sanitizedPenerimaData['jumlah_bantuan'] =
-              double.tryParse(sanitizedPenerimaData['jumlah_bantuan']) ?? 0.0;
-        }
-
-        // Ambil data dari stok bantuan jika tersedia
-        if (sanitizedPenerimaData['stok_bantuan'] != null) {
-          // Cek apakah bantuan berupa uang atau barang
-          final isUang =
-              sanitizedPenerimaData['stok_bantuan']['is_uang'] ?? false;
-          sanitizedPenerimaData['is_uang'] = isUang;
-
-          // Ambil satuan bantuan
-          final satuan = sanitizedPenerimaData['stok_bantuan']['satuan'] ?? '';
-          sanitizedPenerimaData['satuan'] = satuan;
-
-          // Ambil nama kategori bantuan
-          if (sanitizedPenerimaData['stok_bantuan']['kategori_bantuan'] !=
-              null) {
-            final kategoriNama = sanitizedPenerimaData['stok_bantuan']
-                    ['kategori_bantuan']['nama'] ??
-                '';
-            sanitizedPenerimaData['kategori_nama'] = kategoriNama;
-          }
-        }
-
-        // Ambil data dari penyaluran bantuan jika tersedia
-        if (sanitizedPenerimaData['penyaluran_bantuan'] != null) {
-          // Ambil nama penyaluran
-          final namaPenyaluran =
-              sanitizedPenerimaData['penyaluran_bantuan']['nama'] ?? '';
-          sanitizedPenerimaData['nama_penyaluran'] = namaPenyaluran;
-
-          // Ambil deskripsi penyaluran
-          final deskripsiPenyaluran =
-              sanitizedPenerimaData['penyaluran_bantuan']['deskripsi'] ?? '';
-          sanitizedPenerimaData['deskripsi_penyaluran'] = deskripsiPenyaluran;
-
-          // Ambil status penyaluran
-          final statusPenyaluran =
-              sanitizedPenerimaData['penyaluran_bantuan']['status'] ?? '';
-          sanitizedPenerimaData['status_penyaluran'] = statusPenyaluran;
-
-          // Ambil lokasi penyaluran jika tersedia
-          if (sanitizedPenerimaData['penyaluran_bantuan']
-                  ['lokasi_penyaluran'] !=
-              null) {
-            final lokasiNama = sanitizedPenerimaData['penyaluran_bantuan']
-                    ['lokasi_penyaluran']['nama'] ??
-                '';
-            sanitizedPenerimaData['lokasi_penyaluran_nama'] = lokasiNama;
-
-            final lokasiAlamat = sanitizedPenerimaData['penyaluran_bantuan']
-                    ['lokasi_penyaluran']['alamat_lengkap'] ??
-                '';
-            sanitizedPenerimaData['lokasi_penyaluran_alamat'] = lokasiAlamat;
+          // Konversi jumlah_bantuan ke double jika bertipe String
+          if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
+            sanitizedPenerimaData['jumlah_bantuan'] =
+                double.tryParse(sanitizedPenerimaData['jumlah_bantuan']) ?? 0.0;
           }
 
-          // Ambil kategori bantuan dari relasi langsung jika ada
-          if (sanitizedPenerimaData['penyaluran_bantuan']['kategori_bantuan'] !=
-              null) {
-            final kategoriNama = sanitizedPenerimaData['penyaluran_bantuan']
-                    ['kategori_bantuan']['nama'] ??
-                '';
-            // Jika belum ada kategori_nama dari stok_bantuan, gunakan dari relasi langsung
-            if (sanitizedPenerimaData['kategori_nama'] == null ||
-                sanitizedPenerimaData['kategori_nama'].isEmpty) {
+          // Ambil data dari stok bantuan jika tersedia
+          if (sanitizedPenerimaData['stok_bantuan'] != null) {
+            // Cek apakah bantuan berupa uang atau barang
+            final isUang =
+                sanitizedPenerimaData['stok_bantuan']['is_uang'] ?? false;
+            sanitizedPenerimaData['is_uang'] = isUang;
+
+            // Ambil satuan bantuan
+            final satuan =
+                sanitizedPenerimaData['stok_bantuan']['satuan'] ?? '';
+            sanitizedPenerimaData['satuan'] = satuan;
+
+            // Ambil nama kategori bantuan
+            if (sanitizedPenerimaData['stok_bantuan']['kategori_bantuan'] !=
+                null) {
+              final kategoriNama = sanitizedPenerimaData['stok_bantuan']
+                      ['kategori_bantuan']['nama'] ??
+                  '';
               sanitizedPenerimaData['kategori_nama'] = kategoriNama;
             }
           }
-        }
 
-        var model = PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData);
-        penerima.add(model);
+          // Ambil data dari penyaluran bantuan jika tersedia
+          if (sanitizedPenerimaData['penyaluran_bantuan'] != null) {
+            // Ambil nama penyaluran
+            final namaPenyaluran =
+                sanitizedPenerimaData['penyaluran_bantuan']['nama'] ?? '';
+            sanitizedPenerimaData['nama_penyaluran'] = namaPenyaluran;
+
+            // Ambil deskripsi penyaluran
+            final deskripsiPenyaluran =
+                sanitizedPenerimaData['penyaluran_bantuan']['deskripsi'] ?? '';
+            sanitizedPenerimaData['deskripsi_penyaluran'] = deskripsiPenyaluran;
+
+            // Ambil status penyaluran
+            final statusPenyaluran =
+                sanitizedPenerimaData['penyaluran_bantuan']['status'] ?? '';
+            sanitizedPenerimaData['status_penyaluran'] = statusPenyaluran;
+
+            // Ambil lokasi penyaluran jika tersedia
+            if (sanitizedPenerimaData['penyaluran_bantuan']
+                    ['lokasi_penyaluran'] !=
+                null) {
+              final lokasiNama = sanitizedPenerimaData['penyaluran_bantuan']
+                      ['lokasi_penyaluran']['nama'] ??
+                  '';
+              sanitizedPenerimaData['lokasi_penyaluran_nama'] = lokasiNama;
+
+              final lokasiAlamat = sanitizedPenerimaData['penyaluran_bantuan']
+                      ['lokasi_penyaluran']['alamat_lengkap'] ??
+                  '';
+              sanitizedPenerimaData['lokasi_penyaluran_alamat'] = lokasiAlamat;
+            }
+
+            // Ambil kategori bantuan dari relasi langsung jika ada
+            if (sanitizedPenerimaData['penyaluran_bantuan']
+                    ['kategori_bantuan'] !=
+                null) {
+              final kategoriNama = sanitizedPenerimaData['penyaluran_bantuan']
+                      ['kategori_bantuan']['nama'] ??
+                  '';
+              // Jika belum ada kategori_nama dari stok_bantuan, gunakan dari relasi langsung
+              if (sanitizedPenerimaData['kategori_nama'] == null ||
+                  sanitizedPenerimaData['kategori_nama'].isEmpty) {
+                sanitizedPenerimaData['kategori_nama'] = kategoriNama;
+              }
+            }
+          }
+
+          var model = PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData);
+          penerima.add(model);
+          print('DEBUG PENERIMAAN: Berhasil parse item: ${model.id}');
+        } catch (parseError) {
+          print('DEBUG PENERIMAAN: Error parsing item: $parseError');
+          print('DEBUG PENERIMAAN: Data yang gagal di-parse: $item');
+        }
       }
 
-      // Update nilai observable
-      penerimaPenyaluran.assignAll(penerima);
+      // Pastikan list tidak kosong sebelum assign
+      if (penerima.isNotEmpty) {
+        // Update nilai observable
+        penerimaPenyaluran.assignAll(penerima);
+        print(
+            'DEBUG PENERIMAAN: Berhasil assign ${penerima.length} item ke list');
 
-      var diterima =
-          penerima.where((p) => p.statusPenerimaan == 'DITERIMA').length;
-      totalPenyaluranDiterima.value = diterima;
+        var diterima =
+            penerima.where((p) => p.statusPenerimaan == 'DITERIMA').length;
+        totalPenyaluranDiterima.value = diterima;
 
-      // Log untuk debugging
-      print(
-          'Berhasil memuat ${penerima.length} data penerimaan untuk warga ID: $wargaId');
+        // Log untuk debugging
+        print(
+            'Berhasil memuat ${penerima.length} data penerimaan untuk warga ID: $wargaId');
+      } else {
+        print(
+            'DEBUG PENERIMAAN: Tidak ada data penerimaan yang berhasil di-parse');
+      }
 
       return penerima;
     } catch (e) {
       print('Error fetchPenerimaPenyaluran: $e');
+      // Pastikan list kosong jika terjadi error
+      penerimaPenyaluran.clear();
       return [];
     }
   }
