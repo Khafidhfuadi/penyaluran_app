@@ -78,8 +78,8 @@ class PenitipanBantuanModel {
         donatur: json["donatur"] != null
             ? DonaturModel.fromJson(json["donatur"])
             : null,
-        kategoriBantuan: json["kategori_bantuan"] != null
-            ? KategoriBantuanModel.fromJson(json["kategori_bantuan"])
+        kategoriBantuan: json["stok_bantuan"] != null
+            ? KategoriBantuanModel.fromJson(json["stok_bantuan"])
             : null,
         isUang: json["is_uang"] ?? false,
       );

@@ -11,6 +11,10 @@ abstract class Routes {
   static const petugasVerifikasiDashboard = _Paths.petugasVerifikasiDashboard;
   static const petugasDesaDashboard = _Paths.petugasDesaDashboard;
   static const donaturDashboard = _Paths.donaturDashboard;
+  static const donaturSkema = _Paths.donaturSkema;
+  static const donaturJadwal = _Paths.donaturJadwal;
+  static const donaturPenitipan = _Paths.donaturPenitipan;
+  static const donaturLaporan = _Paths.donaturLaporan;
   static const splash = _Paths.splash;
   static const permintaanPenjadwalan = _Paths.permintaanPenjadwalan;
   static const daftarPenerima = _Paths.daftarPenerima;
@@ -51,6 +55,10 @@ abstract class _Paths {
   static const petugasVerifikasiDashboard = '/petugas-verifikasi-dashboard';
   static const petugasDesaDashboard = '/petugas-desa-dashboard';
   static const donaturDashboard = '/donatur-dashboard';
+  static const donaturSkema = '/donatur-skema';
+  static const donaturJadwal = '/donatur-jadwal';
+  static const donaturPenitipan = '/donatur-penitipan';
+  static const donaturLaporan = '/donatur-laporan';
   static const splash = '/splash';
   static const permintaanPenjadwalan = '/permintaan-penjadwalan';
   static const daftarPenerima = '/daftar-penerima';

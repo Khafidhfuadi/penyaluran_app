@@ -36,6 +36,8 @@ import 'package:penyaluran_app/app/modules/laporan_penyaluran/views/laporan_peny
 import 'package:penyaluran_app/app/modules/laporan_penyaluran/views/laporan_penyaluran_create_view.dart';
 import 'package:penyaluran_app/app/modules/laporan_penyaluran/views/laporan_penyaluran_edit_view.dart';
 import 'package:penyaluran_app/app/modules/laporan_penyaluran/bindings/laporan_penyaluran_binding.dart';
+import 'package:penyaluran_app/app/modules/donatur/views/donatur_view.dart';
+import 'package:penyaluran_app/app/modules/donatur/controllers/donatur_dashboard_controller.dart';
 
 part 'app_routes.dart';
 
@@ -159,17 +161,17 @@ class AppPages {
       binding: LaporanPenyaluranBinding(),
     ),
     GetPage(
-      name: _Paths.laporanPenyaluran + '/detail',
+      name: '${_Paths.laporanPenyaluran}/detail',
       page: () => const LaporanPenyaluranDetailView(),
       binding: LaporanPenyaluranBinding(),
     ),
     GetPage(
-      name: _Paths.laporanPenyaluran + '/create',
+      name: '${_Paths.laporanPenyaluran}/create',
       page: () => const LaporanPenyaluranCreateView(),
       binding: LaporanPenyaluranBinding(),
     ),
     GetPage(
-      name: _Paths.laporanPenyaluran + '/edit',
+      name: '${_Paths.laporanPenyaluran}/edit',
       page: () => const LaporanPenyaluranEditView(),
       binding: LaporanPenyaluranBinding(),
     ),
@@ -185,6 +187,51 @@ class AppPages {
         tanggalPenyaluran: Get.arguments['tanggal_penyaluran'],
       ),
       binding: PenyaluranBinding(),
+    ),
+    GetPage(
+      name: Routes.donaturDashboard,
+      page: () => DonaturView(),
+      binding: DonaturBinding(),
+    ),
+    GetPage(
+      name: _Paths.donaturSkema,
+      page: () {
+        final controller =
+            Get.find<DonaturDashboardController>(tag: 'donatur_dashboard');
+        controller.activeTabIndex.value = 1;
+        return DonaturView();
+      },
+      binding: DonaturBinding(),
+    ),
+    GetPage(
+      name: _Paths.donaturJadwal,
+      page: () {
+        final controller =
+            Get.find<DonaturDashboardController>(tag: 'donatur_dashboard');
+        controller.activeTabIndex.value = 2;
+        return DonaturView();
+      },
+      binding: DonaturBinding(),
+    ),
+    GetPage(
+      name: _Paths.donaturPenitipan,
+      page: () {
+        final controller =
+            Get.find<DonaturDashboardController>(tag: 'donatur_dashboard');
+        controller.activeTabIndex.value = 3;
+        return DonaturView();
+      },
+      binding: DonaturBinding(),
+    ),
+    GetPage(
+      name: _Paths.donaturLaporan,
+      page: () {
+        final controller =
+            Get.find<DonaturDashboardController>(tag: 'donatur_dashboard');
+        controller.activeTabIndex.value = 4;
+        return DonaturView();
+      },
+      binding: DonaturBinding(),
     ),
   ];
 }
