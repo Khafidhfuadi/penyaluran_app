@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
+import 'package:penyaluran_app/app/routes/app_pages.dart';
 
 class LoginView extends GetView<AuthController> {
   const LoginView({super.key});
@@ -109,6 +110,39 @@ class LoginView extends GetView<AuthController> {
                               ),
                       )),
                   const SizedBox(height: 20),
+
+                  // Divider
+                  const Row(
+                    children: [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child:
+                            Text('ATAU', style: TextStyle(color: Colors.grey)),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Register Donatur Button
+                  OutlinedButton(
+                    onPressed: () => Get.toNamed(Routes.registerDonatur),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      side: const BorderSide(color: Colors.blue),
+                    ),
+                    child: const Text(
+                      'DAFTAR SEBAGAI DONATUR',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

@@ -77,6 +77,12 @@ class AuthController extends GetxController {
   void onClose() {
     // Pastikan semua controller dibersihkan sebelum dilepaskan
     clearAndDisposeControllers();
+    // Dispose controller registrasi donatur
+    confirmPasswordController.dispose();
+    namaController.dispose();
+    alamatController.dispose();
+    noHpController.dispose();
+    jenisController.dispose();
     super.onClose();
   }
 
@@ -361,21 +367,13 @@ class AuthController extends GetxController {
 
   // Validasi konfirmasi password
   String? validateConfirmPassword(String? value) {
-    try {
-      if (value == null || value.isEmpty) {
-        return 'Konfirmasi password tidak boleh kosong';
-      }
-
-      // Ambil nilai password dari controller jika tersedia
-      final password = passwordController.text;
-      if (value != password) {
-        return 'Password dan konfirmasi password tidak sama';
-      }
-      return null;
-    } catch (e) {
-      print('Error validating confirm password: $e');
-      return 'Terjadi kesalahan saat validasi';
+    if (value == null || value.isEmpty) {
+      return 'Konfirmasi password tidak boleh kosong';
     }
+    if (value != passwordController.text) {
+      return 'Password dan konfirmasi password tidak sama';
+    }
+    return null;
   }
 
   // Metode untuk refresh data user setelah update profil
@@ -418,5 +416,131 @@ class AuthController extends GetxController {
       default:
         return Routes.home;
     }
+  }
+
+  // Metode untuk validasi form registrasi donatur
+  String? validateDonaturNama(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Nama lengkap tidak boleh kosong';
+    }
+    return null;
+  }
+
+  String? validateDonaturNoHp(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Nomor HP tidak boleh kosong';
+    }
+    if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
+      return 'Nomor HP hanya boleh berisi angka';
+    }
+    return null;
+  }
+
+  String? validateDonaturAlamat(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Alamat tidak boleh kosong';
+    }
+    return null;
+  }
+
+  // Form controller untuk registrasi donatur
+  final TextEditingController namaController = TextEditingController();
+  final TextEditingController alamatController = TextEditingController();
+  final TextEditingController noHpController = TextEditingController();
+  final TextEditingController jenisController = TextEditingController();
+
+  // Form key untuk registrasi donatur
+  final GlobalKey<FormState> registerDonaturFormKey = GlobalKey<FormState>();
+
+  // Metode untuk registrasi donatur
+  Future<void> registerDonatur() async {
+    print('DEBUG: Memulai proses registrasi donatur');
+
+    if (registerDonaturFormKey.currentState == null) {
+      print('Error: registerDonaturFormKey.currentState adalah null');
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan pada form registrasi. Silakan coba lagi.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (!registerDonaturFormKey.currentState!.validate()) {
+      print('DEBUG: Validasi form gagal');
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      // Proses registrasi donatur dengan role_id 3
+      await _authProvider.signUpDonatur(
+        email: emailController.text,
+        password: passwordController.text,
+        namaLengkap: namaController.text,
+        alamat: alamatController.text,
+        noHp: noHpController.text,
+        jenis: jenisController.text.isEmpty ? 'Individu' : jenisController.text,
+      );
+
+      Get.snackbar(
+        'Sukses',
+        'Registrasi donatur berhasil! Silakan login dengan akun Anda.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 5),
+      );
+
+      // Bersihkan form
+      clearDonaturRegistrationForm();
+
+      // Arahkan ke halaman login
+      Get.offAllNamed(Routes.login);
+    } catch (e) {
+      print('Error registrasi donatur: $e');
+
+      String errorMessage = 'Gagal melakukan registrasi';
+
+      // Tangani error sesuai jenisnya
+      if (e.toString().contains('email konfirmasi')) {
+        errorMessage =
+            'Gagal mengirim email konfirmasi. Mohon periksa alamat email Anda dan coba lagi nanti.';
+      } else if (e.toString().contains('Email sudah terdaftar')) {
+        errorMessage =
+            'Email sudah terdaftar. Silakan gunakan email lain atau login dengan email tersebut.';
+      } else if (e.toString().contains('weak-password')) {
+        errorMessage =
+            'Password terlalu lemah. Gunakan kombinasi huruf, angka, dan simbol.';
+      } else if (e.toString().contains('invalid-email')) {
+        errorMessage = 'Format email tidak valid.';
+      } else {
+        errorMessage = 'Gagal melakukan registrasi: ${e.toString()}';
+      }
+
+      Get.snackbar(
+        'Error',
+        errorMessage,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 5),
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Metode untuk membersihkan form registrasi donatur
+  void clearDonaturRegistrationForm() {
+    emailController.clear();
+    passwordController.clear();
+    confirmPasswordController.clear();
+    namaController.clear();
+    alamatController.clear();
+    noHpController.clear();
+    jenisController.clear();
   }
 }

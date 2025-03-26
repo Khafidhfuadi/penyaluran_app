@@ -5,6 +5,7 @@ abstract class Routes {
   static const home = _Paths.home;
   static const login = _Paths.login;
   static const register = _Paths.register;
+  static const registerDonatur = _Paths.registerDonatur;
   static const wargaDashboard = _Paths.wargaDashboard;
   static const wargaPenerimaan = _Paths.wargaPenerimaan;
   static const wargaPengaduan = _Paths.wargaPengaduan;
@@ -49,6 +50,7 @@ abstract class _Paths {
   static const home = '/home';
   static const login = '/login';
   static const register = '/register';
+  static const registerDonatur = '/register-donatur';
   static const wargaDashboard = '/warga-dashboard';
   static const wargaPenerimaan = '/warga-penerimaan';
   static const wargaPengaduan = '/warga-pengaduan';

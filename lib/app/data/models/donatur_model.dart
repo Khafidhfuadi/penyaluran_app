@@ -12,6 +12,7 @@ class DonaturModel {
   final String? fotoProfil;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final bool isManual;
 
   DonaturModel({
     required this.id,
@@ -25,6 +26,7 @@ class DonaturModel {
     this.fotoProfil,
     this.createdAt,
     this.updatedAt,
+    this.isManual = false,
   });
 
   factory DonaturModel.fromRawJson(String str) =>
@@ -42,6 +44,7 @@ class DonaturModel {
         deskripsi: json["deskripsi"],
         status: json["status"] ?? 'AKTIF',
         fotoProfil: json["foto_profil"],
+        isManual: json["is_manual"] ?? false,
         createdAt: json["created_at"] != null
             ? DateTime.parse(json["created_at"])
             : null,
@@ -60,6 +63,7 @@ class DonaturModel {
         "deskripsi": deskripsi,
         "status": status ?? 'AKTIF',
         "foto_profil": fotoProfil,
+        "is_manual": isManual,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };

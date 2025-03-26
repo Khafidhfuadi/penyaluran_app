@@ -75,15 +75,6 @@ class PenitipanBantuanController extends GetxController {
 
     // Hapus delay dan muat data petugas desa langsung
     loadAllPetugasDesaData();
-
-    // Listener untuk pencarian donatur
-    donaturSearchController.addListener(() {
-      if (donaturSearchController.text.length >= 3) {
-        searchDonatur(donaturSearchController.text);
-      } else {
-        hasilPencarianDonatur.clear();
-      }
-    });
   }
 
   @override
@@ -441,16 +432,19 @@ class PenitipanBantuanController extends GetxController {
 
   Future<DonaturModel?> getDonaturInfo(String donaturId) async {
     try {
-      // Cek cache terlebih dahulu
+      // Periksa apakah donatur sudah ada di cache
       if (donaturCache.containsKey(donaturId)) {
         return donaturCache[donaturId];
       }
 
-      final donaturData = await _supabaseService.getDonaturById(donaturId);
-      if (donaturData != null) {
-        final donatur = DonaturModel.fromJson(donaturData);
+      // Ambil data donatur dari server
+      final result = await _supabaseService.getDonaturById(donaturId);
+      if (result != null) {
+        final donatur = DonaturModel.fromJson(result);
+
         // Simpan ke cache
         donaturCache[donaturId] = donatur;
+
         return donatur;
       }
       return null;
@@ -595,16 +589,12 @@ class PenitipanBantuanController extends GetxController {
   }
 
   String getPetugasDesaNama(String? petugasDesaId) {
-    print('Petugas Desa ID: $petugasDesaId');
     if (petugasDesaId == null) {
       return 'Tidak diketahui';
     }
 
     // Cek apakah data ada di cache
     if (!petugasDesaCache.containsKey(petugasDesaId)) {
-      print(
-          'Data petugas desa tidak ditemukan di cache untuk ID: $petugasDesaId');
-      // Muat data petugas dan perbarui UI
       loadPetugasDesaData(petugasDesaId);
 
       // Coba cek lagi setelah pemuatan
@@ -620,24 +610,18 @@ class PenitipanBantuanController extends GetxController {
     // Sekarang data seharusnya ada di cache
     // Akses nama dari struktur data petugas_desa
     final nama = petugasDesaCache[petugasDesaId]?['nama_lengkap'];
-    print('Nama petugas desa: $nama untuk ID: $petugasDesaId');
     return nama ?? 'Tidak diketahui';
   }
 
   // Fungsi untuk memuat data petugas desa dan memperbarui UI
   Future<void> loadPetugasDesaData(String petugasDesaId) async {
     try {
-      print('Memuat data petugas desa untuk ID: $petugasDesaId');
       final petugasData = await getPetugasDesaInfo(petugasDesaId);
       if (petugasData != null) {
         // Data sudah dimasukkan ke cache oleh getPetugasDesaInfo
-        print('Berhasil memuat data petugas: ${petugasData['nama_lengkap']}');
 
         // Refresh UI segera
         update(['petugas_data']);
-      } else {
-        print(
-            'Gagal mengambil data petugas desa dari server untuk ID: $petugasDesaId');
       }
     } catch (e) {
       print('Error saat memuat data petugas desa: $e');
@@ -647,11 +631,9 @@ class PenitipanBantuanController extends GetxController {
   // Fungsi untuk memuat semua data petugas desa yang terkait dengan penitipan
   void loadAllPetugasDesaData() async {
     try {
-      print('Memuat ulang semua data petugas desa...');
       for (var item in daftarPenitipan) {
         if (item.status == 'TERVERIFIKASI' && item.petugasDesaId != null) {
           if (!petugasDesaCache.containsKey(item.petugasDesaId)) {
-            print('Memuat data petugas desa untuk ID: ${item.petugasDesaId}');
             await getPetugasDesaInfo(item.petugasDesaId);
           }
         }
@@ -666,76 +648,6 @@ class PenitipanBantuanController extends GetxController {
       });
     } catch (e) {
       print('Error saat memuat ulang data petugas desa: $e');
-    }
-  }
-
-  Future<void> searchDonatur(String keyword) async {
-    if (keyword.length < 3) {
-      hasilPencarianDonatur.clear();
-      return;
-    }
-
-    isSearchingDonatur.value = true;
-    try {
-      final result = await _supabaseService.searchDonatur(keyword);
-      if (result != null) {
-        hasilPencarianDonatur.value =
-            result.map((data) => DonaturModel.fromJson(data)).toList();
-      } else {
-        hasilPencarianDonatur.clear();
-      }
-    } catch (e) {
-      print('Error searching donatur: $e');
-      hasilPencarianDonatur.clear();
-    } finally {
-      isSearchingDonatur.value = false;
-    }
-  }
-
-  // Metode untuk mendapatkan daftar donatur
-  Future<List<DonaturModel>> getDaftarDonatur() async {
-    try {
-      final result = await _supabaseService.getDaftarDonatur();
-      if (result != null) {
-        return result.map((data) => DonaturModel.fromJson(data)).toList();
-      }
-      return [];
-    } catch (e) {
-      print('Error getting daftar donatur: $e');
-      return [];
-    }
-  }
-
-  Future<String?> tambahDonatur({
-    required String nama,
-    required String noHp,
-    String? alamat,
-    String? email,
-    String? jenis,
-  }) async {
-    try {
-      final donaturData = {
-        'nama_lengkap': nama,
-        'no_hp': noHp,
-        'alamat': alamat,
-        'email': email,
-        'jenis': jenis,
-        'status': 'AKTIF',
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
-      return await _supabaseService.tambahDonatur(donaturData);
-    } catch (e) {
-      print('Error adding donatur: $e');
-      Get.snackbar(
-        'Error',
-        'Gagal menambahkan donatur: ${e.toString()}',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return null;
     }
   }
 
@@ -771,5 +683,11 @@ class PenitipanBantuanController extends GetxController {
     // Debug counter values
     print(
         'Counter updated - Menunggu: $menunggu, Terverifikasi: $terverifikasi, Ditolak: $ditolak');
+  }
+
+  // Metode untuk membersihkan pencarian donatur
+  void resetDonaturSearch() {
+    hasilPencarianDonatur.clear();
+    donaturSearchController.clear();
   }
 }

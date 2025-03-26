@@ -439,29 +439,6 @@ class JadwalPenyaluranController extends GetxController {
             .insert(penerimaPenyaluran);
       }
 
-      // Update stok bantuan (kurangi dengan total stok yang dibutuhkan)
-      try {
-        // Dapatkan stok saat ini
-        final stokData = await _supabaseService.client
-            .from('stok_bantuan')
-            .select('total_stok')
-            .eq('id', stokBantuanId)
-            .single();
-
-        if (stokData['total_stok'] != null) {
-          final currentStok = stokData['total_stok'].toDouble();
-          final newStok = currentStok - totalStokDibutuhkan;
-
-          // Update stok bantuan dengan nilai baru
-          await _supabaseService.client
-              .from('stok_bantuan')
-              .update({'total_stok': newStok}).eq('id', stokBantuanId);
-        }
-      } catch (e) {
-        print('Error updating stok bantuan: $e');
-        // Tidak throw exception di sini karena penyaluran sudah disimpan
-      }
-
       // Setelah berhasil menambahkan, refresh data
       await loadJadwalData();
       await loadPermintaanPenjadwalanData();

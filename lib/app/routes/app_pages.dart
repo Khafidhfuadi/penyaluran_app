@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/auth/views/login_view.dart';
+import 'package:penyaluran_app/app/modules/auth/views/register_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/auth/bindings/auth_binding.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/petugas_desa_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/petugas_desa_binding.dart';
@@ -55,6 +56,11 @@ class AppPages {
     GetPage(
       name: _Paths.login,
       page: () => const LoginView(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
+      name: _Paths.registerDonatur,
+      page: () => const RegisterDonaturView(),
       binding: AuthBinding(),
     ),
     GetPage(

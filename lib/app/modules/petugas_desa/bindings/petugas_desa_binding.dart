@@ -4,6 +4,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/petugas_desa_dashboard_controller.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/stok_bantuan_controller.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/riwayat_stok_controller.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penitipan_bantuan_controller.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/pengaduan_controller.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penerima_bantuan_controller.dart';
@@ -41,6 +42,11 @@ class PetugasDesaBinding extends Bindings {
     // Daftarkan controller stok bantuan
     Get.lazyPut<StokBantuanController>(
       () => StokBantuanController(),
+    );
+
+    // Daftarkan controller riwayat stok
+    Get.lazyPut<RiwayatStokController>(
+      () => RiwayatStokController(),
     );
 
     // Daftarkan controller penitipan bantuan

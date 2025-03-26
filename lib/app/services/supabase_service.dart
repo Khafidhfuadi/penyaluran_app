@@ -834,9 +834,30 @@ class SupabaseService extends GetxService {
       }
 
       final petugasDesaId = client.auth.currentUser?.id;
+      if (petugasDesaId == null) {
+        throw 'ID petugas desa tidak ditemukan';
+      }
+
       print(
           'Verifikasi penitipan dengan ID: $penitipanId oleh petugas desa ID: $petugasDesaId');
 
+      // 1. Dapatkan data penitipan untuk mendapatkan stok_bantuan_id dan jumlah
+      final response = await client
+          .from('penitipan_bantuan')
+          .select('stok_bantuan_id, jumlah')
+          .eq('id', penitipanId);
+
+      if (response == null || response.isEmpty) {
+        throw 'Data penitipan tidak ditemukan';
+      }
+
+      final penitipanData = response[0];
+      final String stokBantuanId = penitipanData['stok_bantuan_id'];
+      final double jumlah = penitipanData['jumlah'] is int
+          ? penitipanData['jumlah'].toDouble()
+          : penitipanData['jumlah'];
+
+      // 2. Update status penitipan menjadi terverifikasi
       final updateData = {
         'status': 'TERVERIFIKASI',
         'tanggal_verifikasi': DateTime.now().toIso8601String(),
@@ -852,7 +873,11 @@ class SupabaseService extends GetxService {
           .update(updateData)
           .eq('id', penitipanId);
 
-      print('Penitipan berhasil diverifikasi dan data petugas desa disimpan');
+      // 3. Tambahkan ke stok dan catat di riwayat stok
+      await tambahStokDariPenitipan(
+          penitipanId, stokBantuanId, jumlah, petugasDesaId);
+
+      print('Penitipan berhasil diverifikasi dan stok bantuan ditambahkan');
     } catch (e) {
       print('Error verifying penitipan: $e');
       throw e.toString();
@@ -1591,6 +1616,12 @@ class SupabaseService extends GetxService {
       String? buktiPenerimaan,
       String? keterangan}) async {
     try {
+      // Periksa petugas ID
+      final petugasId = client.auth.currentUser?.id;
+      if (petugasId == null) {
+        throw Exception('ID petugas tidak ditemukan');
+      }
+
       final Map<String, dynamic> updateData = {
         'status_penerimaan': status,
       };
@@ -1607,10 +1638,33 @@ class SupabaseService extends GetxService {
         updateData['keterangan'] = keterangan;
       }
 
+      // Update status penerimaan
       await client
           .from('penerima_penyaluran')
           .update(updateData)
           .eq('id', penerimaId);
+
+      // Jika status adalah DITERIMA, kurangi stok
+      if (status.toUpperCase() == 'DITERIMA') {
+        // Dapatkan data penerima penyaluran (stok_bantuan_id dan jumlah)
+        final penerimaData = await client
+            .from('penerima_penyaluran')
+            .select('penyaluran_bantuan_id, stok_bantuan_id, jumlah')
+            .eq('id', penerimaId)
+            .single();
+
+        if (penerimaData != null) {
+          final String penyaluranId = penerimaData['penyaluran_bantuan_id'];
+          final String stokBantuanId = penerimaData['stok_bantuan_id'];
+          final double jumlah = penerimaData['jumlah'] is int
+              ? penerimaData['jumlah'].toDouble()
+              : penerimaData['jumlah'];
+
+          // Kurangi stok dan catat riwayat
+          await kurangiStokDariPenyaluran(
+              penyaluranId, stokBantuanId, jumlah, petugasId);
+        }
+      }
 
       return true;
     } catch (e) {
@@ -1838,6 +1892,288 @@ class SupabaseService extends GetxService {
     } catch (e) {
       print('Error changing password: $e');
       throw e.toString();
+    }
+  }
+
+  // Riwayat Stok methods
+  Future<List<Map<String, dynamic>>?> getRiwayatStok(
+      {String? stokBantuanId, String? jenisPerubahan}) async {
+    try {
+      var filterString = '';
+      if (stokBantuanId != null) {
+        filterString += 'stok_bantuan_id.eq.$stokBantuanId';
+      }
+
+      if (jenisPerubahan != null) {
+        filterString += (filterString.isNotEmpty ? ',' : '') +
+            'jenis_perubahan.eq.$jenisPerubahan';
+      }
+
+      final response = await client.from('riwayat_stok').select('''
+      *,
+      stok_bantuan:stok_bantuan_id(*),
+      petugas_desa:created_by_id(*)
+    ''').order('created_at', ascending: false);
+
+      var result = response;
+      if (filterString.isNotEmpty) {
+        // Menerapkan filter secara manual karena response sudah berupa List
+        result = result.where((item) {
+          if (stokBantuanId != null &&
+              item['stok_bantuan_id'] != stokBantuanId) {
+            return false;
+          }
+          if (jenisPerubahan != null &&
+              item['jenis_perubahan'] != jenisPerubahan) {
+            return false;
+          }
+          return true;
+        }).toList();
+      }
+
+      return result;
+    } catch (e) {
+      print('Error getting riwayat stok: $e');
+      return null;
+    }
+  }
+
+  // Metode untuk mencatat penambahan stok dari penitipan
+  Future<void> tambahStokDariPenitipan(String penitipanId, String stokBantuanId,
+      double jumlah, String petugasId) async {
+    try {
+      // 1. Update stok bantuan - tambahkan jumlah
+      final stokBantuanResponse = await client
+          .from('stok_bantuan')
+          .select('total_stok')
+          .eq('id', stokBantuanId)
+          .single();
+
+      // Konversi total_stok ke double terlepas dari apakah itu int atau double
+      double currentStok = 0.0;
+      if (stokBantuanResponse['total_stok'] != null) {
+        if (stokBantuanResponse['total_stok'] is int) {
+          currentStok = stokBantuanResponse['total_stok'].toDouble();
+        } else {
+          currentStok = stokBantuanResponse['total_stok'];
+        }
+      }
+
+      double newStok = currentStok + jumlah;
+
+      // Update stok bantuan
+      await client.from('stok_bantuan').update({
+        'total_stok': newStok,
+        'updated_at': DateTime.now().toIso8601String()
+      }).eq('id', stokBantuanId);
+
+      // 2. Catat riwayat penambahan
+      await client.from('riwayat_stok').insert({
+        'stok_bantuan_id': stokBantuanId,
+        'jenis_perubahan': 'penambahan',
+        'jumlah': jumlah,
+        'sumber': 'penitipan',
+        'id_referensi': penitipanId,
+        'created_by_id': petugasId,
+        'created_at': DateTime.now().toIso8601String()
+      });
+
+      print('Stok berhasil ditambahkan dari penitipan');
+    } catch (e) {
+      print('Error adding stok from penitipan: $e');
+      throw e; // Re-throw untuk penanganan di tingkat yang lebih tinggi
+    }
+  }
+
+  // Metode untuk mencatat pengurangan stok dari penyaluran
+  Future<void> kurangiStokDariPenyaluran(String penyaluranId,
+      String stokBantuanId, double jumlah, String petugasId) async {
+    try {
+      // 1. Update stok bantuan - kurangi jumlah
+      final stokBantuanResponse = await client
+          .from('stok_bantuan')
+          .select('total_stok')
+          .eq('id', stokBantuanId)
+          .single();
+
+      // Konversi total_stok ke double terlepas dari apakah itu int atau double
+      double currentStok = 0.0;
+      if (stokBantuanResponse['total_stok'] != null) {
+        if (stokBantuanResponse['total_stok'] is int) {
+          currentStok = stokBantuanResponse['total_stok'].toDouble();
+        } else {
+          currentStok = stokBantuanResponse['total_stok'];
+        }
+      }
+
+      // Validasi stok cukup
+      if (currentStok < jumlah) {
+        throw Exception('Stok tidak mencukupi untuk pengurangan');
+      }
+
+      double newStok = currentStok - jumlah;
+
+      // Update stok bantuan
+      await client.from('stok_bantuan').update({
+        'total_stok': newStok,
+        'updated_at': DateTime.now().toIso8601String()
+      }).eq('id', stokBantuanId);
+
+      // 2. Catat riwayat pengurangan
+      await client.from('riwayat_stok').insert({
+        'stok_bantuan_id': stokBantuanId,
+        'jenis_perubahan': 'pengurangan',
+        'jumlah': jumlah,
+        'sumber': 'penyaluran',
+        'id_referensi': penyaluranId,
+        'created_by_id': petugasId,
+        'created_at': DateTime.now().toIso8601String()
+      });
+
+      print('Stok berhasil dikurangi dari penyaluran');
+    } catch (e) {
+      print('Error reducing stok from penyaluran: $e');
+      throw e; // Re-throw untuk penanganan di tingkat yang lebih tinggi
+    }
+  }
+
+  // Metode untuk penambahan stok manual oleh petugas
+  Future<void> tambahStokManual({
+    required String stokBantuanId,
+    required double jumlah,
+    required String alasan,
+    required String fotoBuktiPath,
+    required String petugasId,
+  }) async {
+    try {
+      // 1. Upload foto bukti jika disediakan
+      String fotoBuktiUrl = '';
+      if (fotoBuktiPath.isNotEmpty) {
+        final String fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${stokBantuanId}.jpg';
+        final fileResponse = await client.storage.from('stok_bukti').upload(
+              fileName,
+              File(fotoBuktiPath),
+              fileOptions:
+                  const FileOptions(cacheControl: '3600', upsert: false),
+            );
+        fotoBuktiUrl = client.storage.from('stok_bukti').getPublicUrl(fileName);
+      }
+
+      // 2. Update stok bantuan - tambahkan jumlah
+      final stokBantuanResponse = await client
+          .from('stok_bantuan')
+          .select('total_stok')
+          .eq('id', stokBantuanId)
+          .single();
+
+      // Konversi total_stok ke double terlepas dari apakah itu int atau double
+      double currentStok = 0.0;
+      if (stokBantuanResponse['total_stok'] != null) {
+        if (stokBantuanResponse['total_stok'] is int) {
+          currentStok = stokBantuanResponse['total_stok'].toDouble();
+        } else {
+          currentStok = stokBantuanResponse['total_stok'];
+        }
+      }
+
+      double newStok = currentStok + jumlah;
+
+      // Update stok bantuan
+      await client.from('stok_bantuan').update({
+        'total_stok': newStok,
+        'updated_at': DateTime.now().toIso8601String()
+      }).eq('id', stokBantuanId);
+
+      // 3. Catat riwayat penambahan
+      await client.from('riwayat_stok').insert({
+        'stok_bantuan_id': stokBantuanId,
+        'jenis_perubahan': 'penambahan',
+        'jumlah': jumlah,
+        'sumber': 'manual',
+        'alasan': alasan,
+        'foto_bukti': fotoBuktiUrl,
+        'created_by_id': petugasId,
+        'created_at': DateTime.now().toIso8601String()
+      });
+
+      print('Stok berhasil ditambahkan secara manual');
+    } catch (e) {
+      print('Error adding stok manually: $e');
+      throw e; // Re-throw untuk penanganan di tingkat yang lebih tinggi
+    }
+  }
+
+  // Metode untuk pengurangan stok manual oleh petugas
+  Future<void> kurangiStokManual({
+    required String stokBantuanId,
+    required double jumlah,
+    required String alasan,
+    required String fotoBuktiPath,
+    required String petugasId,
+  }) async {
+    try {
+      // 1. Validasi stok yang tersedia
+      final stokBantuanResponse = await client
+          .from('stok_bantuan')
+          .select('total_stok')
+          .eq('id', stokBantuanId)
+          .single();
+
+      // Konversi total_stok ke double terlepas dari apakah itu int atau double
+      double currentStok = 0.0;
+      if (stokBantuanResponse['total_stok'] != null) {
+        if (stokBantuanResponse['total_stok'] is int) {
+          currentStok = stokBantuanResponse['total_stok'].toDouble();
+        } else {
+          currentStok = stokBantuanResponse['total_stok'];
+        }
+      }
+
+      // Validasi stok cukup
+      if (currentStok < jumlah) {
+        throw Exception('Stok tidak mencukupi untuk pengurangan');
+      }
+
+      // 2. Upload foto bukti jika disediakan
+      String fotoBuktiUrl = '';
+      if (fotoBuktiPath.isNotEmpty) {
+        final String fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${stokBantuanId}.jpg';
+        final fileResponse = await client.storage.from('stok_bukti').upload(
+              fileName,
+              File(fotoBuktiPath),
+              fileOptions:
+                  const FileOptions(cacheControl: '3600', upsert: false),
+            );
+        fotoBuktiUrl = client.storage.from('stok_bukti').getPublicUrl(fileName);
+      }
+
+      // 3. Update stok bantuan - kurangi jumlah
+      double newStok = currentStok - jumlah;
+
+      // Update stok bantuan
+      await client.from('stok_bantuan').update({
+        'total_stok': newStok,
+        'updated_at': DateTime.now().toIso8601String()
+      }).eq('id', stokBantuanId);
+
+      // 4. Catat riwayat pengurangan
+      await client.from('riwayat_stok').insert({
+        'stok_bantuan_id': stokBantuanId,
+        'jenis_perubahan': 'pengurangan',
+        'jumlah': jumlah,
+        'sumber': 'manual',
+        'alasan': alasan,
+        'foto_bukti': fotoBuktiUrl,
+        'created_by_id': petugasId,
+        'created_at': DateTime.now().toIso8601String()
+      });
+
+      print('Stok berhasil dikurangi secara manual');
+    } catch (e) {
+      print('Error reducing stok manually: $e');
+      throw e; // Re-throw untuk penanganan di tingkat yang lebih tinggi
     }
   }
 }

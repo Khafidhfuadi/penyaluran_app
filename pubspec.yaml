@@ -91,6 +91,9 @@ dependencies:
   # Package untuk membuka file
   open_file: ^3.3.2
   percent_indicator: ^4.2.4
+  uuid: ^4.5.1
+  # Library untuk cached image
+  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:

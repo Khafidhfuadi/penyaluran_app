@@ -249,21 +249,24 @@ class StokBantuanController extends GetxController {
     return filteredList;
   }
 
-  // Metode untuk mendapatkan jumlah stok yang hampir habis (stok <= 10)
+  // Metode untuk mendapatkan jumlah stok yang hampir habis
   int getStokHampirHabis() {
     return daftarStokBantuan
-        .where((stok) => (stok.totalStok ?? 0) <= 10)
+        .where((item) => (item.totalStok ?? 0) <= 10)
         .length;
   }
 
-  // Metode untuk menghitung total dana bantuan
+  // Metode untuk menghitung total dana bantuan dari stok uang
   void _hitungTotalDanaBantuan() {
     double total = 0.0;
+
+    // Hitung dari stok yang isUang = true
     for (var stok in daftarStokBantuan) {
       if (stok.isUang == true) {
         total += stok.totalStok ?? 0.0;
       }
     }
+
     totalDanaBantuan.value = total;
   }
 

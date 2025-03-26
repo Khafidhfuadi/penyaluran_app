@@ -5,9 +5,11 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/dashboard_view.dar
 import 'package:penyaluran_app/app/modules/petugas_desa/views/penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/notifikasi_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/stok_bantuan_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_stok_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/penitipan_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/pengaduan_view.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/riwayat_stok_controller.dart';
 
 class PetugasDesaView extends GetView<PetugasDesaController> {
   const PetugasDesaView({super.key});
@@ -141,6 +143,27 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                 ],
               );
             }
+
+            // Tampilkan tombol riwayat stok jika tab Stok Bantuan aktif
+            if (activeTab == 4) {
+              return Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      // Navigasi ke halaman riwayat stok
+                      if (!Get.isRegistered<RiwayatStokController>()) {
+                        Get.put(RiwayatStokController());
+                      }
+                      Get.to(() => const RiwayatStokView());
+                    },
+                    icon: const Icon(Icons.history),
+                    tooltip: 'Riwayat Stok',
+                  ),
+                  notificationButton,
+                ],
+              );
+            }
+
             return notificationButton;
           }),
         ],
