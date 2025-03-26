@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penerima_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class DetailPenerimaView extends GetView<PenerimaController> {

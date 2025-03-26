@@ -48,9 +48,7 @@ class SkemaBantuanModel {
             : null,
         stokBantuanId: json["stok_bantuan_id"],
         kategoriBantuanId: json["kategori_bantuan_id"],
-        jumlahDiterimaPerOrang: json["jumlah_diterima_per_orang"] != null
-            ? json["jumlah_diterima_per_orang"].toDouble()
-            : null,
+        jumlahDiterimaPerOrang: json["jumlah_diterima_per_orang"]?.toDouble(),
       );
 
   Map<String, dynamic> toJson() => {

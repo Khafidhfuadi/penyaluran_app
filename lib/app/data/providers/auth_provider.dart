@@ -89,19 +89,14 @@ class AuthProvider {
             .eq('id', userId)
             .single();
 
-        if (profileResponse != null) {
-          // Ekstrak data desa jika ada
-          if (profileResponse['desa'] != null) {
-            desa = DesaModel.fromJson(profileResponse['desa']);
-            print('Data Desa: ${desa.nama}');
-          }
-
-          roleData = WargaModel.fromJson(profileResponse);
-          print('Data Warga: ${roleData.namaLengkap}');
-        } else {
-          print('Tidak menemukan data warga untuk ID: $userId');
-          return null;
+        // Ekstrak data desa jika ada
+        if (profileResponse['desa'] != null) {
+          desa = DesaModel.fromJson(profileResponse['desa']);
+          print('Data Desa: ${desa.nama}');
         }
+
+        roleData = WargaModel.fromJson(profileResponse);
+        print('Data Warga: ${roleData.namaLengkap}');
       } else if (roleName == 'petugas_desa') {
         profileResponse = await _supabaseService.client
             .from('petugas_desa')
@@ -109,17 +104,15 @@ class AuthProvider {
             .eq('id', userId)
             .single();
 
-        if (profileResponse != null) {
-          // Ekstrak data desa jika ada
-          if (profileResponse['desa'] != null) {
-            desa = DesaModel.fromJson(profileResponse['desa']);
-            print('Data Desa: ${desa.nama}');
-          }
-
-          roleData = PetugasDesaModel.fromJson(profileResponse);
-          print(
-              'Data Petugas Desa: ${roleData.namaLengkap}, Desa: ${roleData.desa?.nama}');
+        // Ekstrak data desa jika ada
+        if (profileResponse['desa'] != null) {
+          desa = DesaModel.fromJson(profileResponse['desa']);
+          print('Data Desa: ${desa.nama}');
         }
+
+        roleData = PetugasDesaModel.fromJson(profileResponse);
+        print(
+            'Data Petugas Desa: ${roleData.namaLengkap}, Desa: ${roleData.desa?.nama}');
       } else if (roleName == 'donatur') {
         profileResponse = await _supabaseService.client
             .from('donatur')
@@ -252,19 +245,14 @@ class AuthProvider {
               .eq('id', userId)
               .single();
 
-          if (profileResponse != null) {
-            // Ekstrak data desa jika ada
-            if (profileResponse['desa'] != null) {
-              desa = DesaModel.fromJson(profileResponse['desa']);
-              print('Data Desa: ${desa.nama}');
-            }
-
-            roleData = WargaModel.fromJson(profileResponse);
-            print('Data Warga: ${roleData.namaLengkap}');
-          } else {
-            print('Tidak menemukan data warga untuk ID: $userId');
-            return null;
+          // Ekstrak data desa jika ada
+          if (profileResponse['desa'] != null) {
+            desa = DesaModel.fromJson(profileResponse['desa']);
+            print('Data Desa: ${desa.nama}');
           }
+
+          roleData = WargaModel.fromJson(profileResponse);
+          print('Data Warga: ${roleData.namaLengkap}');
         } else if (roleName.toLowerCase() == 'petugas_desa') {
           profileResponse = await _supabaseService.client
               .from('petugas_desa')
@@ -273,15 +261,13 @@ class AuthProvider {
               .eq('id', userId)
               .single();
 
-          if (profileResponse != null) {
-            // Ekstrak data desa jika ada
-            if (profileResponse['desa'] != null) {
-              desa = DesaModel.fromJson(profileResponse['desa']);
-              print('Data Desa: ${desa.nama}');
-            }
-
-            roleData = PetugasDesaModel.fromJson(profileResponse);
+          // Ekstrak data desa jika ada
+          if (profileResponse['desa'] != null) {
+            desa = DesaModel.fromJson(profileResponse['desa']);
+            print('Data Desa: ${desa.nama}');
           }
+
+          roleData = PetugasDesaModel.fromJson(profileResponse);
         } else if (roleName.toLowerCase() == 'donatur') {
           profileResponse = await _supabaseService.client
               .from('donatur')
@@ -289,9 +275,7 @@ class AuthProvider {
               .eq('id', userId)
               .single();
 
-          if (profileResponse != null) {
-            roleData = DonaturModel.fromJson(profileResponse);
-          }
+          roleData = DonaturModel.fromJson(profileResponse);
         }
 
         if (roleData == null) {

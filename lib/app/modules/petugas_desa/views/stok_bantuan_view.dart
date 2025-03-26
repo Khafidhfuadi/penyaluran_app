@@ -426,7 +426,9 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     context,
                     icon: Icons.access_time,
                     label: 'Terakhir Diperbarui',
-                    value: DateTimeHelper.formatDateTime(item.updatedAt),
+                    value: item.updatedAt != null
+                        ? '${item.updatedAt!.day}/${item.updatedAt!.month}/${item.updatedAt!.year} ${item.updatedAt!.hour}:${item.updatedAt!.minute}'
+                        : 'Tidak ada data',
                   ),
                 ),
               ],

@@ -265,18 +265,16 @@ class SupabaseService extends GetxService {
       }
 
       // Tambahkan data role-specific
-      if (roleData != null) {
-        combinedData['role_data'] = roleData;
+      combinedData['role_data'] = roleData;
 
-        // Tambahkan data desa jika ada
-        if (roleData['desa'] != null) {
-          combinedData['desa'] = roleData['desa'];
-        }
+      // Tambahkan data desa jika ada
+      if (roleData['desa'] != null) {
+        combinedData['desa'] = roleData['desa'];
+      }
 
-        // Tambahkan nama dari data role jika ada
-        if (roleData['nama_lengkap'] != null) {
-          combinedData['name'] = roleData['nama_lengkap'];
-        }
+      // Tambahkan nama dari data role jika ada
+      if (roleData['nama_lengkap'] != null) {
+        combinedData['name'] = roleData['nama_lengkap'];
       }
 
       // Cache profil untuk penggunaan berikutnya
@@ -783,6 +781,8 @@ class SupabaseService extends GetxService {
   Future<String?> uploadFile(
       String filePath, String bucket, String folder) async {
     try {
+      print(
+          'Uploading file from path: $filePath to bucket: $bucket in folder: $folder');
       final fileName = filePath.split('/').last;
       final fileExt = fileName.split('.').last;
       final fileKey =
@@ -1327,10 +1327,6 @@ class SupabaseService extends GetxService {
           .eq('role_name', 'warga')
           .single();
 
-      if (roleResponse == null) {
-        throw 'Role warga tidak ditemukan';
-      }
-
       final roleId = roleResponse['id'];
 
       // Update role_id di auth.users
@@ -1378,10 +1374,6 @@ class SupabaseService extends GetxService {
           .select('id')
           .eq('role_name', 'donatur')
           .single();
-
-      if (roleResponse == null) {
-        throw 'Role donatur tidak ditemukan';
-      }
 
       final roleId = roleResponse['id'];
 
@@ -1476,10 +1468,6 @@ class SupabaseService extends GetxService {
           .select('id')
           .eq('role_name', 'petugas_desa')
           .single();
-
-      if (roleResponse == null) {
-        throw 'Role petugas desa tidak ditemukan';
-      }
 
       final roleId = roleResponse['id'];
 

@@ -10,7 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 
 class LaporanPenyaluranCreateView extends GetView<LaporanPenyaluranController> {
-  const LaporanPenyaluranCreateView({Key? key}) : super(key: key);
+  const LaporanPenyaluranCreateView({super.key});
 
   @override
   Widget build(BuildContext context) {

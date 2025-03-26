@@ -11,7 +11,7 @@ import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LaporanPenyaluranDetailView extends GetView<LaporanPenyaluranController> {
-  const LaporanPenyaluranDetailView({Key? key}) : super(key: key);
+  const LaporanPenyaluranDetailView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -385,8 +385,9 @@ class LaporanPenyaluranDetailView extends GetView<LaporanPenyaluranController> {
                                         orElse: () => PenerimaPenyaluranModel())
                                     .stokBantuan;
 
-                                if (stokBantuan == null)
+                                if (stokBantuan == null) {
                                   return const SizedBox.shrink();
+                                }
 
                                 final kategori =
                                     stokBantuan['kategori_bantuan'] != null
@@ -939,9 +940,9 @@ class LaporanPenyaluranDetailView extends GetView<LaporanPenyaluranController> {
 
     return InkWell(
       onTap: () async {
-        final Uri _url = Uri.parse(url);
-        if (await canLaunchUrl(_url)) {
-          await launchUrl(_url, mode: LaunchMode.externalApplication);
+        final Uri url0 = Uri.parse(url);
+        if (await canLaunchUrl(url0)) {
+          await launchUrl(url0, mode: LaunchMode.externalApplication);
         } else {
           Get.snackbar(
             'Error',

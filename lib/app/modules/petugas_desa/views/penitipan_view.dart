@@ -632,16 +632,24 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.camera_alt,
+                            Icons.add_photo_alternate,
                             size: 48,
                             color: Colors.grey.shade600,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Ambil Foto',
+                            'Pilih Foto',
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Kamera atau Galeri',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
                             ),
                           ),
                         ],

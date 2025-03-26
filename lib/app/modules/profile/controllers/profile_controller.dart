@@ -4,7 +4,6 @@ import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class ProfileController extends GetxController {
   final SupabaseService _supabaseService = Get.find<SupabaseService>();

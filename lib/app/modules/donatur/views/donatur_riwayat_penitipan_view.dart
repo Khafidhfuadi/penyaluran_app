@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/donatur/controllers/donatur_dashboard_controller.dart';
 
 class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
-  DonaturRiwayatPenitipanView({Key? key}) : super(key: key);
+  DonaturRiwayatPenitipanView({super.key});
 
   @override
   DonaturDashboardController get controller {
@@ -23,7 +23,7 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Menunggu'),
-              Tab(text: 'Diterima'),
+              Tab(text: 'Terverifikasi'),
               Tab(text: 'Ditolak'),
             ],
           ),
@@ -33,7 +33,7 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
             // Tab Menunggu
             _buildPenitipanList(context, 'MENUNGGU'),
             // Tab Diterima
-            _buildPenitipanList(context, 'DITERIMA'),
+            _buildPenitipanList(context, 'TERVERIFIKASI'),
             // Tab Ditolak
             _buildPenitipanList(context, 'DITOLAK'),
           ],
@@ -88,8 +88,8 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
       case 'MENUNGGU':
         statusText = 'menunggu verifikasi';
         break;
-      case 'DITERIMA':
-        statusText = 'diterima';
+      case 'TERVERIFIKASI':
+        statusText = 'terverifikasi';
         break;
       case 'DITOLAK':
         statusText = 'ditolak';
@@ -137,7 +137,7 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
       BuildContext context, List<dynamic> filteredList, String status) {
     Color statusColor;
     switch (status) {
-      case 'DITERIMA':
+      case 'TERVERIFIKASI':
         statusColor = Colors.green;
         break;
       case 'DITOLAK':
@@ -221,7 +221,7 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
     IconData statusIcon;
 
     switch (penitipan.status) {
-      case 'DITERIMA':
+      case 'TERVERIFIKASI':
         statusIcon = Icons.check_circle;
         break;
       case 'DITOLAK':
@@ -233,160 +233,397 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
         break;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          print('Debug: Tapped on penitipan with ID: ${penitipan.id}');
+          _showDetailDialog(context, penitipan);
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          child: Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      statusIcon,
-                      color: statusColor,
-                      size: 24,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          statusIcon,
+                          color: statusColor,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    penitipan.kategoriBantuan?.nama ??
+                                        'Bantuan',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: statusColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    penitipan.status ?? 'MENUNGGU',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: statusColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 14,
+                                  color: Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  formattedDate,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 14,
+                                  color: Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Jumlah: ${penitipan.jumlah ?? 0}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                penitipan.kategoriBantuan?.nama ?? 'Bantuan',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                  if (penitipan.deskripsi != null &&
+                      penitipan.deskripsi!.isNotEmpty) ...[
+                    const Divider(height: 24),
+                    Text(
+                      penitipan.deskripsi!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade700,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (penitipan.status == 'DITOLAK' &&
+                      penitipan.alasanPenolakan != null &&
+                      penitipan.alasanPenolakan!.isNotEmpty) ...[
+                    const Divider(height: 24),
+                    Text(
+                      'Alasan Penolakan:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      penitipan.alasanPenolakan!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                  ],
+                  // Tambahkan petunjuk visual
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 14,
+                            color: Colors.blue.shade700,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Tap untuk detail',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue.shade700,
+                              fontStyle: FontStyle.italic,
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                penitipan.status ?? 'MENUNGGU',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: statusColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today,
-                              size: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              formattedDate,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Jumlah: ${penitipan.jumlah ?? 0}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
-              if (penitipan.deskripsi != null &&
-                  penitipan.deskripsi!.isNotEmpty) ...[
-                const Divider(height: 24),
-                Text(
-                  penitipan.deskripsi!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDetailDialog(BuildContext context, dynamic penitipan) {
+    final isUang = penitipan.isUang ?? false;
+    final kategoriSatuan = penitipan.kategoriBantuan?.satuan ?? '';
+
+    String getPetugasDesaNama(String? id) {
+      return id != null ? 'Petugas Desa' : 'Tidak ada petugas';
+    }
+
+    void showFullScreenImage(String imageUrl) {
+      Get.dialog(
+        Dialog(
+          insetPadding: EdgeInsets.zero,
+          child: Container(
+            color: Colors.black,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 0.5,
+                  maxScale: 4,
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      );
+                    },
                   ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+                ),
+                Positioned(
+                  top: 20,
+                  right: 20,
+                  child: GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
                 ),
               ],
-              if (penitipan.status == 'DITOLAK' &&
-                  penitipan.alasanPenolakan != null &&
-                  penitipan.alasanPenolakan!.isNotEmpty) ...[
-                const Divider(height: 24),
-                Text(
-                  'Alasan Penolakan:',
+            ),
+          ),
+        ),
+      );
+    }
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Detail Penitipan'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoRow('ID', penitipan.id ?? '-'),
+              _buildInfoRow('Kategori', penitipan.kategoriBantuan?.nama ?? '-'),
+              _buildInfoRow(
+                'Jumlah',
+                isUang
+                    ? 'Rp ${penitipan.jumlah?.toStringAsFixed(0) ?? '0'}'
+                    : '${penitipan.jumlah?.toString() ?? '0'} $kategoriSatuan',
+              ),
+              _buildInfoRow(
+                'Tanggal Penitipan',
+                penitipan.tanggalPenitipan != null
+                    ? DateFormat('dd MMMM yyyy', 'id_ID')
+                        .format(penitipan.tanggalPenitipan!)
+                    : 'Tanggal tidak tersedia',
+              ),
+              _buildInfoRow(
+                'Status',
+                penitipan.status ?? 'Belum diproses',
+              ),
+              if (penitipan.tanggalVerifikasi != null)
+                _buildInfoRow(
+                  'Tanggal Verifikasi',
+                  DateFormat('dd MMMM yyyy HH:mm', 'id_ID')
+                      .format(penitipan.tanggalVerifikasi!),
+                ),
+              if (penitipan.deskripsi != null &&
+                  penitipan.deskripsi!.isNotEmpty)
+                _buildInfoRow('Deskripsi', penitipan.deskripsi!),
+              if (penitipan.alasanPenolakan != null &&
+                  penitipan.alasanPenolakan!.isNotEmpty)
+                _buildInfoRow('Alasan Penolakan', penitipan.alasanPenolakan!),
+
+              // Gambar bukti penitipan
+              if (penitipan.fotoBantuan != null &&
+                  penitipan.fotoBantuan!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'Bukti Penitipan',
                   style: TextStyle(
-                    fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Colors.red.shade700,
+                    fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  penitipan.alasanPenolakan!,
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () =>
+                      showFullScreenImage(penitipan.fotoBantuan!.first),
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      image: DecorationImage(
+                        image: NetworkImage(penitipan.fotoBantuan!.first),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
+              // Bukti serah terima jika ada
+              if (penitipan.fotoBuktiSerahTerima != null &&
+                  penitipan.fotoBuktiSerahTerima!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'Bukti Serah Terima',
                   style: TextStyle(
+                    fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: Colors.red.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () =>
+                      showFullScreenImage(penitipan.fotoBuktiSerahTerima!),
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      image: DecorationImage(
+                        image: NetworkImage(penitipan.fotoBuktiSerahTerima!),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ],
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text(
+              'Tutup',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 14),
+          ),
+        ],
       ),
     );
   }

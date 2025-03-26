@@ -90,29 +90,20 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
 
         print('stokData $stokData');
 
-        if (stokData != null) {
-          namaStokBantuan.value =
-              stokData['nama'] ?? 'Nama stok tidak tersedia';
-          satuanStokBantuan.value = stokData['satuan'] ?? 'Tidak ada satuan';
-          isUang.value = stokData['is_uang'] ?? false;
+        namaStokBantuan.value = stokData['nama'] ?? 'Nama stok tidak tersedia';
+        satuanStokBantuan.value = stokData['satuan'] ?? 'Tidak ada satuan';
+        isUang.value = stokData['is_uang'] ?? false;
 
-          // Ambil jumlah stok tersedia
-          if (stokData['total_stok'] != null) {
-            totalStokTersedia.value = stokData['total_stok'].toDouble();
-          } else {
-            totalStokTersedia.value = 0;
-          }
-
-          // Periksa kecukupan stok
-          isStokCukup.value =
-              totalStokTersedia.value >= totalStokDibutuhkan.value;
+        // Ambil jumlah stok tersedia
+        if (stokData['total_stok'] != null) {
+          totalStokTersedia.value = stokData['total_stok'].toDouble();
         } else {
-          namaStokBantuan.value = 'Stok tidak ditemukan';
-          satuanStokBantuan.value = '';
           totalStokTersedia.value = 0;
-          isStokCukup.value = false;
-          isUang.value = false;
         }
+
+        // Periksa kecukupan stok
+        isStokCukup.value =
+            totalStokTersedia.value >= totalStokDibutuhkan.value;
       } catch (e) {
         print('Error loading stok bantuan: $e');
         namaStokBantuan.value = 'Error memuat data stok';

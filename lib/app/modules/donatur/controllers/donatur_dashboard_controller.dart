@@ -401,9 +401,19 @@ class DonaturDashboardController extends GetxController {
         throw Exception('Foto bantuan harus diunggah');
       }
 
+      // Dapatkan informasi stok bantuan untuk mendapatkan nilai is_uang
+      final selectedStokBantuan = stokBantuan.firstWhere(
+        (stok) => stok.id == stokBantuanId,
+        orElse: () => StokBantuanModel(),
+      );
+
       // Unggah foto bantuan ke storage menggunakan metode dari SupabaseService
       final fotoBantuanUrls = await _supabaseService.uploadMultipleFiles(
-          fotoBantuanPaths, 'penitipan', 'foto_bantuan');
+          fotoBantuanPaths, 'bantuan', 'foto_bantuan');
+
+      if (fotoBantuanUrls == null || fotoBantuanUrls.isEmpty) {
+        throw 'Gagal mengupload foto bantuan';
+      }
 
       // Data yang akan disimpan
       final Map<String, dynamic> data = {
@@ -414,6 +424,7 @@ class DonaturDashboardController extends GetxController {
         'status': 'MENUNGGU',
         'tanggal_penitipan': DateTime.now().toIso8601String(),
         'foto_bantuan': fotoBantuanUrls,
+        'is_uang': selectedStokBantuan.isUang ?? false,
       };
 
       // Tambahkan skema bantuan jika ada
@@ -438,9 +449,6 @@ class DonaturDashboardController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
       );
-
-      // Pindah ke tab riwayat penitipan
-      DefaultTabController.of(Get.context!)?.animateTo(0);
     } catch (e) {
       print('Error creating penitipan bantuan: $e');
       Get.snackbar(

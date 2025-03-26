@@ -74,9 +74,7 @@ class PetugasDesaController extends GetxController {
   String get nama {
     // 1. Coba ambil dari AuthController displayName yang paling lengkap
     final authDisplayName = _authController.displayName;
-    if (authDisplayName != null &&
-        authDisplayName != 'Pengguna' &&
-        authDisplayName != user?.email) {
+    if (authDisplayName != 'Pengguna' && authDisplayName != user?.email) {
       return authDisplayName;
     }
 

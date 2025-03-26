@@ -198,8 +198,62 @@ class PenitipanBantuanController extends GetxController {
 
   Future<void> pickfotoBuktiSerahTerima() async {
     try {
+      // Tampilkan bottom sheet untuk memilih sumber foto
+      Get.bottomSheet(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Pilih Sumber Foto',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Kamera'),
+                onTap: () {
+                  Get.back();
+                  _pickfotoBuktiSerahTerimaFrom(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galeri'),
+                onTap: () {
+                  Get.back();
+                  _pickfotoBuktiSerahTerimaFrom(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    } catch (e) {
+      print('Error showing bottom sheet: $e');
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Fungsi helper untuk mengambil foto dari sumber yang dipilih
+  Future<void> _pickfotoBuktiSerahTerimaFrom(ImageSource source) async {
+    try {
       final pickedFile = await _imagePicker.pickImage(
-        source: ImageSource.camera,
+        source: source,
         imageQuality: 70,
         maxWidth: 1000,
       );

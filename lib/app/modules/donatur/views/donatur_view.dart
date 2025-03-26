@@ -6,6 +6,7 @@ import 'package:penyaluran_app/app/modules/donatur/views/donatur_skema_view.dart
 import 'package:penyaluran_app/app/modules/donatur/views/donatur_jadwal_view.dart';
 import 'package:penyaluran_app/app/modules/donatur/views/donatur_laporan_view.dart';
 import 'package:penyaluran_app/app/modules/donatur/views/donatur_penitipan_view.dart';
+import 'package:penyaluran_app/app/modules/donatur/views/donatur_riwayat_penitipan_view.dart';
 import 'package:penyaluran_app/app/widgets/app_bottom_navigation_bar.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 

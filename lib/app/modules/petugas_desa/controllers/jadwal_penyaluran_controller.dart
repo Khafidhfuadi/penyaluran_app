@@ -448,7 +448,7 @@ class JadwalPenyaluranController extends GetxController {
             .eq('id', stokBantuanId)
             .single();
 
-        if (stokData != null && stokData['total_stok'] != null) {
+        if (stokData['total_stok'] != null) {
           final currentStok = stokData['total_stok'].toDouble();
           final newStok = currentStok - totalStokDibutuhkan;
 

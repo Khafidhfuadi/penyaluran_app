@@ -743,10 +743,10 @@ class ProfileView extends GetView<ProfileController> {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Batal'),
             style: TextButton.styleFrom(
               foregroundColor: Colors.grey[700],
             ),
+            child: const Text('Batal'),
           ),
           ElevatedButton(
             onPressed: () {

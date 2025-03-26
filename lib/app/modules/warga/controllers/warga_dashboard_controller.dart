@@ -125,7 +125,7 @@ class WargaDashboardController extends GetxController {
     print('DEBUG WARGA: Memuat data user dari AuthController');
     print('DEBUG WARGA: baseUser: ${_authController.baseUser}');
     print('DEBUG WARGA: roleData: ${_authController.roleData}');
-    print('DEBUG WARGA: nama yang akan ditampilkan: ${nama}');
+    print('DEBUG WARGA: nama yang akan ditampilkan: $nama');
     print(
         'DEBUG WARGA: displayName dari auth controller: ${_authController.displayName}');
 

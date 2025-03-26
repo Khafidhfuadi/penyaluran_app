@@ -743,10 +743,10 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
 
       // Hapus file sementara sebelum navigasi
       try {
-        if (signatureFile != null && signatureFile.existsSync()) {
+        if (signatureFile.existsSync()) {
           await signatureFile.delete();
         }
-        if (tempDir != null && tempDir.existsSync()) {
+        if (tempDir.existsSync()) {
           await tempDir.delete();
         }
       } catch (e) {

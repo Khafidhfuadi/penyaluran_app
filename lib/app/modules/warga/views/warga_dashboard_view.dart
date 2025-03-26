@@ -539,7 +539,7 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
                             ),
                         ],
                       );
-                    }).toList(),
+                    }),
                   ],
                   if (totalUang == 0 && totalNonUang.isEmpty)
                     _buildSummaryItem(

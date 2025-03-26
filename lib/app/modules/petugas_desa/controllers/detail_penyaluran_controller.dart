@@ -39,32 +39,11 @@ class DetailPenyaluranController extends GetxController {
       if (penyaluran.value?.id != null) {
         loadPenyaluranDetails(penyaluran.value!.id!);
       }
-      checkUserRole();
     } else if (penyaluranId != null) {
       // Jika hanya ID penyaluran yang diterima
       loadPenyaluranData(penyaluranId);
-      checkUserRole();
     } else {
       isLoading.value = false;
-    }
-  }
-
-  Future<void> checkUserRole() async {
-    try {
-      final user = _supabaseService.client.auth.currentUser;
-      if (user != null) {
-        final userData = await _supabaseService.client
-            .from('user_profile')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-        if (userData['role'] == 'PETUGASDESA') {
-          isPetugasDesa.value = true;
-        }
-      }
-    } catch (e) {
-      print('Error checking user role: $e');
     }
   }
 
@@ -522,35 +501,32 @@ class DetailPenyaluranController extends GetxController {
           .eq('qr_code_hash', qrHash)
           .single();
 
-      if (data != null) {
-        // Jika penerima ditemukan, konversi ke model
-        final Map<String, dynamic> sanitizedPenerimaData =
-            Map<String, dynamic>.from(data);
+      // Jika penerima ditemukan, konversi ke model
+      final Map<String, dynamic> sanitizedPenerimaData =
+          Map<String, dynamic>.from(data);
 
-        // Konversi jumlah_bantuan ke double jika bertipe String
-        if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
-          sanitizedPenerimaData['jumlah_bantuan'] = double.tryParse(
-              sanitizedPenerimaData['jumlah_bantuan'] as String);
-        }
-
-        // Konversi data ke model
-        final penerima =
-            PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData);
-
-        // Set isProcessing ke false sebelum navigasi untuk menghindari masalah loading
-        isProcessing.value = false;
-
-        // Navigasi ke halaman konfirmasi dengan data terbaru
-        await Get.toNamed('/petugas-desa/konfirmasi-penerima/${penerima.id}',
-            arguments: {
-              'penerima': penerima,
-              'tanggal_penyaluran': penyaluran.value?.tanggalPenyaluran
-            });
-
-        // Refresh data
-        await refreshData();
-        return true;
+      // Konversi jumlah_bantuan ke double jika bertipe String
+      if (sanitizedPenerimaData['jumlah_bantuan'] is String) {
+        sanitizedPenerimaData['jumlah_bantuan'] =
+            double.tryParse(sanitizedPenerimaData['jumlah_bantuan'] as String);
       }
+
+      // Konversi data ke model
+      final penerima = PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData);
+
+      // Set isProcessing ke false sebelum navigasi untuk menghindari masalah loading
+      isProcessing.value = false;
+
+      // Navigasi ke halaman konfirmasi dengan data terbaru
+      await Get.toNamed('/petugas-desa/konfirmasi-penerima/${penerima.id}',
+          arguments: {
+            'penerima': penerima,
+            'tanggal_penyaluran': penyaluran.value?.tanggalPenyaluran
+          });
+
+      // Refresh data
+      await refreshData();
+      return true;
 
       return false;
     } catch (e) {

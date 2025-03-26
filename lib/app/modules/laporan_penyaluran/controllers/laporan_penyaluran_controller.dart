@@ -891,13 +891,14 @@ class LaporanPenyaluranController extends GetxController {
                           final stokBantuan = daftarPenerima
                               .firstWhere((p) => p.stokBantuanId == stokId,
                                   orElse: () => PenerimaPenyaluranModel())
-                              ?.stokBantuan;
+                              .stokBantuan;
 
-                          if (stokBantuan == null)
+                          if (stokBantuan == null) {
                             return pw.TableRow(children: [
                               _buildPdfTableCell('-', ttf),
                               _buildPdfTableCell('-', ttf),
                             ]);
+                          }
 
                           final isUang = stokBantuan['is_uang'] == true;
                           final formattedJumlah = isUang
@@ -912,7 +913,7 @@ class LaporanPenyaluranController extends GetxController {
                                   align: pw.TextAlign.center),
                             ],
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ],
@@ -988,7 +989,7 @@ class LaporanPenyaluranController extends GetxController {
                                   align: pw.TextAlign.center),
                             ],
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ],

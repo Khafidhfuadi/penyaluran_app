@@ -10,7 +10,7 @@ import 'package:penyaluran_app/app/widgets/status_badge.dart';
 import 'package:intl/intl.dart';
 
 class LaporanPenyaluranView extends GetView<LaporanPenyaluranController> {
-  const LaporanPenyaluranView({Key? key}) : super(key: key);
+  const LaporanPenyaluranView({super.key});
 
   @override
   Widget build(BuildContext context) {
