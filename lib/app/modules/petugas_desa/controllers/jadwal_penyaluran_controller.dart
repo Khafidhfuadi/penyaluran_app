@@ -24,7 +24,7 @@ class JadwalPenyaluranController extends GetxController {
   final RxInt selectedCategoryIndex = 0.obs;
 
   // Data untuk jadwal
-  final RxList<PenyaluranBantuanModel> jadwalHariIni =
+  final RxList<PenyaluranBantuanModel> jadwalAktif =
       <PenyaluranBantuanModel>[].obs;
   final RxList<PenyaluranBantuanModel> jadwalMendatang =
       <PenyaluranBantuanModel>[].obs;
@@ -97,7 +97,7 @@ class JadwalPenyaluranController extends GetxController {
       List<PenyaluranBantuanModel> jadwalToUpdate = [];
       List<PenyaluranBantuanModel> jadwalTerlewat = [];
 
-      for (var jadwal in jadwalHariIni) {
+      for (var jadwal in jadwalAktif) {
         if (jadwal.tanggalPenyaluran != null) {
           final jadwalDateTime =
               DateTimeHelper.toLocalDateTime(jadwal.tanggalPenyaluran!);
@@ -175,9 +175,9 @@ class JadwalPenyaluranController extends GetxController {
     isLoading.value = true;
     try {
       // Mengambil data jadwal hari ini
-      final jadwalHariIniData = await _supabaseService.getJadwalHariIni();
-      if (jadwalHariIniData != null) {
-        jadwalHariIni.value = jadwalHariIniData
+      final jadwalAktifData = await _supabaseService.getJadwalAktif();
+      if (jadwalAktifData != null) {
+        jadwalAktif.value = jadwalAktifData
             .map((data) => PenyaluranBantuanModel.fromJson(data))
             .toList();
       }

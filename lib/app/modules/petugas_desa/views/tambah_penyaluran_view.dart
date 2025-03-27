@@ -129,7 +129,7 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                       fontWeight: FontWeight.bold,
                     ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Skema Bantuan
               Text(
@@ -175,6 +175,18 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                         }
 
                         await loadPengajuanKelayakan(value);
+
+                        // Periksa apakah ada penerima
+                        if (jumlahPenerima.value == 0) {
+                          Get.snackbar(
+                            'Perhatian',
+                            'Skema bantuan ini tidak memiliki penerima yang terverifikasi!',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                            duration: const Duration(seconds: 4),
+                          );
+                        }
                       }
                     },
                     validator: (value) {
@@ -184,6 +196,37 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                       return null;
                     },
                   )),
+
+              // const SizedBox(height: 16),
+              // Pesan pemberitahuan jika tidak ada penerima
+              Obx(() => jumlahPenerima.value == 0 &&
+                      selectedSkemaBantuanId.value != null
+                  ? Container(
+                      margin: const EdgeInsets.only(top: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded,
+                              color: Colors.red.shade700),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Skema bantuan ini tidak memiliki penerima yang terverifikasi. Tambahkan penerima terlebih dahulu.',
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox()),
               const SizedBox(height: 16),
               // Jumlah Penerima (Otomatis)
               Row(
@@ -755,67 +798,78 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
               // Tombol Submit
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (formKey.currentState!.validate()) {
-                      // Periksa kecukupan stok
-                      if (!isStokCukup.value) {
-                        Get.snackbar(
-                          'Stok Tidak Cukup',
-                          'Stok bantuan tidak mencukupi untuk penyaluran ini. Silakan tambah stok terlebih dahulu.',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: Colors.red,
-                          colorText: Colors.white,
-                          duration: const Duration(seconds: 4),
-                        );
-                        return;
-                      }
+                child: Obx(() => ElevatedButton(
+                      onPressed: jumlahPenerima.value > 0
+                          ? () {
+                              if (formKey.currentState!.validate()) {
+                                // Periksa kecukupan stok
+                                if (!isStokCukup.value) {
+                                  Get.snackbar(
+                                    'Stok Tidak Cukup',
+                                    'Stok bantuan tidak mencukupi untuk penyaluran ini. Silakan tambah stok terlebih dahulu.',
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    backgroundColor: Colors.red,
+                                    colorText: Colors.white,
+                                    duration: const Duration(seconds: 4),
+                                  );
+                                  return;
+                                }
 
-                      // Gabungkan tanggal dan waktu mulai
-                      DateTime? tanggalWaktuMulai;
-                      if (selectedDate.value != null &&
-                          selectedWaktuMulai.value != null) {
-                        tanggalWaktuMulai = DateTime(
-                          selectedDate.value!.year,
-                          selectedDate.value!.month,
-                          selectedDate.value!.day,
-                          selectedWaktuMulai.value!.hour,
-                          selectedWaktuMulai.value!.minute,
-                        ).toLocal();
-                      }
+                                // Gabungkan tanggal dan waktu mulai
+                                DateTime? tanggalWaktuMulai;
+                                if (selectedDate.value != null &&
+                                    selectedWaktuMulai.value != null) {
+                                  tanggalWaktuMulai = DateTime(
+                                    selectedDate.value!.year,
+                                    selectedDate.value!.month,
+                                    selectedDate.value!.day,
+                                    selectedWaktuMulai.value!.hour,
+                                    selectedWaktuMulai.value!.minute,
+                                  ).toLocal();
+                                }
 
-                      // Panggil fungsi untuk menambahkan penyaluran
-                      controller.tambahPenyaluran(
-                          nama: namaController.text,
-                          deskripsi: deskripsiController.text,
-                          skemaId: selectedSkemaBantuanId.value!,
-                          lokasiPenyaluranId: selectedLokasiPenyaluranId.value!,
-                          jumlahPenerima: jumlahPenerima.value,
-                          tanggalPenyaluran: tanggalWaktuMulai,
-                          kategoriBantuanId:
-                              selectedSkemaBantuan.value!.kategoriBantuanId!,
-                          jumlahDiterimaPerOrang: jumlahDiterimaPerOrang.value,
-                          stokBantuanId:
-                              selectedSkemaBantuan.value!.stokBantuanId!,
-                          totalStokDibutuhkan: totalStokDibutuhkan.value);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Simpan Penyaluran',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                                // Panggil fungsi untuk menambahkan penyaluran
+                                controller.tambahPenyaluran(
+                                    nama: namaController.text,
+                                    deskripsi: deskripsiController.text,
+                                    skemaId: selectedSkemaBantuanId.value!,
+                                    lokasiPenyaluranId:
+                                        selectedLokasiPenyaluranId.value!,
+                                    jumlahPenerima: jumlahPenerima.value,
+                                    tanggalPenyaluran: tanggalWaktuMulai,
+                                    kategoriBantuanId: selectedSkemaBantuan
+                                        .value!.kategoriBantuanId!,
+                                    jumlahDiterimaPerOrang:
+                                        jumlahDiterimaPerOrang.value,
+                                    stokBantuanId: selectedSkemaBantuan
+                                        .value!.stokBantuanId!,
+                                    totalStokDibutuhkan:
+                                        totalStokDibutuhkan.value);
+
+                                //get back and refresh page
+                                Get.back();
+                                controller.refreshData();
+                              }
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        disabledBackgroundColor: Colors.grey.shade300,
+                        disabledForegroundColor: Colors.grey.shade600,
+                      ),
+                      child: const Text(
+                        'Simpan Penyaluran',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )),
               ),
             ],
           ),

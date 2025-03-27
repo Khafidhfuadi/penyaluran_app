@@ -75,8 +75,8 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
                 // Jadwal hari ini
                 JadwalSectionWidget(
                   controller: controller,
-                  title: 'Hari Ini',
-                  jadwalList: controller.jadwalHariIni,
+                  title: 'Penyaluran Aktif',
+                  jadwalList: controller.jadwalAktif,
                   status: 'Aktif',
                 ),
 
@@ -158,7 +158,7 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
                       context,
                       icon: Icons.event_available,
                       title: 'Aktif',
-                      value: '${controller.jadwalHariIni.length}',
+                      value: '${controller.jadwalAktif.length}',
                       color: Colors.green,
                     )),
               ),

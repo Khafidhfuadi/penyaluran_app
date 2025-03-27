@@ -15,7 +15,9 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Riwayat Stok Bantuan'),
-        //back button
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 2,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back),
@@ -23,6 +25,7 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
       ),
       body: RefreshIndicator(
         onRefresh: controller.refreshData,
+        color: AppTheme.primaryColor,
         child: Obx(() => controller.isLoading.value
             ? const Center(child: CircularProgressIndicator())
             : _buildContent(context)),
@@ -43,6 +46,7 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
             onPressed: () => _showStokManualDialog(context, isAddition: true),
             backgroundColor: AppTheme.primaryColor,
             heroTag: 'tambahStok',
+            elevation: 4,
             child: const Icon(Icons.add, color: Colors.white),
           ),
         ],
@@ -53,45 +57,91 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
   Widget _buildContent(BuildContext context) {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Heading
-            Text(
-              'Riwayat Stok Bantuan',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header dengan latar belakang gradient
+          Container(
+            padding: const EdgeInsets.all(20.0),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Catatan riwayat perubahan stok bantuan',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Heading
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.inventory_2_outlined,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Riwayat Stok Bantuan',
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 40),
+                  child: Text(
+                    'Catatan perubahan stok bantuan di desa Anda',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withOpacity(0.9),
+                        ),
                   ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+          ),
 
-            // Filter dan pencarian
-            _buildFilters(context),
-            const SizedBox(height: 16),
+          // Filter dan pencarian
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _buildFilters(context),
+          ),
 
-            // Daftar riwayat stok
-            Obx(() {
+          // Daftar riwayat stok
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Obx(() {
               final filteredRiwayat = controller.getFilteredRiwayatStok();
               if (filteredRiwayat.isEmpty) {
                 return Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(32.0),
+                    padding: const EdgeInsets.symmetric(vertical: 50.0),
                     child: Column(
                       children: [
-                        const Icon(
-                          Icons.history,
-                          size: 64,
-                          color: Colors.grey,
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.history,
+                            size: 64,
+                            color: Colors.grey,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -99,6 +149,16 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
                                     color: Colors.grey[600],
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Gunakan tombol + untuk menambah stok bantuan',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey[500],
                                   ),
                           textAlign: TextAlign.center,
                         ),
@@ -107,134 +167,262 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
                   ),
                 );
               }
-              return ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: filteredRiwayat.length,
-                itemBuilder: (context, index) {
-                  final riwayat = filteredRiwayat[index];
-                  return _buildRiwayatItem(context, riwayat);
-                },
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.history,
+                        color: AppTheme.primaryColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Daftar Riwayat',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          filteredRiwayat.length.toString(),
+                          style: TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredRiwayat.length,
+                    itemBuilder: (context, index) {
+                      final riwayat = filteredRiwayat[index];
+                      return _buildRiwayatItem(context, riwayat);
+                    },
+                  ),
+                ],
               );
             }),
-          ],
-        ),
+          ),
+          const SizedBox(height: 80), // Ruang untuk floating action button
+        ],
       ),
     );
   }
 
   Widget _buildFilters(BuildContext context) {
-    return Column(
-      children: [
-        // Pencarian
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(8),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            spreadRadius: 0,
+            offset: const Offset(0, 2),
           ),
-          child: TextField(
-            controller: controller.searchController,
-            decoration: const InputDecoration(
-              hintText: 'Cari riwayat stok...',
-              prefixIcon: Icon(Icons.search),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 12),
-            ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Judul Filter
+          Row(
+            children: [
+              const Icon(
+                Icons.filter_list,
+                color: AppTheme.primaryColor,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Filter Riwayat',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-        // Filter jenis perubahan
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Jenis Perubahan'),
-                  const SizedBox(height: 4),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Obx(() => DropdownButtonFormField<String>(
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 12),
-                          ),
-                          isExpanded: true,
-                          value: controller.filterJenisPerubahan.value,
-                          items: [
-                            const DropdownMenuItem(
-                              value: 'semua',
-                              child: Text('Semua'),
-                            ),
-                            const DropdownMenuItem(
-                              value: 'penambahan',
-                              child: Text('Penambahan'),
-                            ),
-                            const DropdownMenuItem(
-                              value: 'pengurangan',
-                              child: Text('Pengurangan'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              controller.filterByJenisPerubahan(value);
-                            }
-                          },
-                        )),
-                  ),
-                ],
+          // Pencarian
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: TextField(
+              controller: controller.searchController,
+              decoration: InputDecoration(
+                hintText: 'Cari riwayat stok...',
+                prefixIcon: Icon(Icons.search,
+                    color: AppTheme.primaryColor.withOpacity(0.7)),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Jenis Bantuan'),
-                  const SizedBox(height: 4),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
+          ),
+          const SizedBox(height: 16),
+
+          // Filter jenis perubahan dan jenis bantuan
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Jenis Perubahan',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
                     ),
-                    child: Obx(() => DropdownButtonFormField<String>(
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 12),
-                          ),
-                          isExpanded: true,
-                          value: controller.filterStokBantuanId.value,
-                          items: [
-                            const DropdownMenuItem(
-                              value: 'semua',
-                              child: Text('Semua'),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Obx(() => DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 12),
                             ),
-                            ...controller.daftarStokBantuan.map((stok) {
-                              return DropdownMenuItem(
-                                value: stok.id,
-                                child: Text(stok.nama ?? '-'),
-                              );
-                            }).toList(),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              controller.filterByStokBantuan(value);
-                            }
-                          },
-                        )),
-                  ),
-                ],
+                            isExpanded: true,
+                            icon: Icon(Icons.arrow_drop_down,
+                                color: AppTheme.primaryColor),
+                            value: controller.filterJenisPerubahan.value,
+                            items: [
+                              DropdownMenuItem(
+                                value: 'semua',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.all_inclusive,
+                                        size: 18, color: Colors.grey[600]),
+                                    const SizedBox(width: 8),
+                                    const Text('Semua'),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 'penambahan',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.add_circle_outline,
+                                        size: 18, color: Colors.green),
+                                    const SizedBox(width: 8),
+                                    const Text('Penambahan'),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 'pengurangan',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.remove_circle_outline,
+                                        size: 18, color: Colors.red),
+                                    const SizedBox(width: 8),
+                                    const Text('Pengurangan'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                controller.filterByJenisPerubahan(value);
+                              }
+                            },
+                          )),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Jenis Bantuan',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Obx(() => DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 12),
+                            ),
+                            isExpanded: true,
+                            icon: Icon(Icons.arrow_drop_down,
+                                color: AppTheme.primaryColor),
+                            value: controller.filterStokBantuanId.value,
+                            items: [
+                              DropdownMenuItem(
+                                value: 'semua',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.category_outlined,
+                                        size: 18, color: Colors.grey[600]),
+                                    const SizedBox(width: 8),
+                                    const Text('Semua'),
+                                  ],
+                                ),
+                              ),
+                              ...controller.daftarStokBantuan.map((stok) {
+                                return DropdownMenuItem(
+                                  value: stok.id,
+                                  child: Text(
+                                    stok.nama ?? '-',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }).toList(),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                controller.filterByStokBantuan(value);
+                              }
+                            },
+                          )),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -247,148 +435,324 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
         riwayat.stokBantuan != null ? riwayat.stokBantuan!['satuan'] ?? '' : '';
     final sumberLabels = {
       'penitipan': 'Penitipan',
-      'penyaluran': 'Penyaluran',
+      'penerimaan': 'Penerimaan',
       'manual': 'Manual',
     };
     final sumberLabel = sumberLabels[riwayat.sumber] ?? 'Tidak diketahui';
+    final sumberIcons = {
+      'penitipan': Icons.inventory,
+      'penerimaan': Icons.local_shipping,
+      'manual': Icons.edit,
+    };
+    final sumberIcon = sumberIcons[riwayat.sumber] ?? Icons.help_outline;
+    final sumberColors = {
+      'penitipan': Colors.blue,
+      'penerimaan': Colors.purple,
+      'manual': Colors.orange,
+    };
+    final sumberColor = sumberColors[riwayat.sumber] ?? Colors.grey;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header: Jumlah dan waktu
-            Row(
-              children: [
-                // Icon & Jumlah
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isPenambahan ? Colors.green[100] : Colors.red[100],
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isPenambahan ? Icons.add : Icons.remove,
-                        color: isPenambahan ? Colors.green : Colors.red,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${riwayat.jumlah?.toStringAsFixed(0) ?? '0'} $stokBantuanSatuan',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: isPenambahan ? Colors.green : Colors.red,
-                        ),
-                      ),
-                    ],
+    // Cek apakah memiliki id_referensi dan bukan dari sumber manual
+    final bool hasSumberReferensi = riwayat.idReferensi != null &&
+        riwayat.sumber != 'manual' &&
+        riwayat.idReferensi!.isNotEmpty;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            spreadRadius: 0,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: hasSumberReferensi
+              ? () => _showReferensiDetailDialog(context, riwayat)
+              : null,
+          child: Column(
+            children: [
+              // Header dengan warna sesuai jenis perubahan
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color:
+                      isPenambahan ? Colors.green.shade50 : Colors.red.shade50,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
                   ),
                 ),
-                const Spacer(),
-                // Sumber
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    sumberLabel,
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Tanggal
-                Text(
-                  riwayat.createdAt != null
-                      ? DateTimeHelper.formatDateTime(riwayat.createdAt!)
-                      : '-',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Nama bantuan
-            Text(
-              stokBantuanNama,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-
-            // Alasan jika ada
-            if (riwayat.alasan != null && riwayat.alasan!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Alasan: ${riwayat.alasan}',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-
-            // Foto bukti jika ada
-            if (riwayat.fotoBukti != null && riwayat.fotoBukti!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: () => _showImageDialog(context, riwayat.fotoBukti!),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.photo,
-                      color: Colors.blue,
-                      size: 20,
+                    // Status dan jumlah
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isPenambahan
+                            ? Colors.green.withOpacity(0.15)
+                            : Colors.red.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isPenambahan ? Icons.add : Icons.remove,
+                            color: isPenambahan ? Colors.green : Colors.red,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${riwayat.jumlah?.toStringAsFixed(0) ?? '0'} $stokBantuanSatuan',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isPenambahan ? Colors.green : Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Lihat Bukti',
-                      style: TextStyle(
-                        color: Colors.blue,
+                    const Spacer(),
+                    // Sumber
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: sumberColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            sumberIcon,
+                            size: 14,
+                            color: sumberColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            sumberLabel,
+                            style: TextStyle(
+                              color: sumberColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
 
-            // Petugas
-            if (riwayat.createdBy != null) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.person,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Oleh: ${riwayat.createdBy!['nama_lengkap'] ?? 'Tidak diketahui'}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
+              // Konten
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Nama bantuan
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.category,
+                            color: AppTheme.primaryColor,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                stokBantuanNama,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                riwayat.createdAt != null
+                                    ? DateTimeHelper.formatDateTime(
+                                        riwayat.createdAt!)
+                                    : '-',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+
+                    // Alasan jika ada
+                    if (riwayat.alasan != null &&
+                        riwayat.alasan!.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 44),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 12),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.description_outlined,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Alasan: ${riwayat.alasan}',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // Foto bukti jika ada
+                    if (riwayat.fotoBukti != null &&
+                        riwayat.fotoBukti!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 44),
+                        child: InkWell(
+                          onTap: () =>
+                              _showImageDialog(context, riwayat.fotoBukti!),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.photo,
+                                  color: Colors.blue,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Lihat Bukti',
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    // Info referensi jika ada
+                    if (hasSumberReferensi) ...[
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 44),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: sumberColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                riwayat.sumber == 'penitipan'
+                                    ? Icons.inventory
+                                    : Icons.local_shipping,
+                                size: 18,
+                                color: sumberColor,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Lihat detail ${riwayat.sumber}',
+                                style: TextStyle(
+                                  color: sumberColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    // Petugas
+                    if (riwayat.createdBy != null) ...[
+                      const Divider(height: 24),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: Colors.grey[200],
+                            child: Icon(
+                              Icons.person,
+                              size: 18,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Oleh: ${riwayat.createdBy!['nama_lengkap'] ?? 'Tidak diketahui'}',
+                            style: TextStyle(
+                              color: Colors.grey[700],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -400,37 +764,82 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
       builder: (BuildContext context) {
         return Dialog(
           insetPadding: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               AppBar(
                 leading: IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
-                title: const Text('Bukti Foto'),
+                title: const Text(
+                  'Bukti Foto',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 elevation: 0,
                 backgroundColor: AppTheme.primaryColor,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
               ),
-              InteractiveViewer(
-                panEnabled: true,
-                boundaryMargin: const EdgeInsets.all(16),
-                minScale: 0.5,
-                maxScale: 4,
-                child: CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator(),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.5,
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  boundaryMargin: const EdgeInsets.all(16),
+                  minScale: 0.5,
+                  maxScale: 4,
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    placeholder: (context, url) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                    errorWidget: (context, url, error) => Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error, color: Colors.red, size: 48),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            'Gagal memuat gambar: $error',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                    fit: BoxFit.contain,
                   ),
-                  errorWidget: (context, url, error) => Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error),
-                      const SizedBox(height: 8),
-                      Text('Gagal memuat gambar: $error'),
-                    ],
-                  ),
-                  fit: BoxFit.contain,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.zoom_in, size: 20, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Cubit untuk memperbesar/memperkecil',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -683,6 +1092,690 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
           ),
         );
       },
+    );
+  }
+
+  // Tambahkan metode baru untuk menampilkan dialog detail referensi
+  void _showReferensiDetailDialog(
+      BuildContext context, RiwayatStokModel riwayat) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: FutureBuilder<Map<String, dynamic>?>(
+            future: controller.getReferensiDetail(
+                idReferensi: riwayat.idReferensi!, sumber: riwayat.sumber!),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 200,
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Terjadi kesalahan',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tidak dapat memuat data: ${snapshot.error}',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Tutup'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              final data = snapshot.data;
+              if (data == null) {
+                return Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.info_outline,
+                        color: Colors.amber,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Data Tidak Ditemukan',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Detail data tidak tersedia atau mungkin sudah dihapus',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Tutup'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // Tampilkan detail sesuai dengan jenis sumber
+              if (riwayat.sumber == 'penitipan') {
+                return _buildPenitipanDetail(context, data);
+              } else if (riwayat.sumber == 'penerimaan') {
+                return _buildPenerimaanDetail(context, data);
+              } else {
+                return const SizedBox(
+                  height: 100,
+                  child: Center(
+                    child: Text('Tipe data tidak dikenal'),
+                  ),
+                );
+              }
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  // Widget untuk menampilkan detail penitipan
+  Widget _buildPenitipanDetail(
+      BuildContext context, Map<String, dynamic> data) {
+    final String tanggal = data['created_at'] != null
+        ? DateTimeHelper.formatDateTime(DateTime.parse(data['created_at']))
+        : '-';
+
+    final String namaPenitip = data['donatur'] != null
+        ? data['donatur']['nama_lengkap'] ?? 'Tidak diketahui'
+        : 'Tidak diketahui';
+
+    final String namaPetugas = data['petugas_desa'] != null
+        ? data['petugas_desa']['nama_lengkap'] ?? 'Tidak diketahui'
+        : 'Tidak diketahui';
+
+    final List<dynamic> fotoBantuan = data['foto_bantuan'] ?? [];
+
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header dengan desain yang lebih menarik
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.inventory,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Detail Penitipan',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Informasi detail dengan desain yang lebih menarik
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        size: 18, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: [
+                            const TextSpan(
+                              text: 'ID Penitipan: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: data['id'] ?? '-'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today,
+                        size: 18, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: [
+                            const TextSpan(
+                              text: 'Tanggal: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: tanggal),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.person,
+                        size: 18, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: [
+                            const TextSpan(
+                              text: 'Penitip: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: namaPenitip),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.admin_panel_settings,
+                        size: 18, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: [
+                            const TextSpan(
+                              text: 'Petugas: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: namaPetugas),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Foto Bukti jika ada dengan desain yang lebih menarik
+          if (fotoBantuan.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.photo, color: AppTheme.primaryColor),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Foto Bukti Penitipan',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 180,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: fotoBantuan.length,
+                      itemBuilder: (context, index) {
+                        final String imageUrl = fotoBantuan[index];
+                        return Padding(
+                          padding: EdgeInsets.only(
+                              right: index < fotoBantuan.length - 1 ? 8.0 : 0),
+                          child: InkWell(
+                            onTap: () => _showImageDialog(context, imageUrl),
+                            child: Container(
+                              width: 200,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    spreadRadius: 1,
+                                    blurRadius: 3,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: CachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      Container(
+                                    color: Colors.grey[300],
+                                    child: const Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.error,
+                                            color: Colors.red, size: 32),
+                                        SizedBox(height: 8),
+                                        Text('Gagal memuat gambar'),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Center(
+                    child: Text(
+                      'Ketuk untuk memperbesar',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Tutup', style: TextStyle(fontSize: 16)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget untuk menampilkan detail penerimaan
+  Widget _buildPenerimaanDetail(
+      BuildContext context, Map<String, dynamic> data) {
+    final String tanggal = data['created_at'] != null
+        ? DateTimeHelper.formatDateTime(DateTime.parse(data['created_at']))
+        : '-';
+
+    final String namaPenerima = data['warga'] != null
+        ? data['warga']['nama_lengkap'] ?? 'Tidak diketahui'
+        : 'Tidak diketahui';
+
+    final String namaPetugas =
+        data['penyaluran_bantuan']['petugas_desa'] != null
+            ? data['penyaluran_bantuan']['petugas_desa']['nama_lengkap'] ??
+                'Tidak diketahui'
+            : 'Tidak diketahui';
+
+    final String buktiPenerimaan = data['bukti_penerimaan'] ?? '';
+
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header dengan desain yang lebih menarik
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.local_shipping,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Detail Penerimaan',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Informasi dalam card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ID Penerimaan dengan ikon
+                Row(
+                  children: [
+                    const Icon(Icons.tag,
+                        size: 18, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: [
+                            const TextSpan(
+                              text: 'ID Penerimaan: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: data['id'] ?? '-'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Tanggal dengan ikon
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today,
+                        size: 18, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: [
+                            const TextSpan(
+                              text: 'Tanggal: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: tanggal),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Penerima dengan ikon
+                Row(
+                  children: [
+                    const Icon(Icons.person,
+                        size: 18, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: [
+                            const TextSpan(
+                              text: 'Penerima: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: namaPenerima),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Petugas dengan ikon
+                Row(
+                  children: [
+                    const Icon(Icons.admin_panel_settings,
+                        size: 18, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: [
+                            const TextSpan(
+                              text: 'Petugas: ',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: namaPetugas),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Foto Bukti jika ada dengan desain yang lebih menarik
+          if (buktiPenerimaan.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.photo, color: AppTheme.primaryColor),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Foto Bukti Penerimaan',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () => _showImageDialog(context, buktiPenerimaan),
+                    child: Container(
+                      height: 180,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 3,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: buktiPenerimaan,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Colors.grey[300],
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.error, color: Colors.red, size: 32),
+                                SizedBox(height: 8),
+                                Text('Gagal memuat gambar'),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Center(
+                    child: Text(
+                      'Ketuk untuk memperbesar',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: const Icon(Icons.check_circle),
+              label: const Text(
+                'Tutup',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

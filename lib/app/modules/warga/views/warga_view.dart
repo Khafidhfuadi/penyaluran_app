@@ -16,16 +16,16 @@ class WargaView extends GetView<WargaDashboardController> {
   Widget build(BuildContext context) {
     // Tambahkan listener untuk refresh data saat fokus didapatkan kembali
     // misalnya ketika kembali dari halaman profil
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final focusNode = FocusNode();
-      FocusScope.of(context).requestFocus(focusNode);
-      focusNode.addListener(() {
-        if (focusNode.hasFocus) {
-          print('DEBUG WARGA: Halaman mendapatkan fokus, memuat ulang data');
-          controller.refreshData();
-        }
-      });
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   final focusNode = FocusNode();
+    //   FocusScope.of(context).requestFocus(focusNode);
+    //   focusNode.addListener(() {
+    //     if (focusNode.hasFocus) {
+    //       print('DEBUG WARGA: Halaman mendapatkan fokus, memuat ulang data');
+    //       controller.refreshData();
+    //     }
+    //   });
+    // });
 
     return Scaffold(
       key: scaffoldKey,

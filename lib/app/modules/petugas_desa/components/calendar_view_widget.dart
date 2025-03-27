@@ -8,11 +8,16 @@ import 'package:penyaluran_app/app/utils/date_time_helper.dart';
 
 class CalendarViewWidget extends StatelessWidget {
   final JadwalPenyaluranController controller;
+  final CalendarController _calendarController = CalendarController();
 
-  const CalendarViewWidget({
+  CalendarViewWidget({
     super.key,
     required this.controller,
-  });
+  }) {
+    // Mengatur controller kalender untuk selalu memilih hari ini saat inisialisasi
+    _calendarController.selectedDate = DateTime.now();
+    _calendarController.displayDate = DateTime.now();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +54,9 @@ class CalendarViewWidget extends StatelessWidget {
               child: Obx(() {
                 return SfCalendar(
                   view: CalendarView.month,
+                  controller: _calendarController,
+                  initialSelectedDate: DateTime.now(),
+                  initialDisplayDate: DateTime.now(),
                   dataSource: _getCalendarDataSource(),
                   timeZone: 'Asia/Jakarta',
                   monthViewSettings: MonthViewSettings(
@@ -246,7 +254,7 @@ class CalendarViewWidget extends StatelessWidget {
     List<Appointment> appointments = [];
 
     List<PenyaluranBantuanModel> allJadwal = [
-      ...controller.jadwalHariIni,
+      ...controller.jadwalAktif,
       ...controller.jadwalMendatang,
       ...controller.jadwalTerlaksana,
     ];
@@ -556,7 +564,7 @@ class CalendarViewWidget extends StatelessWidget {
 
     // Cari jadwal dengan ID yang sesuai
     for (var jadwal in [
-      ...controller.jadwalHariIni,
+      ...controller.jadwalAktif,
       ...controller.jadwalMendatang,
       ...controller.jadwalTerlaksana
     ]) {

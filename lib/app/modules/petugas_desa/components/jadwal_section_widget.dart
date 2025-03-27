@@ -165,9 +165,10 @@ class JadwalSectionWidget extends StatelessWidget {
 
   List<PenyaluranBantuanModel> _getCurrentJadwalList() {
     switch (title) {
-      case 'Hari Ini':
-        return controller.jadwalHariIni.toList();
-      case 'Mendatang':
+      case 'Penyaluran Aktif':
+        return controller.jadwalAktif.toList();
+
+      case '7 Hari Mendatang':
         return controller.jadwalMendatang.toList();
       case 'Terlaksana':
         return controller.jadwalTerlaksana.toList();

@@ -302,4 +302,26 @@ class RiwayatStokController extends GetxController {
     alasan.value = '';
     fotoBukti.value = null;
   }
+
+  // Metode untuk mendapatkan detail referensi berdasarkan id dan sumber
+  Future<Map<String, dynamic>?> getReferensiDetail({
+    required String idReferensi,
+    required String sumber,
+  }) async {
+    try {
+      Map<String, dynamic>? data;
+
+      // Berdasarkan sumber, ambil data dari tabel yang sesuai
+      if (sumber == 'penitipan') {
+        data = await _supabaseService.getPenitipanById(idReferensi);
+      } else if (sumber == 'penerimaan') {
+        data = await _supabaseService.getPenerimaanById(idReferensi);
+      }
+
+      return data;
+    } catch (e) {
+      print('Error getting referensi detail: $e');
+      throw Exception('Gagal mendapatkan data: $e');
+    }
+  }
 }

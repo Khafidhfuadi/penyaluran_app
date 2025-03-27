@@ -73,17 +73,23 @@ class CounterService extends GetxService {
   void updatePengaduanCounter(int diproses) {
     jumlahDiproses.value = diproses;
     _storage.write(_keyDiproses, diproses);
+
+    print('Counter pengaduan updated and saved - Diproses: $diproses');
   }
 
   // Metode untuk memperbarui counter notifikasi
   void updateNotifikasiCounter(int belumDibaca) {
     jumlahNotifikasiBelumDibaca.value = belumDibaca;
     _storage.write(_keyNotifikasi, belumDibaca);
+
+    print('Counter notifikasi updated and saved - Belum Dibaca: $belumDibaca');
   }
 
   // Metode untuk memperbarui counter jadwal
   void updateJadwalCounter(int hariIni) {
     jumlahJadwalHariIni.value = hariIni;
     _storage.write(_keyJadwal, hariIni);
+
+    print('Counter jadwal updated and saved - Hari Ini: $hariIni');
   }
 }

@@ -40,14 +40,11 @@ class SupabaseService extends GetxService {
         print('DEBUG: Auth state changed: $event');
 
         if (event == AuthChangeEvent.signedIn) {
-          print('DEBUG: User signed in');
           _isSessionInitialized = true;
         } else if (event == AuthChangeEvent.signedOut) {
-          print('DEBUG: User signed out');
           _cachedUserProfile = null;
           _isSessionInitialized = false;
         } else if (event == AuthChangeEvent.tokenRefreshed) {
-          print('DEBUG: Token refreshed');
           _isSessionInitialized = true;
         }
       });
@@ -55,7 +52,6 @@ class SupabaseService extends GetxService {
       // Periksa apakah ada sesi yang aktif
       final session = client.auth.currentSession;
       if (session != null) {
-        print('DEBUG: Session aktif ditemukan saat inisialisasi');
         _isSessionInitialized = true;
       } else {
         print('DEBUG: Tidak ada session aktif saat inisialisasi');
@@ -82,7 +78,6 @@ class SupabaseService extends GetxService {
     _cachedUserProfile = null; // Hapus cache saat logout
     _isSessionInitialized = false;
     await client.auth.signOut();
-    print('DEBUG: Logout berhasil, sesi dihapus');
   }
 
   // Metode untuk mendapatkan user saat ini
@@ -99,10 +94,8 @@ class SupabaseService extends GetxService {
       final isValid = session.expiresAt != null && session.expiresAt! > now;
 
       if (isValid) {
-        print('DEBUG: Sesi valid, user terautentikasi');
         return true;
       } else {
-        print('DEBUG: Sesi kedaluwarsa, user tidak terautentikasi');
         return false;
       }
     }
@@ -480,6 +473,51 @@ class SupabaseService extends GetxService {
     }
   }
 
+  // Metode untuk mendapatkan jumlah penyaluran berdasarkan status
+  Future<Map<String, int>?> getStatusPenyaluran() async {
+    try {
+      final result = {
+        'dijadwalkan': 0,
+        'aktif': 0,
+        'batal': 0,
+        'terlaksana': 0
+      };
+
+      // Mendapatkan jumlah penyaluran dengan status DIJADWALKAN
+      final dijadwalkanResponse = await client
+          .from('penyaluran_bantuan')
+          .select('id')
+          .eq('status', 'DIJADWALKAN');
+      result['dijadwalkan'] = dijadwalkanResponse.length;
+
+      // Mendapatkan jumlah penyaluran dengan status AKTIF
+      final aktifResponse = await client
+          .from('penyaluran_bantuan')
+          .select('id')
+          .eq('status', 'AKTIF');
+      result['aktif'] = aktifResponse.length;
+
+      // Mendapatkan jumlah penyaluran dengan status BATAL
+      final batalResponse = await client
+          .from('penyaluran_bantuan')
+          .select('id')
+          .eq('status', 'BATALTERLAKSANA');
+      result['batal'] = batalResponse.length;
+
+      // Mendapatkan jumlah penyaluran dengan status TERLAKSANA
+      final terlaksanaResponse = await client
+          .from('penyaluran_bantuan')
+          .select('id')
+          .eq('status', 'TERLAKSANA');
+      result['terlaksana'] = terlaksanaResponse.length;
+
+      return result;
+    } catch (e) {
+      print('Error getting status penyaluran: $e');
+      return null;
+    }
+  }
+
   Future<List<Map<String, dynamic>>?> getNotifikasiBelumDibaca(
       String userId) async {
     try {
@@ -499,16 +537,8 @@ class SupabaseService extends GetxService {
   }
 
   // Jadwal penyaluran methods
-  Future<List<Map<String, dynamic>>?> getJadwalHariIni() async {
+  Future<List<Map<String, dynamic>>?> getJadwalAktif() async {
     try {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final tomorrow = today.add(const Duration(days: 1));
-
-      // Konversi ke UTC untuk query ke database
-      final todayUtc = today.toUtc().toIso8601String();
-      final tomorrowUtc = tomorrow.toUtc().toIso8601String();
-
       final response = await client
           .from('penyaluran_bantuan')
           .select('''
@@ -518,15 +548,12 @@ class SupabaseService extends GetxService {
               id, nama, alamat_lengkap
             )
           ''')
-          .gte('tanggal_penyaluran', todayUtc)
-          .lt('tanggal_penyaluran', tomorrowUtc)
-          .inFilter('status', ['AKTIF', 'DIJADWALKAN']);
-
-      print("hari ini $response");
+          .eq('status', 'AKTIF')
+          .order('tanggal_penyaluran', ascending: true);
 
       return response;
     } catch (e) {
-      print('Error getting jadwal hari ini: $e');
+      print('Error getting jadwal aktif: $e');
       return null;
     }
   }
@@ -1125,8 +1152,7 @@ class SupabaseService extends GetxService {
           .from('tindakan_pengaduan')
           .select('''
             *,
-            petugas:petugas_id(id, nama_lengkap, nip),
-            verifikator:verifikator_id(id, nama_lengkap, nip)
+            petugas:petugas_id(id, nama_lengkap, nip)
           ''')
           .eq('pengaduan_id', pengaduanId)
           .order('created_at', ascending: false);
@@ -1437,7 +1463,6 @@ class SupabaseService extends GetxService {
     try {
       // Buat map untuk update data
       final Map<String, dynamic> updateData = {
-        'nama': nama,
         'nama_lengkap': nama, // Untuk konsistensi dengan field nama_lengkap
         'no_hp': noHp,
         'updated_at': DateTime.now().toIso8601String(),
@@ -1610,68 +1635,68 @@ class SupabaseService extends GetxService {
     return [];
   }
 
-  // Metode untuk memperbarui status penerimaan bantuan
-  Future<bool> updateStatusPenerimaan(int penerimaId, String status,
-      {DateTime? tanggalPenerimaan,
-      String? buktiPenerimaan,
-      String? keterangan}) async {
-    try {
-      // Periksa petugas ID
-      final petugasId = client.auth.currentUser?.id;
-      if (petugasId == null) {
-        throw Exception('ID petugas tidak ditemukan');
-      }
+  // // Metode untuk memperbarui status penerimaan bantuan
+  // Future<bool> updateStatusPenerimaan(int penerimaId, String status,
+  //     {DateTime? tanggalPenerimaan,
+  //     String? buktiPenerimaan,
+  //     String? keterangan}) async {
+  //   try {
+  //     // Periksa petugas ID
+  //     final petugasId = client.auth.currentUser?.id;
+  //     if (petugasId == null) {
+  //       throw Exception('ID petugas tidak ditemukan');
+  //     }
 
-      final Map<String, dynamic> updateData = {
-        'status_penerimaan': status,
-      };
+  //     final Map<String, dynamic> updateData = {
+  //       'status_penerimaan': status,
+  //     };
 
-      if (tanggalPenerimaan != null) {
-        updateData['tanggal_penerimaan'] = tanggalPenerimaan.toIso8601String();
-      }
+  //     if (tanggalPenerimaan != null) {
+  //       updateData['tanggal_penerimaan'] = tanggalPenerimaan.toIso8601String();
+  //     }
 
-      if (buktiPenerimaan != null) {
-        updateData['bukti_penerimaan'] = buktiPenerimaan;
-      }
+  //     if (buktiPenerimaan != null) {
+  //       updateData['bukti_penerimaan'] = buktiPenerimaan;
+  //     }
 
-      if (keterangan != null) {
-        updateData['keterangan'] = keterangan;
-      }
+  //     if (keterangan != null) {
+  //       updateData['keterangan'] = keterangan;
+  //     }
 
-      // Update status penerimaan
-      await client
-          .from('penerima_penyaluran')
-          .update(updateData)
-          .eq('id', penerimaId);
+  //     // Update status penerimaan
+  //     await client
+  //         .from('penerima_penyaluran')
+  //         .update(updateData)
+  //         .eq('id', penerimaId);
 
-      // Jika status adalah DITERIMA, kurangi stok
-      if (status.toUpperCase() == 'DITERIMA') {
-        // Dapatkan data penerima penyaluran (stok_bantuan_id dan jumlah)
-        final penerimaData = await client
-            .from('penerima_penyaluran')
-            .select('penyaluran_bantuan_id, stok_bantuan_id, jumlah')
-            .eq('id', penerimaId)
-            .single();
+  //     // Jika status adalah DITERIMA, kurangi stok
+  //     if (status.toUpperCase() == 'DITERIMA') {
+  //       // Dapatkan data penerima penyaluran (stok_bantuan_id dan jumlah)
+  //       final penerimaData = await client
+  //           .from('penerima_penyaluran')
+  //           .select('penyaluran_bantuan_id, stok_bantuan_id, jumlah')
+  //           .eq('id', penerimaId)
+  //           .single();
 
-        if (penerimaData != null) {
-          final String penyaluranId = penerimaData['penyaluran_bantuan_id'];
-          final String stokBantuanId = penerimaData['stok_bantuan_id'];
-          final double jumlah = penerimaData['jumlah'] is int
-              ? penerimaData['jumlah'].toDouble()
-              : penerimaData['jumlah'];
+  //       if (penerimaData != null) {
+  //         final String penyaluranId = penerimaData['penyaluran_bantuan_id'];
+  //         final String stokBantuanId = penerimaData['stok_bantuan_id'];
+  //         final double jumlah = penerimaData['jumlah'] is int
+  //             ? penerimaData['jumlah'].toDouble()
+  //             : penerimaData['jumlah'];
 
-          // Kurangi stok dan catat riwayat
-          await kurangiStokDariPenyaluran(
-              penyaluranId, stokBantuanId, jumlah, petugasId);
-        }
-      }
+  //         // Kurangi stok dan catat riwayat
+  //         await kurangiStokDariPenyaluran(
+  //             penyaluranId, stokBantuanId, jumlah, petugasId);
+  //       }
+  //     }
 
-      return true;
-    } catch (e) {
-      print('Error updating status penerimaan: $e');
-      return false;
-    }
-  }
+  //     return true;
+  //   } catch (e) {
+  //     print('Error updating status penerimaan: $e');
+  //     return false;
+  //   }
+  // }
 
   // Metode untuk mendapatkan semua kategori bantuan
   Future<List<Map<String, dynamic>>?> getAllKategoriBantuan() async {
@@ -2024,7 +2049,7 @@ class SupabaseService extends GetxService {
         'stok_bantuan_id': stokBantuanId,
         'jenis_perubahan': 'pengurangan',
         'jumlah': jumlah,
-        'sumber': 'penyaluran',
+        'sumber': 'penerimaan',
         'id_referensi': penyaluranId,
         'created_by_id': petugasId,
         'created_at': DateTime.now().toIso8601String()
@@ -2174,6 +2199,38 @@ class SupabaseService extends GetxService {
     } catch (e) {
       print('Error reducing stok manually: $e');
       throw e; // Re-throw untuk penanganan di tingkat yang lebih tinggi
+    }
+  }
+
+  // Tambahkan metode untuk mendapatkan data penitipan berdasarkan ID
+  Future<Map<String, dynamic>?> getPenitipanById(String id) async {
+    try {
+      final response = await client.from('penitipan_bantuan').select('''
+            *,
+            donatur:donatur_id(*),
+            petugas_desa:petugas_desa_id(*)
+          ''').eq('id', id).single();
+      return response;
+    } catch (e) {
+      print('Error getting penitipan by id: $e');
+      return null;
+    }
+  }
+
+  // Tambahkan metode untuk mendapatkan data penerimaan berdasarkan ID
+  Future<Map<String, dynamic>?> getPenerimaanById(String id) async {
+    try {
+      final response = await client.from('penerima_penyaluran').select('''
+            *,
+            warga:warga_id(*),
+            penyaluran_bantuan:penyaluran_bantuan_id(*,
+            petugas_desa:petugas_id(*)
+            )
+          ''').eq('id', id).single();
+      return response;
+    } catch (e) {
+      print('Error getting penerimaan by id: $e');
+      return null;
     }
   }
 }

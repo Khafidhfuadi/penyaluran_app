@@ -204,6 +204,27 @@ class DetailPenyaluranController extends GetxController {
           .update(updateData)
           .eq('id', penerima.id!);
 
+      // Dapatkan data penerima penyaluran (stok_bantuan_id dan jumlah)
+      final penerimaData = await _supabaseService.client
+          .from('penerima_penyaluran')
+          .select('penyaluran_bantuan_id, stok_bantuan_id, jumlah_bantuan')
+          .eq('id', penerima.id!)
+          .single();
+
+      if (penerimaData != null) {
+        final String stokBantuanId = penerimaData['stok_bantuan_id'];
+        final double jumlah = penerimaData['jumlah_bantuan'] is int
+            ? penerimaData['jumlah_bantuan'].toDouble()
+            : penerimaData['jumlah_bantuan'];
+
+        // Kurangi stok dan catat riwayat
+        final petugasId = _supabaseService.client.auth.currentUser?.id;
+        if (petugasId != null) {
+          await _supabaseService.kurangiStokDariPenyaluran(
+              penerima.id!, stokBantuanId, jumlah, petugasId);
+        }
+      }
+
       // Refresh data setelah konfirmasi berhasil
       await refreshData();
 

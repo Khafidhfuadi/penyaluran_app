@@ -1301,13 +1301,13 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
 
               Get.back(); // Tutup dialog terlebih dahulu
 
-              // Tampilkan loading
-              Get.dialog(
-                const Center(
-                  child: CircularProgressIndicator(),
-                ),
-                barrierDismissible: false,
-              );
+              // // Tampilkan loading
+              // Get.dialog(
+              //   const Center(
+              //     child: CircularProgressIndicator(),
+              //   ),
+              //   barrierDismissible: false,
+              // );
 
               bool success = false;
               try {
@@ -1336,18 +1336,6 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
                 // Refresh data halaman
                 await controller.fetchPengaduan();
                 await controller.fetchPenerimaPenyaluran();
-
-                Get.snackbar(
-                  'Sukses',
-                  'Pengaduan berhasil dikirim dan data diperbarui',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.green,
-                  colorText: Colors.white,
-                  duration: const Duration(seconds: 3),
-                );
-
-                // Navigate ke halaman pengaduan jika berhasil
-                controller.changeTab(2); // Tab pengaduan
               }
             },
             style: ElevatedButton.styleFrom(

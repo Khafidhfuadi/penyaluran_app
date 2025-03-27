@@ -343,9 +343,6 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                       activeIcon: Icons.warning_amber,
                       title: 'Pengaduan',
                       isSelected: controller.activeTabIndex.value == 3,
-                      badge: controller.jumlahDiproses.value > 0
-                          ? controller.jumlahDiproses.value.toString()
-                          : null,
                       onTap: () {
                         Navigator.pop(context);
                         controller.changeTab(3);
@@ -675,7 +672,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                     child: Container(
                       padding: const EdgeInsets.all(2),
                       decoration: const BoxDecoration(
-                        color: Colors.red,
+                        color: Colors.orange,
                         shape: BoxShape.circle,
                       ),
                       constraints: const BoxConstraints(
@@ -705,7 +702,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: const BoxDecoration(
-                      color: Colors.red,
+                      color: Colors.orange,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(

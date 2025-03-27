@@ -11,9 +11,6 @@ import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DonaturDashboardController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();

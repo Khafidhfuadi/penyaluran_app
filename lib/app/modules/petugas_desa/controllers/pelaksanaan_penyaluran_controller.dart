@@ -250,29 +250,29 @@ class PelaksanaanPenyaluranController extends GetxController {
     filteredPenerima.value = filtered;
   }
 
-  // Metode untuk memperbarui status penerimaan bantuan
-  Future<bool> updateStatusPenerimaan(int penerimaId, String status,
-      {DateTime? tanggalPenerimaan,
-      String? buktiPenerimaan,
-      String? keterangan}) async {
-    try {
-      final result = await supabaseService.updateStatusPenerimaan(
-          penerimaId, status,
-          tanggalPenerimaan: tanggalPenerimaan,
-          buktiPenerimaan: buktiPenerimaan,
-          keterangan: keterangan);
+  // // Metode untuk memperbarui status penerimaan bantuan
+  // Future<bool> updateStatusPenerimaan(int penerimaId, String status,
+  //     {DateTime? tanggalPenerimaan,
+  //     String? buktiPenerimaan,
+  //     String? keterangan}) async {
+  //   try {
+  //     final result = await supabaseService.updateStatusPenerimaan(
+  //         penerimaId, status,
+  //         tanggalPenerimaan: tanggalPenerimaan,
+  //         buktiPenerimaan: buktiPenerimaan,
+  //         keterangan: keterangan);
 
-      // Jika berhasil, perbarui data lokal
-      if (result) {
-        await loadPenerimaPenyaluran(activePenyaluranId.value);
-      }
+  //     // Jika berhasil, perbarui data lokal
+  //     if (result) {
+  //       await loadPenerimaPenyaluran(activePenyaluranId.value);
+  //     }
 
-      return result;
-    } catch (e) {
-      print('Error updating status penerimaan: $e');
-      return false;
-    }
-  }
+  //     return result;
+  //   } catch (e) {
+  //     print('Error updating status penerimaan: $e');
+  //     return false;
+  //   }
+  // }
 
   // Metode untuk menyelesaikan jadwal penyaluran
   Future<void> completeJadwal(String jadwalId) async {

@@ -306,236 +306,443 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(26),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
+            color: Colors.grey.withOpacity(0.15),
+            spreadRadius: 2,
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
+        border: Border.all(
+          color: statusColor.withOpacity(0.3),
+          width: 1,
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
+            // Header dengan status
+            Container(
+              color: statusColor.withOpacity(0.1),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          donaturNama,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                          overflow: TextOverflow.ellipsis,
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          statusIcon,
+                          size: 16,
+                          color: statusColor,
                         ),
                       ),
-                      if (isDonaturManual)
-                        Tooltip(
-                          message: 'Donatur Manual (Diinput oleh petugas desa)',
-                          child: Container(
-                            margin: const EdgeInsets.only(left: 4),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.blue.shade300),
-                            ),
-                            child: const Text(
-                              'Manual',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        statusIcon,
-                        size: 16,
-                        color: statusColor,
-                      ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 8),
                       Text(
                         item.status ?? 'Tidak diketahui',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: statusColor,
                               fontWeight: FontWeight.bold,
                             ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon: isUang ? Icons.monetization_on : Icons.category,
-                    label: 'Kategori Bantuan',
-                    value: kategoriNama,
-                  ),
-                ),
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon:
-                        isUang ? Icons.account_balance_wallet : Icons.inventory,
-                    label: 'Jumlah',
-                    value: isUang
-                        ? 'Rp ${DateTimeHelper.formatNumber(item.jumlah)}'
-                        : '${DateTimeHelper.formatNumber(item.jumlah)} $kategoriSatuan',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon: Icons.calendar_today,
-                    label: 'Tanggal Dibuat',
-                    value: DateTimeHelper.formatDateTime(item.createdAt,
-                        defaultValue: 'Tidak ada tanggal'),
-                  ),
-                ),
-                Expanded(
-                  child: item.status == 'TERVERIFIKASI' &&
-                          item.petugasDesaId != null
-                      ? _buildItemDetail(
-                          context,
-                          icon: Icons.person,
-                          label: 'Diverifikasi Oleh',
-                          value:
-                              controller.getPetugasDesaNama(item.petugasDesaId),
-                        )
-                      : const SizedBox(),
-                ),
-              ],
-            ),
-
-            // Tampilkan thumbnail foto bantuan jika ada
-            if (item.fotoBantuan != null && item.fotoBantuan!.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.photo_library,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Foto Bantuan',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey,
-                            ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '(${item.fotoBantuan!.length} foto)',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ],
+                  Text(
+                    DateTimeHelper.formatDate(item.createdAt),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey.shade700,
+                          fontStyle: FontStyle.italic,
+                        ),
                   ),
                 ],
               ),
+            ),
 
-            const SizedBox(height: 12),
-            if (item.status == 'MENUNGGU')
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextButton.icon(
-                    onPressed: () {
-                      _showVerifikasiDialog(context, item.id ?? '');
-                    },
-                    icon: const Icon(Icons.check, size: 18),
-                    label: const Text('Terima'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
+                  // Donatur info
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                        radius: 20,
+                        child: Text(
+                          donaturNama.substring(0, 1).toUpperCase(),
+                          style: TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    donaturNama,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (isDonaturManual)
+                                  Container(
+                                    margin: const EdgeInsets.only(left: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                          color: Colors.blue.shade300),
+                                    ),
+                                    child: const Text(
+                                      'Manual',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            Text(
+                              'Donatur',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Colors.grey,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  TextButton.icon(
-                    onPressed: () {
-                      _showTolakDialog(context, item.id ?? '');
-                    },
-                    icon: const Icon(Icons.close, size: 18),
-                    label: const Text('Tolak'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
+
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 12),
+
+                  // Informasi bantuan
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isUang
+                                ? Colors.green.withOpacity(0.1)
+                                : Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    isUang
+                                        ? Icons.monetization_on
+                                        : Icons.category,
+                                    size: 16,
+                                    color: isUang ? Colors.green : Colors.blue,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Kategori',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: isUang
+                                              ? Colors.green
+                                              : Colors.blue,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                kategoriNama,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isUang
+                                ? Colors.amber.withOpacity(0.1)
+                                : Colors.purple.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    isUang
+                                        ? Icons.account_balance_wallet
+                                        : Icons.inventory,
+                                    size: 16,
+                                    color: isUang
+                                        ? Colors.amber.shade800
+                                        : Colors.purple,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Jumlah',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: isUang
+                                              ? Colors.amber.shade800
+                                              : Colors.purple,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                isUang
+                                    ? 'Rp ${DateTimeHelper.formatNumber(item.jumlah)}'
+                                    : '${DateTimeHelper.formatNumber(item.jumlah)} $kategoriSatuan',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  TextButton.icon(
-                    onPressed: () {
-                      _showDetailDialog(context, item, donaturNama);
-                    },
-                    icon: const Icon(Icons.info_outline, size: 18),
-                    label: const Text('Detail'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+
+                  // Tampilkan thumbnail foto bantuan jika ada
+                  if (item.fotoBantuan != null && item.fotoBantuan!.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 12),
+                        const Divider(),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.photo_library,
+                              size: 16,
+                              color: Colors.grey.shade700,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Foto Bantuan',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: Colors.grey.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${item.fotoBantuan!.length} foto',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ),
+
+                  if (item.status == 'TERVERIFIKASI' &&
+                      item.petugasDesaId != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 12),
+                        const Divider(),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.verified_user,
+                              size: 16,
+                              color: Colors.green,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: RichText(
+                                text: TextSpan(
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  children: [
+                                    TextSpan(
+                                      text: 'Diverifikasi oleh ',
+                                      style: TextStyle(
+                                          color: Colors.grey.shade700),
+                                    ),
+                                    TextSpan(
+                                      text: controller.getPetugasDesaNama(
+                                          item.petugasDesaId),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                 ],
+              ),
+            ),
+
+            // Footer dengan tombol aksi
+            if (item.status == 'MENUNGGU')
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  border: Border(
+                    top: BorderSide(color: Colors.grey.shade200),
+                  ),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        _showDetailDialog(context, item, donaturNama);
+                      },
+                      icon: const Icon(Icons.info_outline, size: 16),
+                      label: const Text('Detail'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                        side: BorderSide(color: Colors.blue.shade300),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        _showTolakDialog(context, item.id ?? '');
+                      },
+                      icon: const Icon(Icons.close, size: 16),
+                      label: const Text('Tolak'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: BorderSide(color: Colors.red.shade300),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        _showVerifikasiDialog(context, item.id ?? '');
+                      },
+                      icon: const Icon(Icons.check, size: 16),
+                      label: const Text('Terima'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                  ],
+                ),
               )
             else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton.icon(
-                    onPressed: () {
-                      _showDetailDialog(context, item, donaturNama);
-                    },
-                    icon: const Icon(Icons.info_outline, size: 18),
-                    label: const Text('Detail'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  border: Border(
+                    top: BorderSide(color: Colors.grey.shade200),
                   ),
-                ],
+                ),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        _showDetailDialog(context, item, donaturNama);
+                      },
+                      icon: const Icon(Icons.info_outline, size: 16),
+                      label: const Text('Lihat Detail'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                      ),
+                    ),
+                  ],
+                ),
               ),
           ],
         ),

@@ -44,6 +44,12 @@ class WargaDashboardController extends GetxController {
   // Jumlah notifikasi belum dibaca
   final RxInt jumlahNotifikasiBelumDibaca = 0.obs;
 
+  // Variabel untuk mengontrol auto-refresh
+  final RxBool _autoRefreshEnabled = true.obs;
+
+  // Getter untuk status auto-refresh
+  bool get isAutoRefreshEnabled => _autoRefreshEnabled.value;
+
   // Getter untuk data user
   BaseUserModel? get user => _authController.baseUser;
   String get role => user?.role ?? 'WARGA';
@@ -70,6 +76,14 @@ class WargaDashboardController extends GetxController {
   String? get noHp {
     if (_authController.isWarga && _authController.roleData != null) {
       return (_authController.roleData as WargaModel).noHp;
+    }
+    return null;
+  }
+
+  // Getter untuk NIK
+  String? get nik {
+    if (_authController.isWarga && _authController.roleData != null) {
+      return (_authController.roleData as WargaModel).nik;
     }
     return null;
   }
@@ -121,35 +135,18 @@ class WargaDashboardController extends GetxController {
   void loadUserData() {
     currentUser.value = _authController.baseUser;
 
-    // Tambahkan log debugging
-    print('DEBUG WARGA: Memuat data user dari AuthController');
-    print('DEBUG WARGA: baseUser: ${_authController.baseUser}');
-    print('DEBUG WARGA: roleData: ${_authController.roleData}');
-    print('DEBUG WARGA: nama yang akan ditampilkan: $nama');
-    print(
-        'DEBUG WARGA: displayName dari auth controller: ${_authController.displayName}');
-
+    // Kurangi log debugging
     if (_authController.userData != null) {
-      print(
-          'DEBUG WARGA: userData ada, role: ${_authController.userData!.baseUser.roleName}');
-
       if (_authController.isWarga) {
-        print('DEBUG WARGA: User adalah warga');
         var wargaData = _authController.roleData;
-        print('DEBUG WARGA: Data warga: ${wargaData?.namaLengkap}');
 
         // Ambil foto profil dari wargaData jika ada
         if (wargaData != null &&
             wargaData.fotoProfil != null &&
             wargaData.fotoProfil!.isNotEmpty) {
           fotoProfil.value = wargaData.fotoProfil!;
-          print('DEBUG WARGA: Foto profil dari roleData: ${fotoProfil.value}');
         }
-      } else {
-        print('DEBUG WARGA: User bukan warga');
       }
-    } else {
-      print('DEBUG WARGA: userData null');
     }
 
     // Ambil foto profil dari database
@@ -169,9 +166,6 @@ class WargaDashboardController extends GetxController {
 
       if (wargaData != null && wargaData['foto_profil'] != null) {
         fotoProfil.value = wargaData['foto_profil'];
-        print('DEBUG WARGA: Foto profil dari API: ${fotoProfil.value}');
-      } else {
-        print('DEBUG WARGA: Foto profil tidak ditemukan atau null');
       }
     } catch (e) {
       print('Error fetching profile photo: $e');
@@ -211,18 +205,13 @@ class WargaDashboardController extends GetxController {
       // Reset data terlebih dahulu untuk memastikan tidak ada data lama yang tersimpan
       penerimaPenyaluran.clear();
 
-      // Log untuk debugging
-      print('DEBUG PENERIMAAN: Memulai fetchPenerimaPenyaluran()');
-
       // Pastikan user sudah login dan memiliki ID
       if (user?.id == null) {
-        print('DEBUG PENERIMAAN: User ID null, tidak bisa mengambil data');
         return [];
       }
 
       // Gunakan langsung ID pengguna sebagai warga_id
       final wargaId = user!.id;
-      print('DEBUG PENERIMAAN: Mengambil data untuk warga ID: $wargaId');
 
       // Ambil data penerima penyaluran dengan join ke warga, stok bantuan, dan penyaluran bantuan
       final response =
@@ -239,9 +228,6 @@ class WargaDashboardController extends GetxController {
               kategori_bantuan(*)
             )
           ''').eq('warga_id', wargaId).order('created_at', ascending: false);
-
-      print(
-          'DEBUG PENERIMAAN: Respons diterima dengan ${response.length} item');
 
       final List<PenerimaPenyaluranModel> penerima = [];
 
@@ -329,7 +315,6 @@ class WargaDashboardController extends GetxController {
 
           var model = PenerimaPenyaluranModel.fromJson(sanitizedPenerimaData);
           penerima.add(model);
-          print('DEBUG PENERIMAAN: Berhasil parse item: ${model.id}');
         } catch (parseError) {
           print('DEBUG PENERIMAAN: Error parsing item: $parseError');
           print('DEBUG PENERIMAAN: Data yang gagal di-parse: $item');
@@ -340,19 +325,10 @@ class WargaDashboardController extends GetxController {
       if (penerima.isNotEmpty) {
         // Update nilai observable
         penerimaPenyaluran.assignAll(penerima);
-        print(
-            'DEBUG PENERIMAAN: Berhasil assign ${penerima.length} item ke list');
 
         var diterima =
             penerima.where((p) => p.statusPenerimaan == 'DITERIMA').length;
         totalPenyaluranDiterima.value = diterima;
-
-        // Log untuk debugging
-        print(
-            'Berhasil memuat ${penerima.length} data penerimaan untuk warga ID: $wargaId');
-      } else {
-        print(
-            'DEBUG PENERIMAAN: Tidak ada data penerimaan yang berhasil di-parse');
       }
 
       return penerima;
@@ -628,12 +604,23 @@ class WargaDashboardController extends GetxController {
     }
   }
 
+  // Metode untuk mengatur apakah auto-refresh diaktifkan atau tidak
+  void setAutoRefreshEnabled(bool enabled) {
+    _autoRefreshEnabled.value = enabled;
+  }
+
   // Metode untuk refresh data setelah update profil atau kembali ke halaman
-  Future<void> refreshData() async {
-    print('DEBUG WARGA: Memulai refresh data...');
+  Future<void> refreshData({bool silent = false}) async {
+    // Cek apakah auto-refresh diaktifkan
+    if (!_autoRefreshEnabled.value) {
+      if (!silent) print('Auto-refresh dinonaktifkan, melewati refresh data');
+      return;
+    }
+
+    if (!silent) print('Memulai refresh data...');
     await _authController.refreshUserData(); // Refresh data dari server
     loadUserData(); // Muat ulang data ke variabel lokal
     fetchData(); // Ambil data terkait lainnya
-    print('DEBUG WARGA: Refresh data selesai');
+    if (!silent) print('Refresh data selesai');
   }
 }

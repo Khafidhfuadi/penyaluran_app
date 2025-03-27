@@ -698,10 +698,7 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
       try {
         imageUrl =
             await controller.uploadBuktiPenerimaan(_buktiPenerimaan!.path);
-        print('Berhasil upload bukti penerimaan: $imageUrl');
       } catch (e) {
-        // Jika upload bukti penerimaan gagal, tampilkan pesan dan hentikan proses
-        print('Error upload bukti penerimaan: $e');
         throw Exception('Gagal mengupload bukti penerimaan: $e');
       }
 
@@ -711,46 +708,31 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
         signatureFile = File('${tempDir.path}/signature.png');
         await signatureFile.writeAsBytes(_signatureImage!);
 
-        print('Signature file path: ${signatureFile.path}');
-        print('Signature file exists: ${signatureFile.existsSync()}');
-        print('Signature file size: ${signatureFile.lengthSync()} bytes');
-
         signatureUrl = await controller.uploadBuktiPenerimaan(
           signatureFile.path,
           isTandaTangan: true,
         );
-        print('Berhasil upload tanda tangan: $signatureUrl');
       } catch (e) {
-        // Jika upload tanda tangan gagal, tampilkan pesan dan hentikan proses
-        print('Error upload tanda tangan: $e');
         throw Exception('Gagal mengupload tanda tangan: $e');
       }
 
       // Konfirmasi penerimaan
       try {
-        print('Melakukan konfirmasi penerimaan untuk ID: ${penerima.id}');
         await controller.konfirmasiPenerimaan(
           penerima,
           buktiPenerimaan: imageUrl,
           tandaTangan: signatureUrl,
         );
-        print('Konfirmasi penerimaan berhasil');
       } catch (e) {
-        // Jika konfirmasi penerimaan gagal, tampilkan pesan dan hentikan proses
-        print('Error konfirmasi penerimaan: $e');
         throw Exception('Gagal melakukan konfirmasi penerimaan: $e');
       }
 
       // Hapus file sementara sebelum navigasi
-      try {
-        if (signatureFile.existsSync()) {
-          await signatureFile.delete();
-        }
-        if (tempDir.existsSync()) {
-          await tempDir.delete();
-        }
-      } catch (e) {
-        print('Error saat menghapus file sementara: $e');
+      if (signatureFile.existsSync()) {
+        await signatureFile.delete();
+      }
+      if (tempDir.existsSync()) {
+        await tempDir.delete();
       }
 
       // Tutup semua snackbar yang mungkin masih terbuka

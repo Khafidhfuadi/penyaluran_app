@@ -1,40 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
+import 'package:penyaluran_app/app/modules/warga/views/form_pengaduan_view.dart';
 import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class WargaPengaduanView extends GetView<WargaDashboardController> {
   const WargaPengaduanView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      if (controller.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
-      }
+    return Scaffold(
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-      // Debug print untuk melihat jumlah item
-      print('DEBUG: Jumlah pengaduan tersedia: ${controller.pengaduan.length}');
+        // Debug print untuk melihat jumlah item
+        print(
+            'DEBUG: Jumlah pengaduan tersedia: ${controller.pengaduan.length}');
 
-      return RefreshIndicator(
-        onRefresh: () async {
-          // Tambahkan delay untuk memastikan refresh indicator terlihat
-          await Future.delayed(const Duration(milliseconds: 300));
-          controller.fetchData();
-        },
-        child: controller.pengaduan.isEmpty
-            ? ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: [
-                  SizedBox(
-                    height: Get.height * 0.7,
-                    child: _buildEmptyState(),
-                  ),
-                ],
-              )
-            : _buildPengaduanList(context),
-      );
-    });
+        return RefreshIndicator(
+          onRefresh: () async {
+            // Tambahkan delay untuk memastikan refresh indicator terlihat
+            await Future.delayed(const Duration(milliseconds: 300));
+            controller.fetchData();
+          },
+          child: controller.pengaduan.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(
+                      height: Get.height * 0.7,
+                      child: _buildEmptyState(),
+                    ),
+                  ],
+                )
+              : _buildPengaduanList(context),
+        );
+      }),
+    );
   }
 
   Widget _buildEmptyState() {
@@ -89,8 +97,6 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
                 }
 
                 final item = controller.pengaduan[index];
-                print(
-                    'DEBUG: Membangun item pengaduan $index dengan id: ${item.id}');
 
                 // Tentukan status dan warna berdasarkan status pengaduan
                 Color statusColor;

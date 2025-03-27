@@ -309,10 +309,10 @@ class PetugasDesaController extends GetxController {
   // Metode untuk memuat data jadwal
   Future<void> loadJadwalData() async {
     try {
-      final jadwalHariIniData = await _supabaseService.getJadwalHariIni();
-      if (jadwalHariIniData != null) {
-        jadwalHariIni.value = jadwalHariIniData;
-        _counterService.updateJadwalCounter(jadwalHariIniData.length);
+      final jadwalAktifData = await _supabaseService.getJadwalAktif();
+      if (jadwalAktifData != null) {
+        jadwalHariIni.value = jadwalAktifData;
+        _counterService.updateJadwalCounter(jadwalAktifData.length);
       }
     } catch (e) {
       print('Error loading jadwal data: $e');
@@ -360,7 +360,7 @@ class PetugasDesaController extends GetxController {
 
         // Hitung jumlah pengaduan dengan status DIPROSES
         for (var item in pengaduanData) {
-          if (item['status'] == 'DIPROSES') {
+          if (item['status'] == 'MENUNGGU') {
             diproses++;
           }
         }
@@ -609,22 +609,22 @@ class PetugasDesaController extends GetxController {
   }
 
   // Metode untuk memperbarui status penerimaan bantuan
-  Future<bool> updateStatusPenerimaan(int penerimaId, String status,
-      {DateTime? tanggalPenerimaan,
-      String? buktiPenerimaan,
-      String? keterangan}) async {
-    try {
-      final result = await _supabaseService.updateStatusPenerimaan(
-          penerimaId, status,
-          tanggalPenerimaan: tanggalPenerimaan,
-          buktiPenerimaan: buktiPenerimaan,
-          keterangan: keterangan);
-      return result;
-    } catch (e) {
-      print('Error updating status penerimaan: $e');
-      return false;
-    }
-  }
+  // Future<bool> updateStatusPenerimaan(int penerimaId, String status,
+  //     {DateTime? tanggalPenerimaan,
+  //     String? buktiPenerimaan,
+  //     String? keterangan}) async {
+  //   try {
+  //     final result = await _supabaseService.updateStatusPenerimaan(
+  //         penerimaId, status,
+  //         tanggalPenerimaan: tanggalPenerimaan,
+  //         buktiPenerimaan: buktiPenerimaan,
+  //         keterangan: keterangan);
+  //     return result;
+  //   } catch (e) {
+  //     print('Error updating status penerimaan: $e');
+  //     return false;
+  //   }
+  // }
 
   // Metode untuk menyelesaikan jadwal penyaluran
   Future<void> completeJadwal(String jadwalId) async {

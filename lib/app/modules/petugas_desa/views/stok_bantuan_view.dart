@@ -332,176 +332,283 @@ class StokBantuanView extends GetView<StokBantuanController> {
   }
 
   Widget _buildStokBantuanItem(BuildContext context, StokBantuanModel item) {
+    // Tentukan warna berdasarkan jenis bantuan
+    Color categoryColor =
+        item.isUang == true ? Colors.amber.shade700 : AppTheme.primaryColor;
+
+    // Cek apakah stok hampir habis (kurang dari 10)
+    bool isLowStock = !item.isUang! && item.totalStok! < 10;
+
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(26),
+            color: Colors.grey.withAlpha(30),
             spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    item.nama ?? 'Tanpa Nama',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header dengan gradient berdasarkan jenis bantuan
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    categoryColor.withOpacity(0.8),
+                    categoryColor,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      item.nama ?? 'Tanpa Nama',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          item.isUang == true
+                              ? Icons.monetization_on
+                              : Icons.inventory_2_outlined,
+                          size: 14,
+                          color: Colors.white,
                         ),
-                    overflow: TextOverflow.ellipsis,
+                        const SizedBox(width: 4),
+                        Text(
+                          item.kategoriBantuan != null
+                              ? (item.kategoriBantuan!['nama'] ??
+                                  'Tidak Ada Kategori')
+                              : 'Tidak Ada Kategori',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Body content
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Deskripsi
+                if (item.deskripsi != null && item.deskripsi!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      item.deskripsi!,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[700],
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                // Detail stok/dana dalam card
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isLowStock
+                        ? Colors.red.shade50
+                        : (item.isUang == true
+                            ? Colors.amber.shade50
+                            : Colors.blue.shade50),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isLowStock
+                                  ? Colors.red.shade200
+                                  : (item.isUang == true
+                                      ? Colors.amber.shade200
+                                      : Colors.blue.shade200),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              item.isUang == true
+                                  ? Icons.monetization_on
+                                  : (isLowStock
+                                      ? Icons.warning_amber_rounded
+                                      : Icons.inventory),
+                              size: 20,
+                              color: isLowStock
+                                  ? Colors.red.shade800
+                                  : (item.isUang == true
+                                      ? Colors.amber.shade800
+                                      : Colors.blue.shade800),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.isUang == true
+                                      ? 'Total Dana'
+                                      : (isLowStock
+                                          ? 'Stok Hampir Habis!'
+                                          : 'Total Stok'),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        color: isLowStock
+                                            ? Colors.red.shade800
+                                            : (item.isUang == true
+                                                ? Colors.amber.shade800
+                                                : Colors.blue.shade800),
+                                      ),
+                                ),
+                                Text(
+                                  item.isUang == true
+                                      ? 'Rp ${DateTimeHelper.formatNumber(item.totalStok)}'
+                                      : '${DateTimeHelper.formatNumber(item.totalStok)} ${item.satuan ?? ''}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: isLowStock
+                                            ? Colors.red.shade900
+                                            : (item.isUang == true
+                                                ? Colors.amber.shade900
+                                                : Colors.blue.shade900),
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (item.isUang == true)
-                        const Icon(
-                          Icons.monetization_on,
-                          size: 16,
-                          color: AppTheme.primaryColor,
-                        ),
-                      if (item.isUang == true) const SizedBox(width: 4),
-                      Text(
-                        item.kategoriBantuan != null
-                            ? (item.kategoriBantuan!['nama'] ??
-                                'Tidak Ada Kategori')
-                            : 'Tidak Ada Kategori',
+
+                const SizedBox(height: 16),
+
+                // Additional details
+                Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: Colors.grey[600],
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        item.updatedAt != null
+                            ? 'Diperbarui: ${DateTimeHelper.formatDateTimeWithHour(item.updatedAt!)}'
+                            : 'Tidak ada data pembaruan',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[600],
                             ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // Tombol Aksi
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    border: Border(
+                      top: BorderSide(color: Colors.grey.shade200),
+                    ),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          // Tampilkan dialog edit stok bantuan
+                          _showEditStokDialog(context, item);
+                        },
+                        icon: const Icon(Icons.edit_outlined, size: 16),
+                        label: const Text('Edit'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.blue,
+                          side: BorderSide(color: Colors.blue.shade300),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          // Tampilkan dialog konfirmasi hapus
+                          _showDeleteConfirmation(context, item);
+                        },
+                        icon: const Icon(Icons.delete_outline, size: 16),
+                        label: const Text('Hapus'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: BorderSide(color: Colors.red.shade300),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            if (item.deskripsi != null && item.deskripsi!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  item.deskripsi!,
-                  style: Theme.of(context).textTheme.bodySmall,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon: item.isUang == true
-                        ? Icons.monetization_on
-                        : Icons.inventory,
-                    label: item.isUang == true ? 'Total Dana' : 'Total Stok',
-                    value: item.isUang == true
-                        ? 'Rp ${DateTimeHelper.formatNumber(item.totalStok)}'
-                        : '${DateTimeHelper.formatNumber(item.totalStok)} ${item.satuan ?? ''}',
-                  ),
-                ),
-                Expanded(
-                  child: _buildItemDetail(
-                    context,
-                    icon: Icons.access_time,
-                    label: 'Terakhir Diperbarui',
-                    value: item.updatedAt != null
-                        ? '${item.updatedAt!.day}/${item.updatedAt!.month}/${item.updatedAt!.year} ${item.updatedAt!.hour}:${item.updatedAt!.minute}'
-                        : 'Tidak ada data',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  onPressed: () {
-                    // Tampilkan dialog edit stok bantuan
-                    _showEditStokDialog(context, item);
-                  },
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  label: const Text('Edit'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    // Tampilkan dialog konfirmasi hapus
-                    _showDeleteConfirmation(context, item);
-                  },
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                  label: const Text('Hapus'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildItemDetail(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: Colors.grey,
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey,
-                    ),
-              ),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyMedium,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

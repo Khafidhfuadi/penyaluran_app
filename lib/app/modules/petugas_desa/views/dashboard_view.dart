@@ -92,7 +92,7 @@ class DashboardView extends GetView<PetugasDesaDashboardController> {
         ),
         const SizedBox(height: 12),
         FutureBuilder<List<Map<String, dynamic>>?>(
-          future: SupabaseService.to.getJadwalHariIni(),
+          future: SupabaseService.to.getJadwalAktif(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -153,11 +153,16 @@ class DashboardView extends GetView<PetugasDesaDashboardController> {
   }
 
   Widget _buildProgressPenyaluran() {
-    // Menghitung nilai untuk progress
-    final terlaksana = controller.totalPenyaluran.value;
-    final total = controller.totalSemuaPenyaluran.value;
-    final progressValue = total > 0 ? terlaksana / total : 0.0;
-    final belumTerlaksana = total - terlaksana;
+    // Menghitung nilai untuk progress berdasarkan status
+    final terlaksana = controller.penyaluranTerlaksana.value;
+    final batal = controller.penyaluranBatal.value;
+    final dijadwalkan = controller.penyaluranDijadwalkan.value;
+    final aktif = controller.penyaluranAktif.value;
+
+    final total = terlaksana + batal + dijadwalkan + aktif;
+    final progressValue = total > 0 ? (terlaksana + batal) / total : 0.0;
+    final belumTerlaksana = dijadwalkan +
+        aktif; // Yang belum terlaksana adalah yang dijadwalkan dan aktif
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -211,6 +216,12 @@ class DashboardView extends GetView<PetugasDesaDashboardController> {
                     _buildProgressDetailItem(
                       'Belum Terlaksana',
                       '$belumTerlaksana',
+                      Colors.white.withOpacity(0.7),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildProgressDetailItem(
+                      'Dibatalkan',
+                      '$batal',
                       Colors.white.withOpacity(0.7),
                     ),
                     const SizedBox(height: 8),
@@ -270,18 +281,22 @@ class DashboardView extends GetView<PetugasDesaDashboardController> {
             Expanded(
               child: StatisticCard(
                 title: 'Penitipan',
-                count: controller.jumlahNotifikasiBelumDibaca.toString(),
+                count: controller.jumlahMenunggu.value.toString(),
                 subtitle: 'Perlu Konfirmasi',
                 height: 120,
                 icon: Icons.inbox,
+                gradient: LinearGradient(
+                  colors: [Colors.orange, Colors.deepOrange],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: StatisticCard(
                 title: 'Pengaduan',
-                count:
-                    '${controller.totalPenerima.value > 0 ? controller.totalPenerima.value ~/ 10 : 0}',
+                count: controller.jumlahDiproses.value.toString(),
                 subtitle: 'Perlu Tindakan',
                 height: 120,
                 gradient: LinearGradient(

@@ -5,10 +5,11 @@ import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_con
 import 'package:penyaluran_app/app/routes/app_pages.dart';
 import 'package:penyaluran_app/app/widgets/bantuan_card.dart';
 import 'package:penyaluran_app/app/widgets/section_header.dart';
+import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
+import 'package:penyaluran_app/app/modules/warga/views/form_pengaduan_view.dart';
 
 class WargaDashboardView extends GetView<WargaDashboardController> {
   const WargaDashboardView({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,7 +17,6 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
-
         return RefreshIndicator(
           onRefresh: () async {
             controller.fetchData();
@@ -150,10 +150,10 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
                 child: Column(
                   children: [
                     _buildInfoRow(
-                      icon: Icons.home_rounded,
-                      iconColor: Colors.blue.shade300,
-                      label: 'Alamat',
-                      value: controller.alamat ?? 'Alamat tidak tersedia',
+                      icon: Icons.numbers_rounded,
+                      iconColor: Colors.green.shade300,
+                      label: 'NIK',
+                      value: controller.nik ?? 'NIK tidak tersedia',
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
@@ -175,30 +175,18 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
                       label: 'Desa',
                       value: controller.desa ?? 'Desa tidak tersedia',
                     ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Divider(height: 1),
+                    ),
+                    _buildInfoRow(
+                      icon: Icons.home_rounded,
+                      iconColor: Colors.blue.shade300,
+                      label: 'Alamat Lengkap',
+                      value: controller.alamat ?? 'Alamat tidak tersedia',
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildActionButton(
-                      icon: Icons.edit_rounded,
-                      label: 'Edit Profil',
-                      color: Colors.blue.shade700,
-                      onTap: () => Get.toNamed(Routes.PROFILE),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildActionButton(
-                      icon: Icons.notifications_rounded,
-                      label: 'Notifikasi',
-                      color: Colors.amber.shade700,
-                      onTap: () => Get.toNamed(Routes.NOTIFIKASI),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -299,7 +287,6 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
   }
 
   Widget _buildStatisticSection() {
-    // Data untuk statistik
     final totalBantuan = controller.penerimaPenyaluran.length;
     final totalDiterima = controller.penerimaPenyaluran
         .where((item) => item.statusPenerimaan == 'DITERIMA')
@@ -341,7 +328,6 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
             ),
           ],
         ),
-        // Progress bar untuk persentase bantuan yang diterima
         if (totalBantuan > 0) ...[
           const SizedBox(height: 16),
           Text(
@@ -443,7 +429,6 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
       decimalDigits: 0,
     );
 
-    // Hitung total bantuan uang dan non-uang
     double totalUang = 0;
     Map<String, double> totalNonUang = {};
 
@@ -739,6 +724,148 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  void _showBuatPengaduanDialog(BuildContext context) {
+    // Daftar penerimaan bantuan yang dapat diadukan (status DITERIMA)
+    final bantuanDiterima = controller.penerimaPenyaluran
+        .where((item) => item.statusPenerimaan == 'DITERIMA')
+        .toList();
+
+    // Jika tidak ada bantuan yang diterima
+    if (bantuanDiterima.isEmpty) {
+      Get.snackbar(
+        'Informasi',
+        'Tidak ada bantuan yang sudah diterima untuk dapat diajukan pengaduan',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Variabel untuk menyimpan pilihan penerimaan
+    PenerimaPenyaluranModel? selectedPenerimaan = bantuanDiterima.first;
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.report_problem,
+                        color: Colors.orange.shade700,
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Buat Pengaduan Baru',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Get.back(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Pilih Bantuan yang Ingin Diadukan:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 10),
+              StatefulBuilder(
+                builder: (context, setState) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<PenerimaPenyaluranModel>(
+                        isExpanded: true,
+                        value: selectedPenerimaan,
+                        items: bantuanDiterima.map((item) {
+                          String displayText = item.namaPenyaluran ?? 'Bantuan';
+                          if (item.tanggalPenerimaan != null) {
+                            displayText +=
+                                ' (${DateFormat('dd/MM/yyyy').format(item.tanggalPenerimaan!)})';
+                          }
+
+                          return DropdownMenuItem<PenerimaPenyaluranModel>(
+                            value: item,
+                            child: Text(displayText),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              selectedPenerimaan = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (selectedPenerimaan != null) {
+                      Get.back();
+                      Get.to(
+                        () => FormPengaduanView(
+                          uidPenerimaan: selectedPenerimaan!.id.toString(),
+                        ),
+                        transition: Transition.rightToLeft,
+                        duration: const Duration(milliseconds: 300),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade700,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Lanjutkan',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

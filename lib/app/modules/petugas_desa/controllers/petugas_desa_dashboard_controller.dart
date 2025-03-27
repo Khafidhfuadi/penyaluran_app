@@ -4,10 +4,12 @@ import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/data/models/notifikasi_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/counter_service.dart';
 
 class PetugasDesaDashboardController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   final SupabaseService _supabaseService = SupabaseService.to;
+  late final CounterService _counterService;
 
   final RxBool isLoading = false.obs;
 
@@ -21,6 +23,12 @@ class PetugasDesaDashboardController extends GetxController {
   final RxInt totalSemuaPenyaluran = 0.obs;
   final RxInt totalPenitipanTerverifikasi = 0.obs;
   final RxDouble progressPenyaluran = 0.0.obs;
+
+  // Data untuk status penyaluran
+  final RxInt penyaluranDijadwalkan = 0.obs;
+  final RxInt penyaluranAktif = 0.obs;
+  final RxInt penyaluranBatal = 0.obs;
+  final RxInt penyaluranTerlaksana = 0.obs;
 
   // Data untuk notifikasi
   final RxList<NotifikasiModel> notifikasiBelumDibaca = <NotifikasiModel>[].obs;
@@ -45,13 +53,24 @@ class PetugasDesaDashboardController extends GetxController {
       userProfile['desa']?['nama'] ??
       (userProfile['desa_id'] != null ? 'Desa' : 'Desa');
 
+  // Getter untuk counter dari CounterService
+  RxInt get jumlahMenunggu => _counterService.jumlahMenunggu;
+  RxInt get jumlahDiproses => _counterService.jumlahDiproses;
+
   @override
   void onInit() {
     super.onInit();
+
+    // Inisialisasi CounterService jika belum ada
+    if (!Get.isRegistered<CounterService>()) {
+      Get.put(CounterService(), permanent: true);
+    }
+    _counterService = Get.find<CounterService>();
+
     loadUserProfile();
     loadDashboardData();
     loadNotifikasiData();
-    loadJadwalHariIni();
+    loadJadwalAktif();
   }
 
   @override
@@ -97,6 +116,15 @@ class PetugasDesaDashboardController extends GetxController {
           await _supabaseService.getTotalSemuaPenyaluran();
       totalSemuaPenyaluran.value = semuaPenyaluranData ?? 0;
 
+      // Mengambil data status penyaluran
+      final statusPenyaluranData = await _supabaseService.getStatusPenyaluran();
+      if (statusPenyaluranData != null) {
+        penyaluranDijadwalkan.value = statusPenyaluranData['dijadwalkan'] ?? 0;
+        penyaluranAktif.value = statusPenyaluranData['aktif'] ?? 0;
+        penyaluranBatal.value = statusPenyaluranData['batal'] ?? 0;
+        penyaluranTerlaksana.value = statusPenyaluranData['terlaksana'] ?? 0;
+      }
+
       // Menghitung progress penyaluran (persentase penyaluran yang terlaksana dari total semua penyaluran)
       if (totalSemuaPenyaluran.value > 0) {
         progressPenyaluran.value =
@@ -127,9 +155,9 @@ class PetugasDesaDashboardController extends GetxController {
     }
   }
 
-  Future<void> loadJadwalHariIni() async {
+  Future<void> loadJadwalAktif() async {
     try {
-      final jadwalData = await _supabaseService.getJadwalHariIni();
+      final jadwalData = await _supabaseService.getJadwalAktif();
       if (jadwalData != null) {
         jadwalHariIni.value = jadwalData;
       }
@@ -145,7 +173,7 @@ class PetugasDesaDashboardController extends GetxController {
         loadUserProfile(),
         loadDashboardData(),
         loadNotifikasiData(),
-        loadJadwalHariIni(),
+        loadJadwalAktif(),
       ]);
     } catch (e) {
       print('Error refreshing data: $e');
