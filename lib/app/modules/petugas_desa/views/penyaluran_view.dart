@@ -8,7 +8,6 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_penyaluran_
 
 class PenyaluranView extends GetView<JadwalPenyaluranController> {
   const PenyaluranView({super.key});
-
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -24,6 +23,10 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
               labelColor: AppTheme.primaryColor,
               indicatorColor: AppTheme.primaryColor,
               unselectedLabelColor: Colors.grey,
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
             ),
             Expanded(
               child: TabBarView(
@@ -38,10 +41,13 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
+        floatingActionButton: FloatingActionButton.extended(
           onPressed: () => Get.to(() => const TambahPenyaluranView()),
           backgroundColor: AppTheme.primaryColor,
-          child: const Icon(Icons.add, color: Colors.white),
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text('Tambah Jadwal',
+              style: TextStyle(color: Colors.white)),
+          elevation: 2,
         ),
       ),
     );
@@ -53,12 +59,12 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
           child: Obx(() {
             if (controller.isLoading.value) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
+              return const SizedBox(
+                height: 300,
+                child: Center(
                   child: CircularProgressIndicator(),
                 ),
               );
@@ -70,7 +76,7 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
                 // Ringkasan jadwal
                 _buildJadwalSummary(Get.context!),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
                 // Jadwal hari ini
                 JadwalSectionWidget(
@@ -80,7 +86,7 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
                   status: 'Aktif',
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
                 // Jadwal mendatang
                 JadwalSectionWidget(
@@ -90,7 +96,7 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
                   status: 'Terjadwal',
                 ),
 
-                const SizedBox(height: 50),
+                const SizedBox(height: 60),
               ],
             );
           }),
@@ -105,12 +111,12 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
           child: Obx(() {
             if (controller.isLoading.value) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
+              return const SizedBox(
+                height: 300,
+                child: Center(
                   child: CircularProgressIndicator(),
                 ),
               );

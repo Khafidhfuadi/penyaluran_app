@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/stok_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/stok_bantuan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
-import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 
 class StokBantuanView extends GetView<StokBantuanController> {
   const StokBantuanView({super.key});
@@ -17,13 +17,15 @@ class StokBantuanView extends GetView<StokBantuanController> {
             ? const Center(child: CircularProgressIndicator())
             : _buildContent(context)),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           // Tampilkan dialog tambah stok bantuan
           _showAddStokDialog(context);
         },
         backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.add, color: Colors.white),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Tambah Stok', style: TextStyle(color: Colors.white)),
+        elevation: 2,
       ),
     );
   }

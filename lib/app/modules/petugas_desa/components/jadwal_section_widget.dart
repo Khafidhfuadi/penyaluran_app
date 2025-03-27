@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
-import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class JadwalSectionWidget extends StatelessWidget {
@@ -43,31 +43,55 @@ class JadwalSectionWidget extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Obx(() {
           final currentJadwalList = _getCurrentJadwalList();
 
           if (currentJadwalList.isEmpty) {
             return Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.grey.withAlpha(20),
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Center(
                 child: Column(
                   children: [
-                    Icon(
-                      _getEmptyIcon(),
-                      size: 40,
-                      color: Colors.grey.shade400,
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _getEmptyIcon(),
+                        size: 48,
+                        color: Colors.grey.shade400,
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 16),
                     Text(
                       'Tidak ada jadwal $title',
                       style: textTheme.titleMedium?.copyWith(
                         color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Jadwal akan muncul di sini saat tersedia',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade500,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
@@ -192,17 +216,18 @@ class JadwalSectionWidget extends StatelessWidget {
         controller.getKategoriBantuanName(jadwal.kategoriBantuanId);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 3,
+      shadowColor: Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: statusColor.withOpacity(0.3),
-          width: 1,
+          width: 1.5,
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           if (jadwal.id != null) {
             Get.toNamed(Routes.detailPenyaluran,
@@ -223,19 +248,19 @@ class JadwalSectionWidget extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Container(
-                  //   padding: const EdgeInsets.all(10),
-                  //   decoration: BoxDecoration(
-                  //     color: statusColor.withOpacity(0.1),
-                  //     borderRadius: BorderRadius.circular(10),
-                  //   ),
-                  //   child: Icon(
-                  //     _getStatusIcon(),
-                  //     color: statusColor,
-                  //     size: 24,
-                  //   ),
-                  // ),
-                  // const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      _getStatusIcon(),
+                      color: statusColor,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,12 +279,16 @@ class JadwalSectionWidget extends StatelessWidget {
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                                horizontal: 10,
+                                vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
+                                color: statusColor.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: statusColor.withOpacity(0.3),
+                                  width: 1,
+                                ),
                               ),
                               child: Text(
                                 statusText,
@@ -273,10 +302,12 @@ class JadwalSectionWidget extends StatelessWidget {
                         ),
                         if (jadwal.deskripsi != null &&
                             jadwal.deskripsi!.isNotEmpty) ...[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Text(
                             jadwal.deskripsi!,
-                            style: textTheme.bodyMedium,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey.shade700,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -287,47 +318,18 @@ class JadwalSectionWidget extends StatelessWidget {
                 ],
               ),
               const Divider(height: 24),
-              _buildInfoItem(
-                Icons.location_on_outlined,
-                'Lokasi',
-                lokasiName,
+              _buildInfoSection(
                 textTheme,
+                lokasiName,
+                kategoriName,
+                formattedDateTime,
+                jadwal.jumlahPenerima,
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInfoItem(
-                      Icons.category_outlined,
-                      'Kategori',
-                      kategoriName,
-                      textTheme,
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildInfoItem(
-                      Icons.event,
-                      'Jadwal',
-                      formattedDateTime,
-                      textTheme,
-                    ),
-                  ),
-                ],
-              ),
-              if (jadwal.jumlahPenerima != null) ...[
-                const SizedBox(height: 8),
-                _buildInfoItem(
-                  Icons.people_outline,
-                  'Jumlah Penerima',
-                  '${jadwal.jumlahPenerima}',
-                  textTheme,
-                ),
-              ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton.icon(
+                  ElevatedButton.icon(
                     onPressed: () {
                       if (jadwal.id != null) {
                         Get.toNamed(Routes.detailPenyaluran,
@@ -340,10 +342,19 @@ class JadwalSectionWidget extends StatelessWidget {
                         );
                       }
                     },
-                    icon: const Icon(Icons.visibility_outlined),
+                    icon: const Icon(Icons.visibility_outlined, size: 18),
                     label: const Text('Lihat Detail'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: statusColor,
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: statusColor,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ],
@@ -351,6 +362,66 @@ class JadwalSectionWidget extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoSection(
+    TextTheme textTheme,
+    String lokasiName,
+    String kategoriName,
+    String formattedDateTime,
+    int? jumlahPenerima,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildInfoItem(
+            Icons.location_on_outlined,
+            'Lokasi',
+            lokasiName,
+            textTheme,
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _buildInfoItem(
+                  Icons.category_outlined,
+                  'Kategori',
+                  kategoriName,
+                  textTheme,
+                ),
+              ),
+              Expanded(
+                child: _buildInfoItem(
+                  Icons.event,
+                  'Jadwal',
+                  formattedDateTime,
+                  textTheme,
+                ),
+              ),
+            ],
+          ),
+          if (jumlahPenerima != null) ...[
+            const SizedBox(height: 10),
+            _buildInfoItem(
+              Icons.people_outline,
+              'Jumlah Penerima',
+              '$jumlahPenerima',
+              textTheme,
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -364,12 +435,19 @@ class JadwalSectionWidget extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: Colors.grey.shade600,
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(
+            icon,
+            size: 14,
+            color: Colors.grey.shade700,
+          ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,11 +456,15 @@ class JadwalSectionWidget extends StatelessWidget {
                 label,
                 style: textTheme.bodySmall?.copyWith(
                   color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
+              const SizedBox(height: 2),
               Text(
                 value,
-                style: textTheme.bodyMedium,
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),

@@ -39,6 +39,7 @@ import 'package:penyaluran_app/app/modules/laporan_penyaluran/views/laporan_peny
 import 'package:penyaluran_app/app/modules/laporan_penyaluran/bindings/laporan_penyaluran_binding.dart';
 import 'package:penyaluran_app/app/modules/donatur/views/donatur_view.dart';
 import 'package:penyaluran_app/app/modules/donatur/controllers/donatur_dashboard_controller.dart';
+import 'package:penyaluran_app/app/modules/donatur/views/donatur_jadwal_detail_view.dart';
 
 part 'app_routes.dart';
 
@@ -237,6 +238,11 @@ class AppPages {
         controller.activeTabIndex.value = 4;
         return DonaturView();
       },
+      binding: DonaturBinding(),
+    ),
+    GetPage(
+      name: '/donatur/jadwal/:id',
+      page: () => const DonaturJadwalDetailView(),
       binding: DonaturBinding(),
     ),
   ];

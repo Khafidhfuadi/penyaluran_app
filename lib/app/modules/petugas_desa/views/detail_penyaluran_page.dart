@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/detail_penyaluran_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
-import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerima_page.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/qr_scanner_page.dart';
@@ -33,12 +33,46 @@ class DetailPenyaluranPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail Penyaluran'),
+        title: const Text(
+          'Detail Penyaluran',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        shadowColor: Colors.grey.withOpacity(0.3),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.primaryColor),
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.arrow_back,
+                color: AppTheme.primaryColor, size: 20),
+          ),
           onPressed: () => Get.back(),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              onPressed: controller.refreshData,
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.refresh,
+                    color: AppTheme.primaryColor, size: 20),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -84,16 +118,38 @@ class DetailPenyaluranPage extends StatelessWidget {
         if (status == 'AKTIF') {
           return FloatingActionButton(
             backgroundColor: AppTheme.primaryColor,
+            elevation: 4,
             onPressed: () => _showQrCodeScanner(context),
             tooltip: 'Scan QR Code',
-            child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+            child: Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.primaryColor,
+                    AppTheme.secondaryColor,
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+            ),
           );
         }
         return showScrollToTop.value
             ? FloatingActionButton(
                 mini: true,
-                backgroundColor: AppTheme.primaryColor,
-                child: const Icon(Icons.arrow_upward),
+                backgroundColor: Colors.white,
+                elevation: 4,
                 onPressed: () {
                   scrollController.animateTo(
                     0,
@@ -101,6 +157,19 @@ class DetailPenyaluranPage extends StatelessWidget {
                     curve: Curves.easeInOut,
                   );
                 },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Colors.white, Colors.grey.shade100],
+                    ),
+                  ),
+                  child: const Icon(Icons.arrow_upward,
+                      color: AppTheme.primaryColor),
+                ),
               )
             : const SizedBox.shrink();
       }),
@@ -140,81 +209,135 @@ class DetailPenyaluranPage extends StatelessWidget {
     final skema = controller.skemaBantuan.value;
 
     return Card(
-      elevation: 2,
+      elevation: 3,
+      shadowColor: Colors.grey.withOpacity(0.3),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header dengan status
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header dengan status
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: const BoxDecoration(
+              color: AppTheme.primaryColor,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Informasi Penyaluran',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
-                  ),
+                const Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Informasi',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
                 _buildStatusBadge(penyaluran.status ?? '-'),
               ],
             ),
-            const Divider(height: 24),
+          ),
 
-            // Informasi penyaluran
-            _buildInfoRow('Nama', penyaluran.nama ?? '-'),
-            _buildInfoRow(
-                'Tanggal',
-                penyaluran.tanggalPenyaluran != null
-                    ? DateTimeHelper.formatDateTime(
-                        penyaluran.tanggalPenyaluran!)
-                    : 'Belum dijadwalkan'),
-            // Tampilkan tanggal selesai jika status TERLAKSANA atau BATALTERLAKSANA
-            if (penyaluran.status == 'TERLAKSANA' ||
-                penyaluran.status == 'BATALTERLAKSANA')
-              _buildInfoRow(
-                  'Tanggal Selesai',
-                  penyaluran.tanggalSelesai != null
-                      ? DateTimeHelper.formatDateTime(
-                          penyaluran.tanggalSelesai!)
-                      : '-'),
-            _buildInfoRow(
-                'Jumlah Penerima', '${penyaluran.jumlahPenerima ?? 0} orang'),
+          // Informasi penyaluran
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Nama dan tanggal dalam baris yang sama
+                _buildInfoItem(Icons.description_outlined, 'Nama Penyaluran',
+                    penyaluran.nama ?? '-', AppTheme.secondaryColor),
+                const SizedBox(height: 16),
+                _buildInfoItem(
+                    Icons.event,
+                    'Tanggal Penyaluran',
+                    penyaluran.tanggalPenyaluran != null
+                        ? DateTimeHelper.formatDateTime(
+                            penyaluran.tanggalPenyaluran!)
+                        : 'Belum dijadwalkan',
+                    AppTheme.secondaryColor),
+                const SizedBox(height: 16),
 
-            // Informasi skema bantuan
-            if (skema != null) ...[
-              const Divider(height: 24),
-              Row(
-                children: [
-                  const Icon(Icons.category,
-                      size: 16, color: AppTheme.secondaryColor),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Skema: ${skema.nama ?? '-'}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.secondaryColor,
-                    ),
-                  ),
+                // Tampilkan tanggal selesai jika status TERLAKSANA atau BATALTERLAKSANA
+                if (penyaluran.status == 'TERLAKSANA' ||
+                    penyaluran.status == 'BATALTERLAKSANA')
+                  _buildInfoItem(
+                      Icons.event_available,
+                      'Tanggal Selesai',
+                      penyaluran.tanggalSelesai != null
+                          ? DateTimeHelper.formatDateTime(
+                              penyaluran.tanggalSelesai!)
+                          : '-',
+                      AppTheme.secondaryColor),
+
+                const SizedBox(height: 16),
+                _buildInfoItem(
+                    Icons.people,
+                    'Jumlah Penerima',
+                    '${penyaluran.jumlahPenerima ?? 0} orang',
+                    AppTheme.secondaryColor),
+
+                // Informasi skema bantuan
+                if (skema != null) ...[
+                  const Divider(height: 32, thickness: 1),
+                  _buildInfoItem(Icons.category, 'Skema Bantuan',
+                      skema.nama ?? '-', AppTheme.accentColor),
                 ],
-              ),
-              const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget untuk info item dengan icon
+  Widget _buildInfoItem(
+      IconData icon, String label, String value, Color iconColor) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: iconColor),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                skema.deskripsi ?? 'Tidak ada deskripsi',
+                label,
                 style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
+                  fontSize: 13,
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -265,13 +388,23 @@ class DetailPenyaluranPage extends StatelessWidget {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        '${_getFilteredPenerima().length} Orang',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
-                        ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.groups,
+                            size: 16,
+                            color: AppTheme.primaryColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_getFilteredPenerima().length} Orang',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ],
                       ),
                     )),
               ],
@@ -283,7 +416,7 @@ class DetailPenyaluranPage extends StatelessWidget {
 
           // Search field dengan filter status
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 // Search field dengan icon dan tombol hapus
@@ -293,10 +426,10 @@ class DetailPenyaluranPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
+                        color: Colors.grey.withOpacity(0.15),
                         spreadRadius: 1,
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
@@ -304,6 +437,10 @@ class DetailPenyaluranPage extends StatelessWidget {
                     controller: searchController,
                     decoration: InputDecoration(
                       hintText: 'Cari nama, NIK, atau alamat...',
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 14,
+                      ),
                       prefixIcon: const Icon(Icons.search,
                           color: AppTheme.primaryColor),
                       suffixIcon: Obx(() => searchQuery.value.isNotEmpty
@@ -331,7 +468,7 @@ class DetailPenyaluranPage extends StatelessWidget {
                       filled: true,
                       fillColor: Colors.white,
                       contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 16),
+                          vertical: 14, horizontal: 16),
                     ),
                     onChanged: (value) {
                       searchQuery.value = value.toLowerCase();
@@ -342,16 +479,26 @@ class DetailPenyaluranPage extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Filter status dengan label
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildFilterChip('Semua', true),
-                      const SizedBox(width: 8),
-                      _buildFilterChip('Sudah Menerima', false),
-                      const SizedBox(width: 8),
-                      _buildFilterChip('Belum Menerima', false),
-                    ],
+                Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 4),
+                        _buildFilterChip('Semua', true),
+                        const SizedBox(width: 12),
+                        _buildFilterChip('Sudah Menerima', false),
+                        const SizedBox(width: 12),
+                        _buildFilterChip('Belum Menerima', false),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -490,9 +637,20 @@ class DetailPenyaluranPage extends StatelessWidget {
             : AppTheme.errorColor;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.grey.shade50,
+            Colors.white,
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
         border: Border(
           bottom: BorderSide(color: Colors.grey.shade200, width: 1),
         ),
@@ -500,47 +658,82 @@ class DetailPenyaluranPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header dengan judul dan persentase
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.insert_chart_outlined,
-                    size: 18,
-                    color: Colors.grey.shade700,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Progres Penyaluran',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade700,
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    child: Icon(
+                      Icons.insert_chart_outlined,
+                      size: 20,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Progres Penyaluran',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Total $totalPenerima penerima',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: progressColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: progressColor.withOpacity(0.3)),
                 ),
-                child: Text(
-                  '${persentaseSudah.toStringAsFixed(1)}%',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: progressColor,
-                  ),
+                child: Row(
+                  children: [
+                    Icon(
+                      persentaseSudah > 75
+                          ? Icons.emoji_events
+                          : persentaseSudah > 50
+                              ? Icons.trending_up
+                              : Icons.trending_down,
+                      size: 16,
+                      color: progressColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${persentaseSudah.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: progressColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
 
           // Progress bar dengan label
           Column(
@@ -552,40 +745,49 @@ class DetailPenyaluranPage extends StatelessWidget {
                   Text(
                     'Sudah Menerima',
                     style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                  Text(
-                    '$sudahMenerima dari $totalPenerima',
-                    style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey.shade700,
                     ),
                   ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: progressColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$sudahMenerima dari $totalPenerima',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: progressColor,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Stack(
                 children: [
                   // Background progress bar
                   Container(
-                    height: 12,
+                    height: 16,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   // Foreground progress bar
                   FractionallySizedBox(
                     widthFactor: persentaseSudah / 100,
                     child: Container(
-                      height: 12,
+                      height: 16,
                       decoration: BoxDecoration(
                         color: progressColor,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
                             color: progressColor.withOpacity(0.3),
@@ -594,6 +796,18 @@ class DetailPenyaluranPage extends StatelessWidget {
                           ),
                         ],
                       ),
+                      child: Center(
+                        child: persentaseSudah > 15
+                            ? Text(
+                                '${persentaseSudah.toInt()}%',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
                   ),
                 ],
@@ -601,27 +815,29 @@ class DetailPenyaluranPage extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Statistik detail
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Expanded(
-                  child: _buildStatistikItem(
-                'Sudah Menerima',
-                sudahMenerima,
-                AppTheme.successColor,
-                Icons.check_circle,
-              )),
-              const SizedBox(width: 6),
+                child: _buildStatistikItem(
+                  'Sudah Menerima',
+                  sudahMenerima,
+                  AppTheme.successColor,
+                  Icons.check_circle,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                  child: _buildStatistikItem(
-                'Belum Menerima',
-                belumMenerima,
-                AppTheme.warningColor,
-                Icons.pending,
-              )),
+                child: _buildStatistikItem(
+                  'Belum Menerima',
+                  belumMenerima,
+                  AppTheme.warningColor,
+                  Icons.pending,
+                ),
+              ),
             ],
           )
         ],
@@ -632,39 +848,51 @@ class DetailPenyaluranPage extends StatelessWidget {
   Widget _buildStatistikItem(
       String label, int value, Color color, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          )
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              shape: BoxShape.circle,
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade700,
             ),
-            child: Icon(icon, color: color, size: 14),
           ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          SizedBox(
+            height: 8,
+          ),
+          Row(
             children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 16),
+              ),
+              SizedBox(
+                width: 12,
+              ),
               Text(
                 '$value',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 30,
                   fontWeight: FontWeight.bold,
                   color: color,
-                ),
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade700,
                 ),
               ),
             ],
@@ -697,70 +925,82 @@ class DetailPenyaluranPage extends StatelessWidget {
     // Cek apakah filter ini yang aktif
     isSelected = statusFilter.value == filterValue;
 
-    // Tentukan icon berdasarkan jenis filter
+    // Tentukan icon dan warna berdasarkan jenis filter
     IconData filterIcon;
+    Color chipColor;
+
     if (label == 'Semua') {
       filterIcon = Icons.list_alt;
+      chipColor = AppTheme.primaryColor;
     } else if (label == 'Sudah Menerima') {
       filterIcon = Icons.check_circle;
+      chipColor = AppTheme.successColor;
     } else {
       filterIcon = Icons.pending;
+      chipColor = AppTheme.warningColor;
     }
 
-    return FilterChip(
-      avatar: Icon(
-        filterIcon,
-        size: 16,
-        color: isSelected ? Colors.white : AppTheme.primaryColor,
-      ),
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label),
-          const SizedBox(width: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? Colors.white.withOpacity(0.3)
-                  : AppTheme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+    return InkWell(
+      onTap: () {
+        statusFilter.value = filterValue;
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? chipColor : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            if (isSelected)
+              BoxShadow(
+                color: chipColor.withOpacity(0.3),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              )
+          ],
+          border: Border.all(
+            color: isSelected ? Colors.transparent : Colors.grey.shade300,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              filterIcon,
+              size: 16,
+              color: isSelected ? Colors.white : chipColor,
             ),
-            child: Text(
-              '$count',
+            const SizedBox(width: 6),
+            Text(
+              label,
               style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : AppTheme.primaryColor,
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? Colors.white : Colors.black87,
               ),
             ),
-          ),
-        ],
-      ),
-      selected: isSelected,
-      // checkmarkColor: Colors.white,
-      showCheckmark: false,
-      selectedColor: AppTheme.primaryColor,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.black87,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      backgroundColor: Colors.white,
-      elevation: isSelected ? 0 : 1,
-      shadowColor: Colors.grey.withOpacity(0.2),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? Colors.transparent : Colors.grey.shade300,
-          width: 1,
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withOpacity(0.3)
+                    : chipColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : chipColor,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      onSelected: (selected) {
-        if (selected) {
-          statusFilter.value = filterValue;
-        }
-      },
     );
   }
 
@@ -781,47 +1021,66 @@ class DetailPenyaluranPage extends StatelessWidget {
     final warga = item.warga;
     final bool sudahMenerima =
         item.statusPenerimaan?.toUpperCase() == 'DITERIMA';
-    final Color cardColor = Colors.white;
-    final Color borderColor = Colors.grey.shade300;
+    final Color statusColor =
+        sudahMenerima ? AppTheme.successColor : AppTheme.warningColor;
 
     return Card(
-      elevation: 2,
+      elevation: 3,
+      shadowColor: Colors.grey.withOpacity(0.2),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor, width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: sudahMenerima
+              ? statusColor.withOpacity(0.3)
+              : Colors.grey.shade200,
+          width: 1.5,
+        ),
       ),
-      color: cardColor,
       child: InkWell(
         onTap: () => _showDetailPenerima(context, item),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(16.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Avatar
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: sudahMenerima
-                    ? AppTheme.successColor.withOpacity(0.2)
-                    : AppTheme.primaryColor.withOpacity(0.1),
-                child: Text(
-                  warga != null && warga['nama_lengkap'] != null
-                      ? warga['nama_lengkap']
-                          .toString()
-                          .substring(0, 1)
-                          .toUpperCase()
-                      : '?',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: sudahMenerima
-                        ? AppTheme.successColor
-                        : AppTheme.primaryColor,
-                    fontSize: 20,
+              // Avatar dengan border berwarna
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: statusColor.withOpacity(0.5),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: statusColor.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 28,
+                  backgroundColor: sudahMenerima
+                      ? statusColor.withOpacity(0.15)
+                      : Colors.grey.shade50,
+                  child: Text(
+                    warga != null && warga['nama_lengkap'] != null
+                        ? warga['nama_lengkap']
+                            .toString()
+                            .substring(0, 1)
+                            .toUpperCase()
+                        : '?',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: sudahMenerima ? statusColor : Colors.grey.shade700,
+                      fontSize: 22,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
 
               // Informasi penerima
               Expanded(
@@ -829,44 +1088,75 @@ class DetailPenyaluranPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Nama dan NIK
-                    Text(
-                      warga != null
-                          ? warga['nama_lengkap'] ?? 'Nama tidak tersedia'
-                          : 'Nama tidak tersedia',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'NIK: ${warga != null ? warga['nik'] ?? '-' : '-'}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    // Nama
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            warga != null
+                                ? warga['nama_lengkap'] ?? 'Nama tidak tersedia'
+                                : 'Nama tidak tersedia',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Icon indicator (arrow or check)
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: sudahMenerima
+                                ? statusColor.withOpacity(0.1)
+                                : Colors.grey.shade100,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            sudahMenerima
+                                ? Icons.check_circle
+                                : Icons.arrow_forward,
+                            size: 18,
+                            color: sudahMenerima
+                                ? statusColor
+                                : Colors.grey.shade400,
+                          ),
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 4),
+
+                    // NIK dengan icon
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.credit_card,
+                          size: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'NIK: ${warga != null ? warga['nik'] ?? '-' : '-'}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Status penerimaan
                     _buildStatusChipNew(item.statusPenerimaan ?? '-'),
                   ],
                 ),
-              ),
-
-              // Status dan icon
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.arrow_forward_ios,
-                      size: 14,
-                      color:
-                          sudahMenerima ? AppTheme.successColor : Colors.grey),
-                ],
               ),
             ],
           ),
@@ -878,38 +1168,63 @@ class DetailPenyaluranPage extends StatelessWidget {
   Widget _buildStatusBadge(String status) {
     Color backgroundColor;
     Color textColor = Colors.white;
+    IconData statusIcon;
     String statusText = _getStatusText(status);
 
     switch (status.toUpperCase()) {
       case 'DIJADWALKAN':
         backgroundColor = AppTheme.processedColor;
+        statusIcon = Icons.calendar_today;
         break;
       case 'AKTIF':
         backgroundColor = AppTheme.scheduledColor;
+        statusIcon = Icons.play_circle_outline;
         break;
       case 'TERLAKSANA':
         backgroundColor = AppTheme.completedColor;
+        statusIcon = Icons.check_circle_outline;
         break;
       case 'BATALTERLAKSANA':
         backgroundColor = AppTheme.errorColor;
+        statusIcon = Icons.cancel_outlined;
         break;
       default:
         backgroundColor = AppTheme.infoColor;
+        statusIcon = Icons.info_outline;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: backgroundColor.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
-      child: Text(
-        statusText,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            statusIcon,
+            size: 16,
+            color: backgroundColor,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            statusText,
+            style: TextStyle(
+              color: backgroundColor,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -920,8 +1235,32 @@ class DetailPenyaluranPage extends StatelessWidget {
     if (controller.isProcessing.value) {
       return Container(
         padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
         child: const Center(
-          child: CircularProgressIndicator(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 8),
+              Text(
+                'Memproses...',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -951,34 +1290,65 @@ class DetailPenyaluranPage extends StatelessWidget {
     Widget cancelButton = Expanded(
       child: OutlinedButton.icon(
         icon: const Icon(Icons.cancel),
-        label: const Text('Batalkan'),
+        label: const Text(
+          'Batalkan',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppTheme.errorColor,
-          side: const BorderSide(color: AppTheme.errorColor),
+          side: const BorderSide(color: AppTheme.errorColor, width: 1.5),
           padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         onPressed: () => _showBatalkanDialog(context),
       ),
     );
 
     if (status == 'AKTIF') {
+      final bool allReceived = controller.penerimaPenyaluran.every(
+          (penerima) => penerima.statusPenerimaan?.toUpperCase() == 'DITERIMA');
+
       return buildButtonContainer([
         Expanded(
           child: ElevatedButton.icon(
-            icon: const Icon(Icons.check_circle),
-            label: const Text('Selesaikan'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.successColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              // Tombol disabled jika belum semua penerima menerima bantuan
-              disabledBackgroundColor: Colors.grey.shade300,
-              disabledForegroundColor: Colors.grey.shade700,
+            icon: allReceived
+                ? const Icon(Icons.check_circle)
+                : const Icon(Icons.info_outline),
+            label: Text(
+              'Selesaikan',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: allReceived ? 16 : 14,
+              ),
             ),
-            onPressed: controller.penerimaPenyaluran.every((penerima) =>
-                    penerima.statusPenerimaan?.toUpperCase() == 'DITERIMA')
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  allReceived ? AppTheme.successColor : Colors.grey.shade300,
+              foregroundColor:
+                  allReceived ? Colors.white : Colors.grey.shade700,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              elevation: allReceived ? 2 : 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: allReceived
                 ? controller.selesaikanPenyaluran
-                : null,
+                : () => Get.snackbar(
+                      'Perhatian',
+                      'Masih ada penerima yang belum menerima bantuan',
+                      backgroundColor: Colors.orange.shade100,
+                      colorText: Colors.orange.shade800,
+                      snackPosition: SnackPosition.BOTTOM,
+                      margin: const EdgeInsets.all(16),
+                      borderRadius: 10,
+                      icon: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange,
+                      ),
+                    ),
           ),
         ),
         const SizedBox(width: 12),
@@ -1047,53 +1417,161 @@ class DetailPenyaluranPage extends StatelessWidget {
 
   void _showBatalkanDialog(BuildContext context) {
     final TextEditingController alasanController = TextEditingController();
+    final isAlasanEmpty = false.obs;
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Batalkan Penyaluran'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Masukkan alasan pembatalan penyaluran:'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: alasanController,
-              decoration: const InputDecoration(
-                hintText: 'Alasan pembatalan',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Batal'),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
           ),
-          ElevatedButton(
-            onPressed: () {
-              if (alasanController.text.trim().isEmpty) {
-                Get.snackbar(
-                  'Error',
-                  'Alasan pembatalan tidak boleh kosong',
-                  backgroundColor: Colors.red,
-                  colorText: Colors.white,
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-                return;
-              }
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppTheme.errorColor,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Batalkan Penyaluran',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.errorColor,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Tindakan ini tidak dapat dibatalkan',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-              controller.batalkanPenyaluran(alasanController.text.trim());
-              Get.back();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorColor,
-            ),
-            child: const Text('Batalkan'),
+              const SizedBox(height: 20),
+
+              // Form alasan
+              const Text(
+                'Masukkan alasan pembatalan:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Obx(() => TextField(
+                    controller: alasanController,
+                    decoration: InputDecoration(
+                      hintText: 'Misalnya: Terjadi kesalahan data penerima...',
+                      hintStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade500,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      errorText: isAlasanEmpty.value
+                          ? 'Alasan tidak boleh kosong'
+                          : null,
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            const BorderSide(color: AppTheme.errorColor),
+                      ),
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                    maxLines: 3,
+                    onChanged: (value) {
+                      if (isAlasanEmpty.value && value.trim().isNotEmpty) {
+                        isAlasanEmpty.value = false;
+                      }
+                    },
+                  )),
+
+              const SizedBox(height: 24),
+
+              // Tombol aksi
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(color: Colors.grey.shade400),
+                        foregroundColor: Colors.grey.shade700,
+                      ),
+                      child: const Text(
+                        'Batal',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (alasanController.text.trim().isEmpty) {
+                          isAlasanEmpty.value = true;
+                          return;
+                        }
+
+                        controller
+                            .batalkanPenyaluran(alasanController.text.trim());
+                        Get.back();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.errorColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Batalkan',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1783,31 +2261,44 @@ class DetailPenyaluranPage extends StatelessWidget {
 
   // Widget untuk status chip baru
   Widget _buildStatusChipNew(String status) {
-    final Color statusColor;
-    final String statusText;
-
-    if (status.toUpperCase() == 'DITERIMA') {
-      statusColor = AppTheme.successColor;
-      statusText = 'Sudah Menerima';
-    } else {
-      statusColor = AppTheme.warningColor;
-      statusText = 'Belum Menerima';
-    }
+    final bool isDiterima = status.toUpperCase() == 'DITERIMA';
+    final Color statusColor =
+        isDiterima ? AppTheme.successColor : AppTheme.warningColor;
+    final String statusText = isDiterima ? 'Sudah Menerima' : 'Belum Menerima';
+    final IconData statusIcon = isDiterima ? Icons.check_circle : Icons.pending;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.2),
+        color: statusColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: statusColor.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: statusColor.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
-      child: Text(
-        statusText,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: statusColor,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            statusIcon,
+            size: 14,
+            color: statusColor,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            statusText,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: statusColor,
+            ),
+          ),
+        ],
       ),
     );
   }

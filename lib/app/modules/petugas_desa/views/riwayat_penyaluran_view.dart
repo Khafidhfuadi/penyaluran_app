@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/jadwal_penyaluran_controller.dart';
-import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 
 class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {

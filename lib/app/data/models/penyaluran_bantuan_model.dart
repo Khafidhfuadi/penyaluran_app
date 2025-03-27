@@ -16,6 +16,10 @@ class PenyaluranBantuanModel {
   final DateTime? tanggalSelesai;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final Map<String, dynamic>? lokasiPenyaluran;
+  final Map<String, dynamic>? kategori;
+  final Map<String, dynamic>? petugas;
+  final int? jumlahBantuan;
 
   PenyaluranBantuanModel({
     this.id,
@@ -33,7 +37,39 @@ class PenyaluranBantuanModel {
     this.tanggalSelesai,
     this.createdAt,
     this.updatedAt,
+    this.lokasiPenyaluran,
+    this.kategori,
+    this.petugas,
+    this.jumlahBantuan,
   });
+
+  // Mendapatkan nama lokasi dari relasi lokasiPenyaluran
+  String? get lokasiNama {
+    if (lokasiPenyaluran != null && lokasiPenyaluran!['nama'] != null) {
+      return lokasiPenyaluran!['nama'];
+    }
+    return null;
+  }
+
+  // Mendapatkan nama kategori dari relasi kategori
+  String? get kategoriNama {
+    if (kategori != null && kategori!['nama'] != null) {
+      return kategori!['nama'];
+    }
+    return null;
+  }
+
+  // Mendapatkan nama petugas dari relasi petugas
+  String? get namaPetugas {
+    if (petugas != null) {
+      if (petugas!['nama_lengkap'] != null) {
+        return petugas!['nama_lengkap'];
+      } else if (petugas!['nama'] != null) {
+        return petugas!['nama'];
+      }
+    }
+    return null;
+  }
 
   factory PenyaluranBantuanModel.fromRawJson(String str) =>
       PenyaluranBantuanModel.fromJson(json.decode(str));
@@ -67,6 +103,10 @@ class PenyaluranBantuanModel {
         updatedAt: json["updated_at"] != null
             ? DateTime.parse(json["updated_at"]).toUtc()
             : null,
+        lokasiPenyaluran: json["lokasi_penyaluran"],
+        kategori: json["kategori"],
+        petugas: json["petugas"],
+        jumlahBantuan: json["jumlah_bantuan"],
       );
 
   Map<String, dynamic> toJson() => {

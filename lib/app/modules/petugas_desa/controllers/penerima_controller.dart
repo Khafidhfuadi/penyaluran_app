@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
-import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 
 class PenerimaController extends GetxController {
   final RxList<Map<String, dynamic>> daftarPenerima =

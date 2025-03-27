@@ -296,6 +296,32 @@ class PengaduanController extends GetxController {
     }
   }
 
+  Future<void> updateStatusTindakan(String pengaduanId) async {
+    isLoading.value = true;
+    try {
+      await _supabaseService.updateStatusPengaduan(pengaduanId, 'TINDAKAN');
+      await loadPengaduanData();
+      Get.snackbar(
+        'Sukses',
+        'Pengaduan berhasil diubah ke status Tindakan',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      print('Error updating to Tindakan status: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal mengubah status ke Tindakan: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   Future<List<TindakanPengaduanModel>> getTindakanPengaduan(
       String pengaduanId) async {
     try {

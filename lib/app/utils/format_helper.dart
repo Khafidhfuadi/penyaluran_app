@@ -219,4 +219,34 @@ class DateTimeHelper {
     final localDateTime = toLocalDateTime(dateTime);
     return DateFormat('dd MMMM yyyy HH:mm', 'id_ID').format(localDateTime);
   }
+
+  /// Format nilai ke dalam format mata uang Rupiah
+  ///
+  /// [value] adalah nilai yang akan diformat
+  /// [symbol] adalah simbol mata uang (default: 'Rp')
+  /// [decimalDigits] adalah jumlah digit desimal yang ditampilkan
+  /// [defaultValue] adalah nilai default jika value null
+  static String formatRupiah(
+    num? value, {
+    String symbol = 'Rp',
+    int decimalDigits = 0,
+    String defaultValue = 'Rp 0',
+  }) {
+    if (value == null) return defaultValue;
+    try {
+      final formatter = NumberFormat.currency(
+        locale: 'id_ID',
+        symbol: '$symbol ',
+        decimalDigits: decimalDigits,
+      );
+      return formatter.format(value);
+    } catch (e) {
+      print('Error formatting currency: $e');
+      // Fallback ke format manual
+      return '$symbol ${value.toStringAsFixed(decimalDigits).replaceAllMapped(
+            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+            (Match m) => '${m[1]}.',
+          )}';
+    }
+  }
 }

@@ -24,6 +24,9 @@ class DonaturDashboardController extends GetxController {
   // Indeks tab yang aktif di bottom navigation bar
   final RxInt activeTabIndex = 0.obs;
 
+  // Menyimpan ID skema bantuan yang dipilih
+  final RxString selectedSkemaBantuanId = ''.obs;
+
   // Data untuk skema bantuan tersedia
   final RxList<SkemaBantuanModel> skemaBantuan = <SkemaBantuanModel>[].obs;
 
@@ -228,7 +231,8 @@ class DonaturDashboardController extends GetxController {
       final now = DateTime.now();
       final response = await _supabaseService.client
           .from('penyaluran_bantuan')
-          .select()
+          .select(
+              '*, lokasi_penyaluran:lokasi_penyaluran_id(*), kategori:kategori_bantuan_id(*), petugas:petugas_id(*)')
           .order('tanggal_penyaluran', ascending: true);
 
       // Konversi ke model lalu filter di sisi client
@@ -457,6 +461,27 @@ class DonaturDashboardController extends GetxController {
       );
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  // Mendapatkan nama lokasi penyaluran berdasarkan ID
+  Future<String?> getLokasiPenyaluran(String? lokasiId) async {
+    if (lokasiId == null) return null;
+
+    try {
+      final response = await _supabaseService.client
+          .from('lokasi_penyaluran')
+          .select('nama')
+          .eq('id', lokasiId)
+          .single();
+
+      if (response != null && response['nama'] != null) {
+        return response['nama'] as String;
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching lokasi penyaluran: $e');
+      return null;
     }
   }
 }

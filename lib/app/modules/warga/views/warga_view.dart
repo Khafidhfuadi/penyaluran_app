@@ -14,19 +14,6 @@ class WargaView extends GetView<WargaDashboardController> {
 
   @override
   Widget build(BuildContext context) {
-    // Tambahkan listener untuk refresh data saat fokus didapatkan kembali
-    // misalnya ketika kembali dari halaman profil
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   final focusNode = FocusNode();
-    //   FocusScope.of(context).requestFocus(focusNode);
-    //   focusNode.addListener(() {
-    //     if (focusNode.hasFocus) {
-    //       print('DEBUG WARGA: Halaman mendapatkan fokus, memuat ulang data');
-    //       controller.refreshData();
-    //     }
-    //   });
-    // });
-
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
@@ -288,9 +275,6 @@ class WargaView extends GetView<WargaDashboardController> {
                       activeIcon: Icons.report_problem,
                       title: 'Pengaduan',
                       isSelected: controller.activeTabIndex.value == 2,
-                      badge: controller.totalPengaduanProses.value > 0
-                          ? controller.totalPengaduanProses.value.toString()
-                          : null,
                       onTap: () {
                         Navigator.pop(context);
                         controller.changeTab(2);

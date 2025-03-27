@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/riwayat_pengaduan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
-import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 
 class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
   const RiwayatPengaduanView({super.key});
@@ -159,253 +159,388 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
       formattedDate = DateTimeHelper.formatDate(item.createdAt);
     }
 
-    return InkWell(
-      onTap: () {
-        // Navigasi ke halaman detail pengaduan
-        Get.toNamed('/detail-pengaduan', arguments: {'id': item.id});
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withAlpha(26),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 1),
-            ),
-          ],
+    Color statusColor = AppTheme.successColor;
+    IconData statusIcon = Icons.check_circle;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: statusColor.withOpacity(0.3),
+          width: 1,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      ),
+      elevation: 3,
+      child: InkWell(
+        onTap: () {
+          // Navigasi ke halaman detail pengaduan
+          Get.toNamed('/detail-pengaduan', arguments: {'id': item.id});
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header dengan warna sesuai status
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+              ),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      item.warga?['nama'] ?? item.judul ?? '',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.report_problem,
+                          color: statusColor,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            item.warga?['nama'] ?? item.judul ?? '',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: statusColor,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 12),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppTheme.successColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: statusColor,
+                        width: 1.0,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          Icons.check_circle,
-                          size: 16,
-                          color: AppTheme.successColor,
+                        Icon(
+                          statusIcon,
+                          size: 14,
+                          color: statusColor,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           'SELESAI',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppTheme.successColor,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                item.deskripsi ?? '',
-                style: Theme.of(context).textTheme.bodyMedium,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 12),
-              Row(
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: _buildItemDetail(
-                      context,
-                      icon: Icons.person,
-                      label: 'Pelapor',
-                      value: item.warga?['nama_lengkap'] ?? '',
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildItemDetail(
-                      context,
-                      icon: Icons.numbers,
-                      label: 'NIK',
-                      value: item.warga?['nik'] ?? '',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (item.penerimaPenyaluran != null) ...[
-                Row(
-                  children: [
-                    Expanded(
-                        child: _buildItemDetail(
-                      context,
-                      icon: Icons.shopping_bag,
-                      label: 'Jumlah',
-                      value:
-                          '${item.jumlahBantuan} ${item.stokBantuan['satuan']}',
-                    )),
-                    Expanded(
-                      child: _buildItemDetail(
-                        context,
-                        icon: Icons.inventory,
-                        label: 'Stok Bantuan',
-                        value: item.stokBantuan['nama'] ?? '',
+                  // Deskripsi masalah
+                  if (item.deskripsi != null && item.deskripsi.isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Colors.grey.shade200,
+                          width: 1.0,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildItemDetail(
-                        context,
-                        icon: Icons.category,
-                        label: 'Nama Penyaluran',
-                        value: item.namaPenyaluran ?? '',
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildItemDetail(
-                        context,
-                        icon: Icons.calendar_today,
-                        label: 'Tanggal',
-                        value: formattedDate,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              if (item.ratingWarga != null && item.ratingWarga > 0) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.amber.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Feedback Warga',
-                            style: const TextStyle(
+                            'Deskripsi Masalah:',
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: Colors.amber,
+                              color: Colors.grey.shade800,
                             ),
                           ),
-                          Row(
-                            children: List.generate(5, (index) {
-                              return Icon(
-                                index < (item.ratingWarga ?? 0)
-                                    ? Icons.star
-                                    : Icons.star_border,
-                                color: Colors.amber,
-                                size: 16,
-                              );
-                            }),
+                          const SizedBox(height: 6),
+                          Text(
+                            item.deskripsi ?? '',
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                            ),
                           ),
                         ],
                       ),
-                      if (item.feedbackWarga != null &&
-                          item.feedbackWarga.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          '${item.feedbackWarga}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                    ),
+
+                  // Informasi penyaluran bantuan jika ada
+                  if (item.penerimaPenyaluran != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Colors.blue.shade200,
+                          width: 1.0,
                         ),
-                      ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Penyaluran: ${item.namaPenyaluran ?? "Tidak tersedia"}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Bantuan',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      item.stokBantuan['nama'] ?? '-',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Jumlah',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${item.jumlahBantuan} ${item.stokBantuan['satuan'] ?? ''}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // Informasi pelapor dan NIK
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Pelapor',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            Text(
+                              item.warga?['nama_lengkap'] ?? '-',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'NIK',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            Text(
+                              item.warga?['nik'] ?? '-',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton.icon(
-                    onPressed: () {
-                      // Navigasi ke halaman detail pengaduan
-                      Get.toNamed('/detail-pengaduan',
-                          arguments: {'id': item.id});
-                    },
-                    icon: const Icon(Icons.info_outline, size: 18),
-                    label: const Text('Detail'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.grey,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+
+                  const SizedBox(height: 12),
+
+                  // Informasi tanggal
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(4),
                     ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          formattedDate,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Rating dan feedback warga jika ada
+                  if (item.ratingWarga != null && item.ratingWarga > 0) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Colors.amber.shade200,
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Feedback Warga',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Colors.amber.shade800,
+                                ),
+                              ),
+                              Row(
+                                children: List.generate(5, (index) {
+                                  return Icon(
+                                    index < (item.ratingWarga ?? 0)
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                    color: Colors.amber,
+                                    size: 16,
+                                  );
+                                }),
+                              ),
+                            ],
+                          ),
+                          if (item.feedbackWarga != null &&
+                              item.feedbackWarga.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              '${item.feedbackWarga}',
+                              style: TextStyle(
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 12),
+
+                  // Tombol detail
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Get.toNamed('/detail-pengaduan',
+                              arguments: {'id': item.id});
+                        },
+                        icon: const Icon(Icons.info_outline, size: 18),
+                        label: const Text('Lihat Detail'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: statusColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildItemDetail(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: Colors.grey,
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey,
-                    ),
-              ),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyMedium,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

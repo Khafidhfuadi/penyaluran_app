@@ -4,7 +4,7 @@ import 'package:penyaluran_app/app/data/models/riwayat_stok_model.dart';
 import 'package:penyaluran_app/app/data/models/stok_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/riwayat_stok_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
-import 'package:penyaluran_app/app/utils/date_time_helper.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class RiwayatStokView extends GetView<RiwayatStokController> {
@@ -60,60 +60,6 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header dengan latar belakang gradient
-          Container(
-            padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Heading
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.inventory_2_outlined,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Riwayat Stok Bantuan',
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.only(left: 40),
-                  child: Text(
-                    'Catatan perubahan stok bantuan di desa Anda',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Filter dan pencarian
           Padding(
             padding: const EdgeInsets.all(16.0),

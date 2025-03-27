@@ -46,6 +46,19 @@ class _FormPenitipanBantuanState extends State<FormPenitipanBantuan> {
     super.initState();
     // Reset foto bantuan saat form dibuka
     controller.resetFotoBantuan();
+
+    // Cek apakah ada skema bantuan yang dipilih dari halaman skema
+    if (controller.selectedSkemaBantuanId.isNotEmpty) {
+      // Aktifkan tab skema bantuan
+      setState(() {
+        selectedSkemaBantuanId = controller.selectedSkemaBantuanId.value;
+      });
+
+      // Reset ID skema setelah digunakan
+      Future.delayed(Duration.zero, () {
+        controller.selectedSkemaBantuanId.value = '';
+      });
+    }
   }
 
   @override
@@ -214,6 +227,96 @@ class _FormPenitipanBantuanState extends State<FormPenitipanBantuan> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 8),
+
+                // Tampilkan informasi stok bantuan dari skema yang dipilih
+                Obx(() {
+                  // Hanya tampilkan jika skema dipilih
+                  if (selectedSkemaBantuanId == null ||
+                      selectedSkemaBantuanId!.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  // Cari skema bantuan yang dipilih
+                  SkemaBantuanModel? selectedSkema;
+                  try {
+                    selectedSkema = controller.skemaBantuan.firstWhere(
+                      (skema) => skema.id == selectedSkemaBantuanId,
+                    );
+                  } catch (_) {
+                    return const SizedBox.shrink();
+                  }
+
+                  // Pastikan skema dan stok bantuan ada
+                  if (selectedSkema.stokBantuanId == null) {
+                    return const SizedBox.shrink();
+                  }
+
+                  // Cari stok bantuan yang sesuai
+                  var stokBantuanFound = false;
+                  var stokNama = 'Tidak diketahui';
+                  var stokTotal = 0.0;
+                  var stokSatuan = 'item';
+
+                  for (var stok in controller.stokBantuan) {
+                    if (stok.id == selectedSkema.stokBantuanId) {
+                      stokBantuanFound = true;
+                      stokNama = stok.nama ?? 'Tidak diketahui';
+                      stokTotal = stok.totalStok ?? 0;
+                      stokSatuan = stok.satuan ?? 'item';
+                      break;
+                    }
+                  }
+
+                  if (!stokBantuanFound) {
+                    return const SizedBox.shrink();
+                  }
+
+                  // Tampilkan informasi stok bantuan
+                  return Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue.shade200),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.info_outline,
+                                    color: Colors.blue.shade700, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Informasi Stok Bantuan',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Jenis Bantuan: $stokNama',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Stok Tersedia: $stokTotal $stokSatuan',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16)
+                    ],
+                  );
+                }),
+
                 const SizedBox(height: 16),
               ] else ...[
                 // Form untuk bantuan manual
