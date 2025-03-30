@@ -3,6 +3,7 @@ import 'package:penyaluran_app/app/data/models/donatur_model.dart';
 import 'package:penyaluran_app/app/data/models/petugas_desa_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/data/models/warga_model.dart';
+import 'package:penyaluran_app/app/data/models/lokasi_penyaluran_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 
@@ -1733,6 +1734,33 @@ class SupabaseService extends GetxService {
     } catch (e) {
       print('Error getting all lokasi penyaluran: $e');
       return null;
+    }
+  }
+
+  // Metode untuk mendapatkan lokasi penyaluran berdasarkan ID petugas
+  Future<List<LokasiPenyaluranModel>> getLokasiPenyaluran(
+      {String? petugasId}) async {
+    try {
+      var query = client.from('lokasi_penyaluran').select('*');
+
+      final response = await query.order('nama');
+
+      return response
+          .map((data) => LokasiPenyaluranModel.fromJson(data))
+          .toList();
+    } catch (e) {
+      print('Error getting lokasi penyaluran: $e');
+      return [];
+    }
+  }
+
+  // Metode untuk menghapus lokasi penyaluran
+  Future<void> deleteLokasiPenyaluran(String lokasiId) async {
+    try {
+      await client.from('lokasi_penyaluran').delete().eq('id', lokasiId);
+    } catch (e) {
+      print('Error deleting lokasi penyaluran: $e');
+      throw e.toString();
     }
   }
 

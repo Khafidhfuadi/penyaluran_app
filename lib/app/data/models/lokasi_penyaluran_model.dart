@@ -3,7 +3,7 @@ import 'dart:convert';
 class LokasiPenyaluranModel {
   final String id;
   final String nama;
-  final String? alamat;
+  final String? alamatLengkap;
   final String? desa;
   final String? kecamatan;
   final String? kabupaten;
@@ -19,7 +19,7 @@ class LokasiPenyaluranModel {
   LokasiPenyaluranModel({
     required this.id,
     required this.nama,
-    this.alamat,
+    this.alamatLengkap,
     this.desa,
     this.kecamatan,
     this.kabupaten,
@@ -42,7 +42,7 @@ class LokasiPenyaluranModel {
       LokasiPenyaluranModel(
         id: json["id"],
         nama: json["nama"],
-        alamat: json["alamat"],
+        alamatLengkap: json["alamat_lengkap"],
         desa: json["desa"],
         kecamatan: json["kecamatan"],
         kabupaten: json["kabupaten"],
@@ -61,7 +61,7 @@ class LokasiPenyaluranModel {
   Map<String, dynamic> toJson() => {
         "id": id,
         "nama": nama,
-        "alamat": alamat,
+        "alamat_lengkap": alamatLengkap,
         "desa": desa,
         "kecamatan": kecamatan,
         "kabupaten": kabupaten,

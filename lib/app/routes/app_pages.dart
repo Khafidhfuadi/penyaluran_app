@@ -13,6 +13,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_donatur_vie
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_lokasi_penyaluran_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/lokasi_penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_penyaluran_page.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/penyaluran_binding.dart';
@@ -153,6 +154,11 @@ class AppPages {
     GetPage(
       name: _Paths.tambahLokasiPenyaluran,
       page: () => const TambahLokasiPenyaluranView(),
+      binding: PetugasDesaBinding(),
+    ),
+    GetPage(
+      name: _Paths.lokasiPenyaluran,
+      page: () => const LokasiPenyaluranView(),
       binding: PetugasDesaBinding(),
     ),
     GetPage(

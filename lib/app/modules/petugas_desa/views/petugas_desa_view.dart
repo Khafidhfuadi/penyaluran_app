@@ -387,6 +387,15 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                   },
                 ),
                 _buildMenuItem(
+                  icon: Icons.location_on_outlined,
+                  activeIcon: Icons.location_on,
+                  title: 'Lokasi Penyaluran',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.toNamed('/lokasi-penyaluran');
+                  },
+                ),
+                _buildMenuItem(
                   icon: Icons.description_outlined,
                   activeIcon: Icons.description,
                   title: 'Laporan Penyaluran',

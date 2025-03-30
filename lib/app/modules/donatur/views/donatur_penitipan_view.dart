@@ -1196,7 +1196,7 @@ class _FormPenitipanBantuanState extends State<FormPenitipanBantuan> {
             value: selectedLokasiPenyaluranId,
             items: controller.lokasiPenyaluran.map((lokasi) {
               String alamatLengkap = [
-                lokasi.alamat,
+                lokasi.alamatLengkap,
                 lokasi.desa,
                 lokasi.kecamatan,
                 lokasi.kabupaten,

@@ -588,19 +588,21 @@ class JadwalPenyaluranController extends GetxController {
   }
 
   Future<void> loadLokasiPenyaluranData() async {
+    isLokasiLoading.value = true;
     try {
-      isLokasiLoading(true);
-      final lokasiData = await _supabaseService.getAllLokasiPenyaluran();
-      if (lokasiData != null) {
-        for (var lokasi in lokasiData) {
-          final lokasiModel = LokasiPenyaluranModel.fromJson(lokasi);
-          lokasiPenyaluranCache[lokasiModel.id] = lokasiModel;
-        }
+      final data = await _supabaseService.getLokasiPenyaluran(
+        petugasId: user?.id,
+      );
+
+      // Bersihkan cache dan tambahkan data baru
+      lokasiPenyaluranCache.clear();
+      for (final lokasi in data) {
+        lokasiPenyaluranCache[lokasi.id] = lokasi;
       }
     } catch (e) {
-      print('Error loading lokasi penyaluran data: $e');
+      print('Error loading lokasi penyaluran: $e');
     } finally {
-      isLokasiLoading(false);
+      isLokasiLoading.value = false;
     }
   }
 
@@ -868,5 +870,93 @@ class JadwalPenyaluranController extends GetxController {
     final hash = sha256.convert(bytes);
     // Kembalikan representasi string dari hash
     return hash.toString();
+  }
+
+  // Mengedit lokasi penyaluran
+  void editLokasiPenyaluran(String lokasiId) {
+    if (lokasiPenyaluranCache.containsKey(lokasiId)) {
+      // Ambil data lokasi yang akan diedit
+      final lokasi = lokasiPenyaluranCache[lokasiId];
+
+      // Navigasi ke halaman edit dengan membawa data lokasi
+      Get.toNamed('/petugas-desa/edit-lokasi-penyaluran', arguments: {
+        'lokasi_id': lokasiId,
+        'lokasi': lokasi,
+      });
+    } else {
+      Get.snackbar(
+        'Gagal',
+        'Data lokasi tidak ditemukan',
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  // Menghapus lokasi penyaluran
+  void hapusLokasiPenyaluran(String lokasiId) {
+    // Tampilkan dialog konfirmasi penghapusan
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: const Text('Apakah Anda yakin ingin menghapus lokasi ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('BATAL'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Get.back(); // Tutup dialog
+
+              // Tampilkan loading
+              Get.dialog(
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                barrierDismissible: false,
+              );
+
+              try {
+                // Lakukan penghapusan di database
+                await _supabaseService.deleteLokasiPenyaluran(lokasiId);
+
+                // Hapus data dari cache lokal
+                lokasiPenyaluranCache.remove(lokasiId);
+
+                // Tutup dialog loading
+                Get.back();
+
+                // Tampilkan notifikasi berhasil
+                Get.snackbar(
+                  'Berhasil',
+                  'Lokasi penyaluran berhasil dihapus',
+                  backgroundColor: Colors.green.shade100,
+                  colorText: Colors.green.shade800,
+                  snackPosition: SnackPosition.BOTTOM,
+                );
+              } catch (e) {
+                // Tutup dialog loading
+                Get.back();
+
+                // Tampilkan pesan error
+                Get.snackbar(
+                  'Gagal',
+                  'Terjadi kesalahan: ${e.toString()}',
+                  backgroundColor: Colors.red.shade100,
+                  colorText: Colors.red.shade800,
+                  snackPosition: SnackPosition.BOTTOM,
+                );
+              }
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('HAPUS'),
+          ),
+        ],
+      ),
+    );
   }
 }

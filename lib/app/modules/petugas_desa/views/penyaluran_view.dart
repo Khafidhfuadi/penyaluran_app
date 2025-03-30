@@ -5,12 +5,16 @@ import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/jadwal_section_widget.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/components/calendar_view_widget.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_penyaluran_view.dart';
-import 'package:penyaluran_app/app/routes/app_pages.dart';
 
 class PenyaluranView extends GetView<JadwalPenyaluranController> {
   const PenyaluranView({super.key});
   @override
   Widget build(BuildContext context) {
+    // Memastikan controller tersedia
+    if (!Get.isRegistered<JadwalPenyaluranController>()) {
+      Get.put(JadwalPenyaluranController());
+    }
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -83,11 +87,6 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
               children: [
                 // Ringkasan jadwal
                 _buildJadwalSummary(Get.context!),
-
-                const SizedBox(height: 16),
-
-                // Tombol untuk mengelola lokasi penyaluran
-                _buildLokasiPenyaluranSection(),
 
                 const SizedBox(height: 24),
 
@@ -235,242 +234,6 @@ class PenyaluranView extends GetView<JadwalPenyaluranController> {
           textAlign: TextAlign.center,
         ),
       ],
-    );
-  }
-
-  // Widget untuk menampilkan section lokasi penyaluran
-  Widget _buildLokasiPenyaluranSection() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.blue.shade100, width: 1),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Lokasi Penyaluran',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade800,
-                  ),
-                ),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    // Menampilkan dialog daftar lokasi penyaluran
-                    _showLokasiPenyaluranDialog();
-                  },
-                  icon: const Icon(Icons.map, size: 16),
-                  label: const Text('Lihat Lokasi'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.blue,
-                    side: BorderSide(color: Colors.blue.shade300),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Kelola lokasi penyaluran bantuan untuk masyarakat dengan lebih mudah',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: () => Get.toNamed(Routes.tambahLokasiPenyaluran),
-              icon: const Icon(Icons.add_location, size: 16),
-              label: const Text('Tambah Lokasi Penyaluran Baru'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade50,
-                foregroundColor: Colors.blue.shade700,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Colors.blue.shade200),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Fungsi untuk menampilkan dialog daftar lokasi penyaluran
-  void _showLokasiPenyaluranDialog() {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Daftar Lokasi Penyaluran',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade800,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: const Icon(Icons.close),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Container(
-                constraints: BoxConstraints(
-                  maxHeight: Get.height * 0.5,
-                ),
-                width: double.infinity,
-                child: Obx(() {
-                  if (controller.isLokasiLoading.value) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-
-                  if (controller.lokasiPenyaluranCache.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.location_off,
-                            size: 48,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Belum ada lokasi penyaluran',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              Get.back();
-                              Get.toNamed(Routes.tambahLokasiPenyaluran);
-                            },
-                            icon: const Icon(Icons.add_location),
-                            label: const Text('Tambah Lokasi'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: controller.lokasiPenyaluranCache.length,
-                    itemBuilder: (context, index) {
-                      final lokasi = controller.lokasiPenyaluranCache.values
-                          .elementAt(index);
-                      final lokasiId = controller.lokasiPenyaluranCache.keys
-                          .elementAt(index);
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          title: Text(
-                            lokasi.nama,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (lokasi.alamat != null &&
-                                  lokasi.alamat!.isNotEmpty)
-                                Text(lokasi.alamat!),
-                              Row(
-                                children: [
-                                  if (lokasi.isLokasiTitip)
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 4),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.shade100,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        'Lokasi Penitipan',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.green.shade800,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          leading: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.location_on,
-                              color: Colors.blue.shade700,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      Get.back();
-                      Get.toNamed(Routes.tambahLokasiPenyaluran);
-                    },
-                    child: const Text('Tambah Lokasi Baru'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.blue,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

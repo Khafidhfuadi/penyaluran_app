@@ -15,16 +15,28 @@ class TambahLokasiPenyaluranView extends GetView<JadwalPenyaluranController> {
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
       ),
-      body: _buildTambahLokasiPenyaluranForm(context),
+      body: _LokasiPenyaluranForm(controller: controller),
     );
   }
+}
 
-  Widget _buildTambahLokasiPenyaluranForm(BuildContext context) {
-    final formKey = GlobalKey<FormState>();
-    final TextEditingController namaController = TextEditingController();
-    final TextEditingController alamatLengkapController =
-        TextEditingController();
+class _LokasiPenyaluranForm extends StatefulWidget {
+  final JadwalPenyaluranController controller;
 
+  const _LokasiPenyaluranForm({required this.controller});
+
+  @override
+  State<_LokasiPenyaluranForm> createState() => _LokasiPenyaluranFormState();
+}
+
+class _LokasiPenyaluranFormState extends State<_LokasiPenyaluranForm> {
+  final formKey = GlobalKey<FormState>();
+  final TextEditingController namaController = TextEditingController();
+  final TextEditingController alamatLengkapController = TextEditingController();
+  bool isLokasiTitip = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Form(
@@ -95,6 +107,29 @@ class TambahLokasiPenyaluranView extends GetView<JadwalPenyaluranController> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+
+              // Checkbox Is Lokasi Titip
+              Row(
+                children: [
+                  Checkbox(
+                    value: isLokasiTitip,
+                    activeColor: AppTheme.primaryColor,
+                    onChanged: (newValue) {
+                      setState(() {
+                        isLokasiTitip = newValue ?? false;
+                      });
+                    },
+                  ),
+                  const Text('Lokasi Titip'),
+                  const SizedBox(width: 4),
+                  const Tooltip(
+                    message:
+                        'Centang jika lokasi ini merupakan lokasi yang dapat menerima penitipan',
+                    child: Icon(Icons.info_outline, size: 16),
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
 
               // Tombol Submit
@@ -107,6 +142,7 @@ class TambahLokasiPenyaluranView extends GetView<JadwalPenyaluranController> {
                       _tambahLokasiPenyaluran(
                         nama: namaController.text,
                         alamatLengkap: alamatLengkapController.text,
+                        isLokasiTitip: isLokasiTitip,
                       );
                     }
                   },
@@ -137,6 +173,7 @@ class TambahLokasiPenyaluranView extends GetView<JadwalPenyaluranController> {
   Future<void> _tambahLokasiPenyaluran({
     required String nama,
     required String alamatLengkap,
+    required bool isLokasiTitip,
   }) async {
     try {
       // Tampilkan loading
@@ -152,7 +189,8 @@ class TambahLokasiPenyaluranView extends GetView<JadwalPenyaluranController> {
       final String id = uuid.v4();
 
       // Ambil ID petugas desa yang sedang login dari controller
-      final String? petugasDesaId = controller.supabaseService.currentUser?.id;
+      final String? petugasDesaId =
+          widget.controller.supabaseService.currentUser?.id;
 
       if (petugasDesaId == null) {
         Get.back(); // Tutup dialog loading
@@ -167,7 +205,7 @@ class TambahLokasiPenyaluranView extends GetView<JadwalPenyaluranController> {
 
       // Dapatkan desa_id dari data petugas desa
       // Ambil data petugas desa dari Supabase untuk mendapatkan desa_id
-      final petugasDesaData = await controller.supabaseService.client
+      final petugasDesaData = await widget.controller.supabaseService.client
           .from('petugas_desa')
           .select('desa_id')
           .eq('id', petugasDesaId)
@@ -193,11 +231,12 @@ class TambahLokasiPenyaluranView extends GetView<JadwalPenyaluranController> {
         'nama': nama,
         'alamat_lengkap': alamatLengkap,
         'desa_id': desaId,
+        'is_lokasi_titip': isLokasiTitip,
         'created_at': DateTime.now().toIso8601String(),
       };
 
       // Insert data ke tabel lokasi_penyaluran
-      await controller.supabaseService.client
+      await widget.controller.supabaseService.client
           .from('lokasi_penyaluran')
           .insert(data);
 
@@ -216,7 +255,7 @@ class TambahLokasiPenyaluranView extends GetView<JadwalPenyaluranController> {
       Get.back();
 
       // Refresh data di controller
-      controller.refreshData();
+      widget.controller.refreshData();
     } catch (e) {
       // Tutup dialog loading
       Get.back();

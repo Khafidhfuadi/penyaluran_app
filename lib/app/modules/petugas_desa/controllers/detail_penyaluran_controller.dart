@@ -101,7 +101,8 @@ class DetailPenyaluranController extends GetxController {
       // Ambil data penerima penyaluran
       final penerimaPenyaluranData = await _supabaseService.client
           .from('penerima_penyaluran')
-          .select('*, warga:warga_id(*)')
+          .select(
+              '*, warga:warga_id(*, desa:desa_id(*)), stok_bantuan:stok_bantuan_id(*)')
           .eq('penyaluran_bantuan_id', penyaluranId);
 
       final List<PenerimaPenyaluranModel> penerima = [];
