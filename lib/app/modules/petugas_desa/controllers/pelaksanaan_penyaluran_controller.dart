@@ -96,10 +96,10 @@ class PelaksanaanPenyaluranController extends GetxController {
             ? response['kategori_bantuan']['nama']
             : 'Tidak tersedia',
         'tanggal': penyaluranModel.tanggalPenyaluran != null
-            ? DateTimeHelper.formatDate(penyaluranModel.tanggalPenyaluran!)
+            ? FormatHelper.formatDateTime(penyaluranModel.tanggalPenyaluran!)
             : 'Tidak tersedia',
         'waktu': penyaluranModel.tanggalPenyaluran != null
-            ? DateTimeHelper.formatTime(penyaluranModel.tanggalPenyaluran!)
+            ? FormatHelper.formatTime(penyaluranModel.tanggalPenyaluran!)
             : 'Tidak tersedia',
         'jumlah_penerima': penyaluranModel.jumlahPenerima?.toString() ?? '0',
         'status': penyaluranModel.status,

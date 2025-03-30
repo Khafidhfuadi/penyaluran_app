@@ -52,7 +52,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
             .getKategoriBantuanName(item.kategoriBantuanId)
             .toLowerCase();
         final tanggal =
-            DateTimeHelper.formatDateTime(item.tanggalPenyaluran).toLowerCase();
+            FormatHelper.formatDateTime(item.tanggalPenyaluran).toLowerCase();
 
         return nama.contains(searchText) ||
             deskripsi.contains(searchText) ||
@@ -105,7 +105,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
                                   ),
                         ),
                         Text(
-                          '${DateTimeHelper.formatNumber(filteredList.length)} item',
+                          '${FormatHelper.formatNumber(filteredList.length)} item',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey,
@@ -119,7 +119,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Total: ${DateTimeHelper.formatNumber(filteredList.length)} item',
+                          'Total: ${FormatHelper.formatNumber(filteredList.length)} item',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey,
@@ -132,7 +132,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
                                 size: 16, color: Colors.grey[600]),
                             const SizedBox(width: 4),
                             Text(
-                              'Update: ${DateTimeHelper.formatDateTimeWithHour(DateTime.now())}',
+                              'Update: ${FormatHelper.formatDateTimeWithHour(DateTime.now())}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
@@ -305,7 +305,7 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
                     child: _buildInfoItem(
                       Icons.event,
                       'Tanggal',
-                      DateTimeHelper.formatDateTime(item.tanggalPenyaluran,
+                      FormatHelper.formatDateTime(item.tanggalPenyaluran,
                           format: 'dd MMM yyyy HH:mm'),
                       Theme.of(context).textTheme,
                     ),
@@ -316,17 +316,57 @@ class RiwayatPenyaluranView extends GetView<JadwalPenyaluranController> {
               _buildInfoItem(
                 Icons.people_outline,
                 'Jumlah Penerima',
-                '${DateTimeHelper.formatNumber(item.jumlahPenerima ?? 0)} orang',
+                '${FormatHelper.formatNumber(item.jumlahPenerima ?? 0)} orang',
                 Theme.of(context).textTheme,
               ),
               if (item.alasanPembatalan != null &&
                   item.alasanPembatalan!.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _buildInfoItem(
-                  Icons.info_outline,
-                  'Alasan Pembatalan',
-                  item.alasanPembatalan!,
-                  Theme.of(context).textTheme,
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.cancel_outlined,
+                        size: 20,
+                        color: Colors.red.shade700,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Alasan Pembatalan',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red.shade700,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              item.alasanPembatalan!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: Colors.red.shade800,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
               const SizedBox(height: 16),

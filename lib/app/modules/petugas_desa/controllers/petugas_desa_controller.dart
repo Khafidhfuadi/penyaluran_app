@@ -8,6 +8,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/controllers/counter_serv
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penitipan_bantuan_controller.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/stok_bantuan_controller.dart';
+import 'package:penyaluran_app/app/services/jadwal_update_service.dart';
 
 class PetugasDesaController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
@@ -182,10 +183,22 @@ class PetugasDesaController extends GetxController {
     }
     _counterService = Get.find<CounterService>();
 
+    // Pastikan JadwalUpdateService juga tersedia
+    JadwalUpdateService jadwalUpdateService;
+    if (Get.isRegistered<JadwalUpdateService>()) {
+      jadwalUpdateService = Get.find<JadwalUpdateService>();
+    } else {
+      jadwalUpdateService = Get.put(JadwalUpdateService());
+    }
+
+    // Perbarui counter pada saat aplikasi dimulai
+    jadwalUpdateService.refreshCounters();
+
+    // Muat data awal
     loadUserProfile();
-    loadNotifikasiData();
-    loadJadwalData();
     loadPenitipanData();
+    loadJadwalData();
+    loadNotifikasiData();
     loadPengaduanData();
   }
 

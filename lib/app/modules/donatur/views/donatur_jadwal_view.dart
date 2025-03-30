@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/donatur/controllers/donatur_dashboard_controller.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/widgets/section_header.dart';
 
 class DonaturJadwalView extends GetView<DonaturDashboardController> {
@@ -97,7 +98,7 @@ class DonaturJadwalView extends GetView<DonaturDashboardController> {
     for (var jadwal in controller.jadwalPenyaluran) {
       if (jadwal.tanggalPenyaluran != null) {
         String monthYear =
-            DateFormat('MMMM yyyy', 'id_ID').format(jadwal.tanggalPenyaluran!);
+            FormatHelper.formatDate(jadwal.tanggalPenyaluran!, format: 'MMMM');
 
         if (!groupedJadwal.containsKey(monthYear)) {
           groupedJadwal[monthYear] = [];
@@ -110,9 +111,14 @@ class DonaturJadwalView extends GetView<DonaturDashboardController> {
     // Urutkan kunci (bulan) secara kronologis
     List<String> sortedMonths = groupedJadwal.keys.toList()
       ..sort((a, b) {
-        DateTime dateA = DateFormat('MMMM yyyy', 'id_ID').parse(a);
-        DateTime dateB = DateFormat('MMMM yyyy', 'id_ID').parse(b);
-        return dateA.compareTo(dateB);
+        try {
+          DateTime dateA = DateFormat('MMMM yyyy', 'id_ID').parse(a);
+          DateTime dateB = DateFormat('MMMM yyyy', 'id_ID').parse(b);
+          return dateA.compareTo(dateB);
+        } catch (e) {
+          // Fallback sorting jika parse error
+          return a.compareTo(b);
+        }
       });
 
     return ListView(
@@ -158,28 +164,27 @@ class DonaturJadwalView extends GetView<DonaturDashboardController> {
 
   Widget _buildJadwalCard(dynamic jadwal) {
     final formattedDate = jadwal.tanggalPenyaluran != null
-        ? DateFormat('EEEE, dd MMMM yyyy', 'id_ID')
-            .format(jadwal.tanggalPenyaluran!)
+        ? FormatHelper.formatDateTime(jadwal.tanggalPenyaluran!)
         : 'Tanggal tidak tersedia';
 
-    String statusText = 'Akan Datang';
+    String statusText = 'Dijadwalkan';
     Color statusColor = Colors.blue;
 
     switch (jadwal.status) {
-      case 'SELESAI':
-        statusText = 'Selesai';
+      case 'TERLAKSANA':
+        statusText = 'Terlaksana';
         statusColor = Colors.green;
         break;
-      case 'DIBATALKAN':
-        statusText = 'Dibatalkan';
+      case 'BATALTERLAKSANA':
+        statusText = 'Batal Terlaksana';
         statusColor = Colors.red;
         break;
-      case 'DALAM_PROSES':
-        statusText = 'Dalam Proses';
-        statusColor = Colors.orange;
+      case 'AKTIF':
+        statusText = 'Aktif';
+        statusColor = Colors.blue;
         break;
       default:
-        statusText = 'Akan Datang';
+        statusText = 'Dijadwalkan';
         statusColor = Colors.blue;
     }
 
@@ -248,8 +253,9 @@ class DonaturJadwalView extends GetView<DonaturDashboardController> {
                             ),
                             child: Text(
                               jadwal.tanggalPenyaluran != null
-                                  ? DateFormat('MMM', 'id_ID')
-                                      .format(jadwal.tanggalPenyaluran!)
+                                  ? FormatHelper.formatDate(
+                                          jadwal.tanggalPenyaluran!,
+                                          format: 'MMM')
                                       .toUpperCase()
                                   : 'TBD',
                               style: const TextStyle(
@@ -265,8 +271,9 @@ class DonaturJadwalView extends GetView<DonaturDashboardController> {
                             child: Center(
                               child: Text(
                                 jadwal.tanggalPenyaluran != null
-                                    ? DateFormat('dd')
-                                        .format(jadwal.tanggalPenyaluran!)
+                                    ? FormatHelper.formatDate(
+                                        jadwal.tanggalPenyaluran!,
+                                        format: 'dd')
                                     : '-',
                                 style: TextStyle(
                                   fontSize: 24,
@@ -459,11 +466,11 @@ class DonaturJadwalView extends GetView<DonaturDashboardController> {
 
   IconData _getStatusIcon(String? status) {
     switch (status) {
-      case 'SELESAI':
+      case 'TERLAKSANA':
         return Icons.check_circle;
-      case 'DIBATALKAN':
+      case 'BATALTERLAKSANA':
         return Icons.cancel;
-      case 'DALAM_PROSES':
+      case 'AKTIF':
         return Icons.timelapse;
       default:
         return Icons.event_available;

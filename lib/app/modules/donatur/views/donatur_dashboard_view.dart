@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/donatur/controllers/donatur_dashboard_controller.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/widgets/section_header.dart';
 
 class DonaturDashboardView extends GetView<DonaturDashboardController> {
@@ -36,13 +36,57 @@ class DonaturDashboardView extends GetView<DonaturDashboardController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header DisalurKita dengan logo dan slogan
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/images/logo-disalurkita.png',
+                        width: 50,
+                        height: 50,
+                      ),
+                      const SizedBox(width: 15),
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'DisalurKita',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1565C0),
+                            ),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            'Salurkan dengan Pasti, Pantau dengan Bukti',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
                 _buildWelcomeSection(),
                 const SizedBox(height: 24),
                 _buildStatisticSection(),
-                const SizedBox(height: 24),
-                _buildUpcomingEvents(),
-                const SizedBox(height: 24),
-                _buildRecentPenitipan(),
               ],
             ),
           ),
@@ -101,14 +145,24 @@ class DonaturDashboardView extends GetView<DonaturDashboardController> {
                       child: CircleAvatar(
                         radius: 30,
                         backgroundColor: Colors.blue.shade100,
-                        backgroundImage: controller.profilePhotoUrl != null
+                        backgroundImage: controller.profilePhotoUrl != null &&
+                                controller.profilePhotoUrl!.isNotEmpty
                             ? NetworkImage(controller.profilePhotoUrl!)
                             : null,
-                        child: controller.profilePhotoUrl == null
-                            ? Icon(
-                                Icons.person,
-                                color: Colors.blue.shade700,
-                                size: 30,
+                        child: (controller.profilePhotoUrl == null ||
+                                controller.profilePhotoUrl!.isEmpty)
+                            ? Text(
+                                controller.nama.isNotEmpty
+                                    ? controller.nama
+                                        .toString()
+                                        .substring(0, 1)
+                                        .toUpperCase()
+                                    : '?',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade700,
+                                  fontSize: 24,
+                                ),
                               )
                             : null,
                       ),
@@ -263,7 +317,7 @@ class DonaturDashboardView extends GetView<DonaturDashboardController> {
               child: _buildStatCard(
                 title: 'Diterima',
                 value:
-                    '${controller.penitipanBantuan.where((p) => p.status == 'DITERIMA').length}',
+                    '${controller.penitipanBantuan.where((p) => p.status == 'TERVERIFIKASI').length}',
                 icon: Icons.check_circle_outline,
                 color: Colors.green,
               ),
@@ -280,125 +334,6 @@ class DonaturDashboardView extends GetView<DonaturDashboardController> {
             ),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget _buildUpcomingEvents() {
-    final upcomingEvents = controller.jadwalPenyaluran
-        .where((event) =>
-            event.tanggalPenyaluran != null &&
-            event.tanggalPenyaluran!.isAfter(DateTime.now()))
-        .take(3)
-        .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionHeader(
-                  title: 'Jadwal Penyaluran',
-                ),
-                Text(
-                  'Jadwal penyaluran bantuan terdekat',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-            TextButton(
-              onPressed: () {
-                // Navigasi ke tab jadwal penyaluran
-                controller.activeTabIndex.value = 2;
-              },
-              child: Text(
-                'Lihat Semua',
-                style: TextStyle(color: Colors.blue.shade700),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        if (upcomingEvents.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Center(
-              child: Text(
-                'Tidak ada jadwal penyaluran dalam waktu dekat',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
-          )
-        else
-          ...upcomingEvents.map((event) => _buildEventCard(event)),
-      ],
-    );
-  }
-
-  Widget _buildRecentPenitipan() {
-    final recentPenitipan = controller.penitipanBantuan.take(3).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionHeader(
-                  title: 'Bantuan Terakhir',
-                ),
-                Text(
-                  'Riwayat penitipan bantuan terakhir',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-            TextButton(
-              onPressed: () {
-                // Navigasi ke tab riwayat penitipan
-                controller.activeTabIndex.value = 3;
-              },
-              child: Text(
-                'Lihat Semua',
-                style: TextStyle(color: Colors.blue.shade700),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        if (recentPenitipan.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Center(
-              child: Text(
-                'Belum ada riwayat penitipan bantuan',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
-          )
-        else
-          ...recentPenitipan.map((penitipan) => _buildPenitipanCard(penitipan)),
       ],
     );
   }
@@ -545,7 +480,7 @@ class DonaturDashboardView extends GetView<DonaturDashboardController> {
 
   Widget _buildEventCard(dynamic event) {
     final formattedDate = event.tanggalPenyaluran != null
-        ? DateFormat('dd MMMM yyyy', 'id_ID').format(event.tanggalPenyaluran!)
+        ? FormatHelper.formatDateTime(event.tanggalPenyaluran!)
         : 'Tanggal tidak tersedia';
 
     return Container(
@@ -588,7 +523,8 @@ class DonaturDashboardView extends GetView<DonaturDashboardController> {
                     ),
                     Text(
                       event.tanggalPenyaluran != null
-                          ? DateFormat('dd').format(event.tanggalPenyaluran!)
+                          ? FormatHelper.formatDateTime(
+                              event.tanggalPenyaluran!)
                           : '--',
                       style: TextStyle(
                         fontSize: 14,
@@ -640,8 +576,7 @@ class DonaturDashboardView extends GetView<DonaturDashboardController> {
 
   Widget _buildPenitipanCard(dynamic penitipan) {
     final formattedDate = penitipan.tanggalPenitipan != null
-        ? DateFormat('dd MMMM yyyy', 'id_ID')
-            .format(penitipan.tanggalPenitipan!)
+        ? FormatHelper.formatDateTime(penitipan.tanggalPenitipan!)
         : 'Tanggal tidak tersedia';
 
     Color statusColor;

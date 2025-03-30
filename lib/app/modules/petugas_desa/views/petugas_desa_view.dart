@@ -39,7 +39,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
             case 4:
               return const Text('Stok Bantuan');
             default:
-              return const Text('Petugas Desa');
+              return const Text('Dashboard');
           }
         }),
         leading: IconButton(
@@ -223,14 +223,23 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                     child: CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.white70,
-                      backgroundImage: controller.profilePhotoUrl != null
+                      backgroundImage: controller.profilePhotoUrl != null &&
+                              controller.profilePhotoUrl!.isNotEmpty
                           ? NetworkImage(controller.profilePhotoUrl!)
                           : null,
-                      child: controller.profilePhotoUrl == null
-                          ? Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 40,
+                      child: (controller.profilePhotoUrl == null ||
+                              controller.profilePhotoUrl!.isEmpty)
+                          ? Text(
+                              controller.nama.isNotEmpty
+                                  ? controller.nama
+                                      .substring(0, 1)
+                                      .toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                                fontSize: 30,
+                              ),
                             )
                           : null,
                     ),
@@ -396,6 +405,16 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
                     Get.toNamed('/profile');
                   },
                 ),
+                const Divider(),
+                _buildMenuItem(
+                  icon: Icons.info_outline,
+                  activeIcon: Icons.info,
+                  title: 'Tentang Kami',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.toNamed('/about');
+                  },
+                ),
                 _buildMenuItem(
                   icon: Icons.logout,
                   title: 'Keluar',
@@ -411,7 +430,7 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              '© ${DateTime.now().year} Aplikasi Penyaluran Bantuan',
+              '© ${DateTime.now().year} DisalurKita',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey,

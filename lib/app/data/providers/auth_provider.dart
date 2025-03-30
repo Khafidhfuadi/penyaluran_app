@@ -457,4 +457,12 @@ class AuthProvider {
   Future<void> markNotificationAsRead(int notificationId) async {
     await _supabaseService.markNotificationAsRead(notificationId);
   }
+
+  // Metode untuk reset password
+  Future<void> resetPasswordForEmail(String email, {String? redirectTo}) async {
+    await _supabaseService.client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: redirectTo,
+    );
+  }
 }

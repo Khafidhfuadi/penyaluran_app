@@ -289,7 +289,7 @@ class PenerimaController extends GetxController {
     );
 
     if (picked != null) {
-      tanggalPenyaluran.value = DateTimeHelper.formatDate(picked);
+      tanggalPenyaluran.value = FormatHelper.formatDateTime(picked);
     }
   }
 

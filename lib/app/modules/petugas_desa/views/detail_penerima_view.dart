@@ -107,14 +107,24 @@ class DetailPenerimaView extends GetView<PenerimaController> {
               child: CircleAvatar(
                 radius: 60,
                 backgroundColor: Colors.white,
-                backgroundImage: penerima['foto_profil'] != null
+                backgroundImage: penerima['foto_profil'] != null &&
+                        penerima['foto_profil'].toString().isNotEmpty
                     ? NetworkImage(penerima['foto_profil'])
                     : null,
-                child: penerima['foto_profil'] == null
-                    ? Icon(
-                        Icons.person,
-                        size: 60,
-                        color: AppTheme.primaryColor.withOpacity(0.7),
+                child: (penerima['foto_profil'] == null ||
+                        penerima['foto_profil'].toString().isEmpty)
+                    ? Text(
+                        penerima['nama_lengkap'] != null
+                            ? penerima['nama_lengkap']
+                                .toString()
+                                .substring(0, 1)
+                                .toUpperCase()
+                            : '?',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor.withOpacity(0.7),
+                          fontSize: 36,
+                        ),
                       )
                     : null,
               ),
@@ -507,7 +517,7 @@ class DetailPenerimaView extends GetView<PenerimaController> {
                       child: _buildInfoItem(
                         Icons.calendar_today,
                         'Tanggal Penerimaan',
-                        DateTimeHelper.formatDateTime(tanggalPenerimaan),
+                        FormatHelper.formatDateTime(tanggalPenerimaan),
                       ),
                     ),
                     Expanded(

@@ -4,6 +4,7 @@ import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penitipan_bantuan_controller.dart';
 import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
+import 'package:penyaluran_app/app/widgets/widgets.dart';
 
 class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
   const RiwayatPenitipanView({super.key});
@@ -47,7 +48,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
         final kategoriNama = item.kategoriBantuan?.nama?.toLowerCase() ?? '';
         final deskripsi = item.deskripsi?.toLowerCase() ?? '';
         final tanggal =
-            DateTimeHelper.formatDateTime(item.tanggalPenitipan).toLowerCase();
+            FormatHelper.formatDateTime(item.tanggalPenitipan).toLowerCase();
 
         return donaturNama.contains(searchText) ||
             kategoriNama.contains(searchText) ||
@@ -99,7 +100,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                                   ),
                         ),
                         Text(
-                          '${DateTimeHelper.formatNumber(filteredList.length)} item',
+                          '${FormatHelper.formatNumber(filteredList.length)} item',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey,
@@ -113,7 +114,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Total: ${DateTimeHelper.formatNumber(filteredList.length)} item',
+                          'Total: ${FormatHelper.formatNumber(filteredList.length)} item',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Colors.grey,
@@ -126,7 +127,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                                 size: 16, color: Colors.grey[600]),
                             const SizedBox(width: 4),
                             Text(
-                              'Update: ${DateTimeHelper.formatDateTimeWithHour(controller.lastUpdateTime.value)}',
+                              'Update: ${FormatHelper.formatDateTimeWithHour(controller.lastUpdateTime.value)}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
@@ -262,7 +263,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                     ],
                   ),
                   Text(
-                    DateTimeHelper.formatDate(item.createdAt),
+                    FormatHelper.formatDateTime(item.createdAt),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey.shade700,
                           fontStyle: FontStyle.italic,
@@ -282,17 +283,26 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                   Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                         radius: 20,
-                        child: Text(
-                          donaturNama.isNotEmpty
-                              ? donaturNama.substring(0, 1).toUpperCase()
-                              : '?',
-                          style: TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        backgroundColor: statusColor.withOpacity(0.2),
+                        backgroundImage: item.donatur != null &&
+                                item.donatur!.fotoProfil != null &&
+                                item.donatur!.fotoProfil!.isNotEmpty
+                            ? NetworkImage(item.donatur!.fotoProfil!)
+                            : null,
+                        child: (item.donatur == null ||
+                                item.donatur!.fotoProfil == null ||
+                                item.donatur!.fotoProfil!.isEmpty)
+                            ? Text(
+                                donaturNama.isNotEmpty
+                                    ? donaturNama.substring(0, 1).toUpperCase()
+                                    : '?',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: statusColor,
+                                ),
+                              )
+                            : null,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -422,8 +432,8 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                               const SizedBox(height: 4),
                               Text(
                                 isUang
-                                    ? 'Rp ${DateTimeHelper.formatNumber(item.jumlah)}'
-                                    : '${DateTimeHelper.formatNumber(item.jumlah)} $kategoriSatuan',
+                                    ? 'Rp ${FormatHelper.formatNumber(item.jumlah)}'
+                                    : '${FormatHelper.formatNumber(item.jumlah)} $kategoriSatuan',
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleSmall
@@ -579,20 +589,20 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
               _buildDetailItem(
                   'Jumlah',
                   isUang
-                      ? 'Rp ${DateTimeHelper.formatNumber(item.jumlah)}'
-                      : '${DateTimeHelper.formatNumber(item.jumlah)} $kategoriSatuan'),
+                      ? 'Rp ${FormatHelper.formatNumber(item.jumlah)}'
+                      : '${FormatHelper.formatNumber(item.jumlah)} $kategoriSatuan'),
               if (isUang) _buildDetailItem('Jenis Bantuan', 'Uang (Rupiah)'),
               _buildDetailItem(
                   'Deskripsi', item.deskripsi ?? 'Tidak ada deskripsi'),
               _buildDetailItem(
                 'Tanggal Penitipan',
-                DateTimeHelper.formatDateTime(item.tanggalPenitipan,
+                FormatHelper.formatDateTime(item.tanggalPenitipan,
                     defaultValue: 'Tidak ada tanggal'),
               ),
               if (item.tanggalVerifikasi != null)
                 _buildDetailItem(
                   'Tanggal Verifikasi',
-                  DateTimeHelper.formatDateTime(item.tanggalVerifikasi),
+                  FormatHelper.formatDateTime(item.tanggalVerifikasi),
                 ),
               if (item.status == 'TERVERIFIKASI' && item.petugasDesaId != null)
                 _buildDetailItem(
@@ -600,7 +610,7 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                   controller.getPetugasDesaNama(item.petugasDesaId),
                 ),
               _buildDetailItem('Tanggal Dibuat',
-                  DateTimeHelper.formatDateTime(item.createdAt)),
+                  FormatHelper.formatDateTime(item.createdAt)),
               if (item.alasanPenolakan != null &&
                   item.alasanPenolakan!.isNotEmpty)
                 _buildDetailItem('Alasan Penolakan', item.alasanPenolakan!),
@@ -626,8 +636,10 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                         itemBuilder: (context, index) {
                           return GestureDetector(
                             onTap: () {
-                              _showFullScreenImage(
-                                  context, item.fotoBantuan![index]);
+                              ShowImageDialog.show(
+                                context,
+                                item.fotoBantuan![index],
+                              );
                             },
                             child: Padding(
                               padding: const EdgeInsets.only(right: 8.0),
@@ -677,8 +689,10 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                         itemBuilder: (context, index) {
                           return GestureDetector(
                             onTap: () {
-                              _showFullScreenImage(
-                                  context, item.fotoBantuan![index]);
+                              ShowImageDialog.show(
+                                context,
+                                item.fotoBantuan![index],
+                              );
                             },
                             child: Padding(
                               padding: const EdgeInsets.only(right: 8.0),
@@ -721,8 +735,10 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () {
-                        _showFullScreenImage(
-                            context, item.fotoBuktiSerahTerima!);
+                        ShowImageDialog.show(
+                          context,
+                          item.fotoBuktiSerahTerima!,
+                        );
                       },
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
@@ -753,58 +769,6 @@ class RiwayatPenitipanView extends GetView<PenitipanBantuanController> {
             child: const Text('Tutup'),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showFullScreenImage(BuildContext context, String imageUrl) {
-    Get.dialog(
-      Dialog(
-        insetPadding: EdgeInsets.zero,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            InteractiveViewer(
-              panEnabled: true,
-              minScale: 0.5,
-              maxScale: 4,
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey.shade300,
-                    child: const Center(
-                      child: Icon(
-                        Icons.error,
-                        size: 50,
-                        color: Colors.red,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Positioned(
-              top: 20,
-              right: 20,
-              child: GestureDetector(
-                onTap: () => Get.back(),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

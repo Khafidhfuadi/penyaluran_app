@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:penyaluran_app/app/modules/auth/views/forgot_password_view.dart';
 import 'package:penyaluran_app/app/modules/auth/views/login_view.dart';
 import 'package:penyaluran_app/app/modules/auth/views/register_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/auth/bindings/auth_binding.dart';
@@ -11,6 +12,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_penitipan_
 import 'package:penyaluran_app/app/modules/petugas_desa/views/daftar_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_donatur_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_penyaluran_view.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/views/tambah_lokasi_penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_penyaluran_view.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/detail_penyaluran_page.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/penyaluran_binding.dart';
@@ -18,7 +20,8 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/riwayat_pengaduan_
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/riwayat_pengaduan_binding.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/qr_scanner_page.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/views/konfirmasi_penerima_page.dart';
-
+import 'package:penyaluran_app/app/modules/about/views/about_view.dart';
+import 'package:penyaluran_app/app/modules/about/bindings/about_binding.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/penerima_binding.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/bindings/donatur_binding.dart';
 import 'package:penyaluran_app/app/modules/profile/bindings/profile_binding.dart';
@@ -65,6 +68,11 @@ class AppPages {
       binding: AuthBinding(),
     ),
     GetPage(
+      name: _Paths.forgotPassword,
+      page: () => const ForgotPasswordView(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
       name: Routes.wargaDashboard,
       page: () => WargaView(),
       binding: WargaBinding(),
@@ -91,6 +99,11 @@ class AppPages {
       name: _Paths.petugasDesaDashboard,
       page: () => const PetugasDesaView(),
       binding: PetugasDesaBinding(),
+    ),
+    GetPage(
+      name: _Paths.about,
+      page: () => const AboutView(),
+      binding: AboutBinding(),
     ),
     GetPage(
       name: _Paths.permintaanPenjadwalan,
@@ -135,6 +148,11 @@ class AppPages {
     GetPage(
       name: _Paths.tambahPenyaluran,
       page: () => const TambahPenyaluranView(),
+      binding: PetugasDesaBinding(),
+    ),
+    GetPage(
+      name: _Paths.tambahLokasiPenyaluran,
+      page: () => const TambahLokasiPenyaluranView(),
       binding: PetugasDesaBinding(),
     ),
     GetPage(

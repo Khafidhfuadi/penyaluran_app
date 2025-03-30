@@ -11,14 +11,21 @@ import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:penyaluran_app/app/services/jadwal_update_service.dart';
+import 'package:penyaluran_app/app/services/notification_service.dart';
+import 'package:penyaluran_app/app/modules/petugas_desa/controllers/counter_service.dart';
 
 class JadwalPenyaluranController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   final SupabaseService _supabaseService = SupabaseService.to;
+  late final JadwalUpdateService _jadwalUpdateService;
+  late final StreamSubscription _jadwalUpdateSubscription;
 
   SupabaseService get supabaseService => _supabaseService;
 
   final RxBool isLoading = false.obs;
+  final RxBool isLoadingStatusUpdate = false.obs;
+  final RxBool isLokasiLoading = false.obs;
 
   // Indeks kategori yang dipilih untuk filter
   final RxInt selectedCategoryIndex = 0.obs;
@@ -52,6 +59,21 @@ class JadwalPenyaluranController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    // Inisialisasi JadwalUpdateService
+    if (Get.isRegistered<JadwalUpdateService>()) {
+      _jadwalUpdateService = Get.find<JadwalUpdateService>();
+    } else {
+      _jadwalUpdateService = Get.put(JadwalUpdateService());
+    }
+
+    // Daftarkan controller ini untuk menerima pembaruan
+    _jadwalUpdateService.registerForUpdates('JadwalPenyaluranController');
+
+    // Berlangganan ke pembaruan jadwal
+    _jadwalUpdateSubscription =
+        _jadwalUpdateService.jadwalUpdateStream.listen(_handleJadwalUpdate);
+
     loadJadwalData();
     loadPermintaanPenjadwalanData();
     loadLokasiPenyaluranData();
@@ -67,100 +89,444 @@ class JadwalPenyaluranController extends GetxController {
     searchController.dispose();
     // Hentikan timer jika ada
     _stopJadwalCheckTimer();
+    // Berhenti berlangganan pembaruan jadwal
+    _jadwalUpdateSubscription.cancel();
+    // Batalkan pendaftaran controller
+    _jadwalUpdateService.unregisterFromUpdates('JadwalPenyaluranController');
     super.onClose();
   }
 
   // Timer untuk memeriksa jadwal secara berkala
   Timer? _jadwalCheckTimer;
+  Timer?
+      _intensiveCheckTimer; // Timer untuk pengecekan intensif mendekati waktu penyaluran
+  final RxBool _intensiveCheckActive = false.obs; // Status pengecekan intensif
 
   void _startJadwalCheckTimer() {
-    // Periksa jadwal setiap 1 menit
-    _jadwalCheckTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      checkAndUpdateJadwalStatus();
+    // Dengan fitur realtime yang sudah aktif, kita bisa mengurangi frekuensi polling
+    // Cek setiap 30 detik sebagai fallback untuk realtime
+    _jadwalCheckTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (!isLoadingStatusUpdate.value) {
+        checkAndUpdateJadwalStatus();
+      }
     });
 
     // Periksa jadwal segera saat aplikasi dimulai
     checkAndUpdateJadwalStatus();
+
+    // Log info untuk debugging
+    print('Jadwal check timer started with 30 seconds interval');
+
+    // Mulai juga pengecekan jadwal yang akan datang
+    _startUpcomingJadwalCheck();
   }
 
   void _stopJadwalCheckTimer() {
     _jadwalCheckTimer?.cancel();
     _jadwalCheckTimer = null;
+    _intensiveCheckTimer?.cancel();
+    _intensiveCheckTimer = null;
+  }
+
+  // Metode baru untuk memeriksa jadwal mendatang dan memulai pemeriksaan intensif jika perlu
+  void _startUpcomingJadwalCheck() {
+    Timer.periodic(const Duration(minutes: 1), (timer) {
+      // Jika sudah ada timer intensif yang berjalan, tidak perlu melakukan pengecekan lagi
+      if (_intensiveCheckActive.value) return;
+
+      final now = DateTime.now();
+      bool foundUpcomingJadwal = false;
+
+      // Periksa apakah ada jadwal yang akan aktif dalam 10 menit ke depan
+      for (var jadwal in jadwalMendatang) {
+        if (jadwal.tanggalPenyaluran != null &&
+            jadwal.status == 'DIJADWALKAN') {
+          final jadwalTime = jadwal.tanggalPenyaluran!;
+          final diff = jadwalTime.difference(now).inMinutes;
+
+          // Jika ada jadwal dalam 10 menit ke depan, mulai pemeriksaan intensif
+          if (diff >= 0 && diff <= 10) {
+            print(
+                'Found upcoming jadwal in $diff minutes: ${jadwal.id} - ${jadwal.nama}');
+            foundUpcomingJadwal = true;
+            break;
+          }
+        }
+      }
+
+      // Jika ditemukan jadwal yang akan datang, mulai pemeriksaan intensif
+      if (foundUpcomingJadwal && !_intensiveCheckActive.value) {
+        _startIntensiveCheck();
+      }
+    });
+  }
+
+  // Metode untuk memulai pemeriksaan intensif untuk jadwal yang mendekati waktu
+  void _startIntensiveCheck() {
+    if (_intensiveCheckActive.value) return;
+
+    _intensiveCheckActive.value = true;
+    print('Starting intensive jadwal check every 5 seconds');
+
+    // Periksa setiap 5 detik
+    _intensiveCheckTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!isLoadingStatusUpdate.value) {
+        checkAndUpdateJadwalStatus();
+      }
+
+      // Periksa apakah masih perlu melakukan pemeriksaan intensif
+      final now = DateTime.now();
+      bool needIntensiveCheck = false;
+
+      for (var jadwal in jadwalMendatang) {
+        if (jadwal.tanggalPenyaluran != null &&
+            jadwal.status == 'DIJADWALKAN') {
+          final jadwalTime = jadwal.tanggalPenyaluran!;
+          final diff = jadwalTime.difference(now).inMinutes;
+
+          // Jika masih ada jadwal dalam 10 menit ke depan, lanjutkan pemeriksaan
+          if (diff >= -5 && diff <= 10) {
+            needIntensiveCheck = true;
+            break;
+          }
+        }
+      }
+
+      // Jika tidak ada lagi jadwal yang mendekati waktu, hentikan pemeriksaan intensif
+      if (!needIntensiveCheck) {
+        _stopIntensiveCheck();
+      }
+    });
+  }
+
+  // Metode untuk menghentikan pemeriksaan intensif
+  void _stopIntensiveCheck() {
+    _intensiveCheckTimer?.cancel();
+    _intensiveCheckTimer = null;
+    _intensiveCheckActive.value = false;
+    print('Stopping intensive jadwal check');
+  }
+
+  // Handler untuk menerima pembaruan jadwal dari service
+  void _handleJadwalUpdate(Map<String, dynamic> updateData) {
+    if (updateData['type'] == 'status_update') {
+      // Update lokal jika jadwal yang diperbarui ada di salah satu list
+      final jadwalId = updateData['jadwal_id'];
+      final newStatus = updateData['new_status'];
+
+      // Periksa dan update jadwal di berbagai daftar
+      _updateJadwalStatusLocally(jadwalId, newStatus);
+    } else if (updateData['type'] == 'reload_required') {
+      // Muat ulang data jika diminta
+      loadJadwalData();
+      loadPermintaanPenjadwalanData();
+    } else if (updateData['type'] == 'check_required') {
+      // Segera periksa status jadwal
+      if (!isLoadingStatusUpdate.value) {
+        print(
+            'Received check_required signal, checking jadwal status immediately');
+        checkAndUpdateJadwalStatus();
+      } else {
+        print('Already checking jadwal status, ignoring check_required signal');
+      }
+    }
+  }
+
+  // Perbarui status jadwal secara lokal tanpa perlu memanggil API lagi
+  void _updateJadwalStatusLocally(String jadwalId, String newStatus) {
+    bool updated = false;
+    print(
+        'Updating jadwal status locally - ID: $jadwalId, New Status: $newStatus');
+
+    // Periksa jadwal aktif
+    final jadwalAktifIndex =
+        jadwalAktif.indexWhere((jadwal) => jadwal.id == jadwalId);
+    if (jadwalAktifIndex >= 0) {
+      print('Found in jadwalAktif at index $jadwalAktifIndex');
+      jadwalAktif[jadwalAktifIndex] =
+          jadwalAktif[jadwalAktifIndex].copyWith(status: newStatus);
+      updated = true;
+    }
+
+    // Periksa jadwal mendatang
+    final jadwalMendatangIndex =
+        jadwalMendatang.indexWhere((jadwal) => jadwal.id == jadwalId);
+    if (jadwalMendatangIndex >= 0) {
+      print('Found in jadwalMendatang at index $jadwalMendatangIndex');
+      jadwalMendatang[jadwalMendatangIndex] =
+          jadwalMendatang[jadwalMendatangIndex].copyWith(status: newStatus);
+      updated = true;
+    }
+
+    // Periksa jadwal terlaksana
+    final jadwalTerlaksanaIndex =
+        jadwalTerlaksana.indexWhere((jadwal) => jadwal.id == jadwalId);
+    if (jadwalTerlaksanaIndex >= 0) {
+      print('Found in jadwalTerlaksana at index $jadwalTerlaksanaIndex');
+      jadwalTerlaksana[jadwalTerlaksanaIndex] =
+          jadwalTerlaksana[jadwalTerlaksanaIndex].copyWith(status: newStatus);
+      updated = true;
+    }
+
+    // Jika perlu, reorganisasi daftar berdasarkan status baru
+    if (updated) {
+      print('Status updated locally, reorganizing lists');
+      _reorganizeJadwalLists();
+
+      // Perbarui counter penyaluran setelah reorganisasi daftar
+      _updatePenyaluranCounters();
+    } else {
+      print(
+          'Jadwal with ID $jadwalId not found in any list, refreshing data from server');
+      // Jika jadwal tidak ditemukan di daftar lokal, muat ulang data
+      loadJadwalData();
+    }
+  }
+
+  // Reorganisasi daftar jadwal berdasarkan status mereka
+  void _reorganizeJadwalLists() {
+    // Filter jadwal yang seharusnya pindah dari satu list ke list lain
+
+    // Jadwal yang seharusnya pindah dari aktif ke terlaksana
+    final completedJadwal = jadwalAktif
+        .where((j) => j.status == 'TERLAKSANA' || j.status == 'BATALTERLAKSANA')
+        .toList();
+    if (completedJadwal.isNotEmpty) {
+      jadwalAktif.removeWhere(
+          (j) => j.status == 'TERLAKSANA' || j.status == 'BATALTERLAKSANA');
+      jadwalTerlaksana.addAll(completedJadwal);
+    }
+
+    // Jadwal yang seharusnya pindah dari mendatang ke aktif
+    final activeJadwal =
+        jadwalMendatang.where((j) => j.status == 'AKTIF').toList();
+    if (activeJadwal.isNotEmpty) {
+      jadwalMendatang.removeWhere((j) => j.status == 'AKTIF');
+      jadwalAktif.addAll(activeJadwal);
+    }
+
+    // Jadwal yang seharusnya pindah dari mendatang ke terlaksana
+    final expiredJadwal = jadwalMendatang
+        .where((j) => j.status == 'TERLAKSANA' || j.status == 'BATALTERLAKSANA')
+        .toList();
+    if (expiredJadwal.isNotEmpty) {
+      jadwalMendatang.removeWhere(
+          (j) => j.status == 'TERLAKSANA' || j.status == 'BATALTERLAKSANA');
+      jadwalTerlaksana.addAll(expiredJadwal);
+    }
+
+    // Memicu pembaruan UI
+    jadwalAktif.refresh();
+    jadwalMendatang.refresh();
+    jadwalTerlaksana.refresh();
+  }
+
+  // Metode baru untuk memperbarui counter penyaluran
+  void _updatePenyaluranCounters() {
+    try {
+      // Dapatkan jumlah jadwal untuk setiap status
+      int dijadwalkan =
+          jadwalMendatang.where((j) => j.status == 'DIJADWALKAN').length;
+      int aktif = jadwalAktif.where((j) => j.status == 'AKTIF').length;
+      int batal =
+          jadwalTerlaksana.where((j) => j.status == 'BATALTERLAKSANA').length;
+      int terlaksana =
+          jadwalTerlaksana.where((j) => j.status == 'TERLAKSANA').length;
+
+      // Hitung total jadwal aktif untuk tab hari ini
+      int jadwalHariIni = jadwalAktif.length;
+
+      // Perbarui counter jadwal
+      if (Get.isRegistered<CounterService>()) {
+        final counterService = Get.find<CounterService>();
+        counterService.updateJadwalCounter(jadwalHariIni);
+      }
+
+      print(
+          'Jadwal counters updated - Aktif: $aktif, Dijadwalkan: $dijadwalkan, Terlaksana: $terlaksana, Batal: $batal');
+    } catch (e) {
+      print('Error updating jadwal counters: $e');
+    }
   }
 
   // Memeriksa dan memperbarui status jadwal
   Future<void> checkAndUpdateJadwalStatus() async {
+    if (isLoadingStatusUpdate.value) return;
+
+    isLoadingStatusUpdate.value = true;
+    print('Starting jadwal status check at ${DateTime.now()}');
+
     try {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
 
-      List<PenyaluranBantuanModel> jadwalToUpdate = [];
-      List<PenyaluranBantuanModel> jadwalTerlewat = [];
+      // Kelompokkan jadwal yang perlu diperbarui untuk mengurangi jumlah operasi database
+      final Map<String, String> jadwalUpdates = {};
+      final List<PenyaluranBantuanModel> jadwalToUpdate = [];
+      final List<PenyaluranBantuanModel> jadwalTerlewat = [];
 
-      for (var jadwal in jadwalAktif) {
-        if (jadwal.tanggalPenyaluran != null) {
-          final jadwalDateTime =
-              DateTimeHelper.toLocalDateTime(jadwal.tanggalPenyaluran!);
-          final jadwalDate = DateTime(
-            jadwalDateTime.year,
-            jadwalDateTime.month,
-            jadwalDateTime.day,
-          );
+      print('Checking ${jadwalMendatang.length} upcoming schedules');
 
-          if (isSameDay(jadwalDate, today)) {
-            if (now.isAfter(jadwalDateTime) ||
-                now.isAtSameMomentAs(jadwalDateTime)) {
-              if (jadwal.status == 'DIJADWALKAN') {
-                if (now
-                    .isBefore(jadwalDateTime.add(const Duration(hours: 2)))) {
-                  await _supabaseService.updateJadwalStatus(
-                      jadwal.id!, 'AKTIF');
-                  jadwalToUpdate.add(jadwal);
-                } else {
-                  await _supabaseService.updateJadwalStatus(
-                      jadwal.id!, 'BATALTERLAKSANA');
-                  jadwalTerlewat.add(jadwal);
-                }
-              } else if (jadwal.status == 'AKTIF') {
-                if (now.isAfter(jadwalDateTime.add(const Duration(hours: 2)))) {
-                  await _supabaseService.updateJadwalStatus(
-                      jadwal.id!, 'BATALTERLAKSANA');
-                  jadwalTerlewat.add(jadwal);
-                }
+      // Proses semua jadwal yang perlu diperbarui
+      for (var jadwal in jadwalMendatang) {
+        if (jadwal.tanggalPenyaluran != null && jadwal.id != null) {
+          final jadwalDate = jadwal.tanggalPenyaluran!;
+
+          // Log untuk debugging waktu pemeriksaan
+          print(
+              'Checking jadwal: ${jadwal.id} - ${jadwal.nama} scheduled for ${jadwal.tanggalPenyaluran}');
+          print('Current time: $now, Jadwal time: $jadwalDate');
+
+          // Periksa apakah jadwal sudah melewati waktunya
+          // Kita gunakan isAtSameMomentAs atau isAfter untuk menangkap dengan tepat
+          if (now.isAfter(jadwalDate) || now.isAtSameMomentAs(jadwalDate)) {
+            print('Jadwal time has passed/reached for ${jadwal.id}');
+
+            // Batasan 2 jam untuk status aktif
+            final batasAktif = jadwalDate.add(const Duration(hours: 2));
+
+            if (jadwal.status == 'DIJADWALKAN' && now.isBefore(batasAktif)) {
+              print(
+                  'Updating to AKTIF: ${jadwal.id} - Time difference: ${now.difference(jadwalDate).inSeconds} seconds');
+              jadwalUpdates[jadwal.id!] = 'AKTIF';
+              jadwalToUpdate.add(jadwal);
+            } else if ((jadwal.status == 'DIJADWALKAN' ||
+                    jadwal.status == 'AKTIF') &&
+                now.isAfter(batasAktif)) {
+              print('Updating to BATALTERLAKSANA (time expired): ${jadwal.id}');
+              jadwalUpdates[jadwal.id!] = 'BATALTERLAKSANA';
+              jadwalTerlewat.add(jadwal);
+            }
+          } else {
+            // Periksa apakah jadwal hampir memasuki waktunya (dalam 5 menit ke depan)
+            final diff = jadwalDate.difference(now).inMinutes;
+            if (diff >= 0 && diff <= 5 && jadwal.status == 'DIJADWALKAN') {
+              print('Jadwal will be active in $diff minutes: ${jadwal.id}');
+
+              // Tambahkan jadwal ke daftar pengawasan intensif
+              _jadwalUpdateService.addJadwalToWatch(jadwal.id!, jadwalDate);
+
+              // Jika tinggal 1 menit atau kurang, cek setiap 15 detik
+              if (diff <= 1) {
+                Future.delayed(const Duration(seconds: 15), () {
+                  if (!isLoadingStatusUpdate.value) {
+                    checkAndUpdateJadwalStatus();
+                  }
+                });
               }
             }
           }
         }
       }
 
-      if (jadwalToUpdate.isNotEmpty || jadwalTerlewat.isNotEmpty) {
-        await loadJadwalData();
+      // Update database hanya jika ada perubahan
+      if (jadwalUpdates.isNotEmpty) {
+        print('Batch updating ${jadwalUpdates.length} schedules');
 
-        if (jadwalToUpdate.isNotEmpty) {
-          Get.snackbar(
-            'Jadwal Diperbarui',
-            '${jadwalToUpdate.length} jadwal dipindahkan ke section Hari Ini',
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 3),
-          );
-        }
+        try {
+          // Gunakan batch update untuk meningkatkan efisiensi
+          await _supabaseService.batchUpdateJadwalStatus(jadwalUpdates);
 
-        if (jadwalTerlewat.isNotEmpty) {
-          Get.snackbar(
-            'Jadwal Terlewat',
-            '${jadwalTerlewat.length} jadwal diubah menjadi BATALTERLAKSANA',
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 3),
-          );
+          // Perbarui data lokal
+          await loadJadwalData();
+
+          // Beritahu seluruh aplikasi tentang pembaruan
+          await _jadwalUpdateService.notifyJadwalUpdate();
+
+          // Kirim notifikasi untuk perubahan status jadwal
+          bool notificationsSuccessful = true;
+          final notificationService = Get.find<NotificationService>();
+
+          try {
+            // Kirim notifikasi untuk jadwal yang diperbarui menjadi Aktif
+            for (var jadwal in jadwalToUpdate) {
+              if (jadwal.id != null && jadwal.nama != null) {
+                await notificationService.sendJadwalStatusNotification(
+                  jadwalId: jadwal.id!,
+                  newStatus: 'AKTIF',
+                  jadwalNama: jadwal.nama!,
+                );
+              }
+            }
+          } catch (notificationError) {
+            print(
+                'Warning: Error sending AKTIF notifications: $notificationError');
+            notificationsSuccessful = false;
+          }
+
+          try {
+            // Kirim notifikasi untuk jadwal yang terlewat
+            for (var jadwal in jadwalTerlewat) {
+              if (jadwal.id != null && jadwal.nama != null) {
+                await notificationService.sendJadwalStatusNotification(
+                  jadwalId: jadwal.id!,
+                  newStatus: 'BATALTERLAKSANA',
+                  jadwalNama: jadwal.nama!,
+                );
+              }
+            }
+          } catch (notificationError) {
+            print(
+                'Warning: Error sending BATALTERLAKSANA notifications: $notificationError');
+            notificationsSuccessful = false;
+          }
+
+          // Tampilkan notifikasi hanya jika ada perubahan
+          if (jadwalToUpdate.isNotEmpty) {
+            Get.snackbar(
+              'Jadwal Diperbarui',
+              '${jadwalToUpdate.length} jadwal dipindahkan ke section Hari Ini',
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 3),
+            );
+          }
+
+          if (jadwalTerlewat.isNotEmpty) {
+            Get.snackbar(
+              'Jadwal Terlewat',
+              '${jadwalTerlewat.length} jadwal diubah menjadi BATALTERLAKSANA',
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: Colors.orange,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 3),
+            );
+          }
+
+          // Log status keseluruhan
+          if (notificationsSuccessful) {
+            print(
+                'Jadwal status update and notifications completed successfully');
+          } else {
+            print('Jadwal status update completed with notification errors');
+          }
+        } catch (updateError) {
+          print('Error during batch update process: $updateError');
+          // Jika batch update gagal, coba update satu-per-satu secara manual
+          print('Trying individual updates for critical jadwal...');
+
+          // Prioritaskan jadwal yang akan diaktifkan
+          for (var jadwal in jadwalToUpdate) {
+            if (jadwal.id != null) {
+              try {
+                await _supabaseService.updateJadwalStatus(jadwal.id!, 'AKTIF');
+                print('Manual update successful for jadwal ${jadwal.id}');
+              } catch (e) {
+                print('Manual update failed for jadwal ${jadwal.id}: $e');
+              }
+            }
+          }
         }
+      } else {
+        print('No schedule updates needed');
       }
     } catch (e, stackTrace) {
       print('Error checking and updating jadwal status: $e');
       print('Stack trace: $stackTrace');
+    } finally {
+      isLoadingStatusUpdate.value = false;
+      print('Jadwal status check completed at ${DateTime.now()}');
     }
   }
 
@@ -197,6 +563,9 @@ class JadwalPenyaluranController extends GetxController {
             .map((data) => PenyaluranBantuanModel.fromJson(data))
             .toList();
       }
+
+      // Perbarui counter penyaluran setelah data dimuat
+      _updatePenyaluranCounters();
     } catch (e) {
       print('Error loading jadwal data: $e');
     } finally {
@@ -220,6 +589,7 @@ class JadwalPenyaluranController extends GetxController {
 
   Future<void> loadLokasiPenyaluranData() async {
     try {
+      isLokasiLoading(true);
       final lokasiData = await _supabaseService.getAllLokasiPenyaluran();
       if (lokasiData != null) {
         for (var lokasi in lokasiData) {
@@ -229,6 +599,8 @@ class JadwalPenyaluranController extends GetxController {
       }
     } catch (e) {
       print('Error loading lokasi penyaluran data: $e');
+    } finally {
+      isLokasiLoading(false);
     }
   }
 
@@ -335,8 +707,30 @@ class JadwalPenyaluranController extends GetxController {
   Future<void> completeJadwal(String jadwalId) async {
     isLoading.value = true;
     try {
+      // Dapatkan detail jadwal
+      final jadwalIndex = jadwalAktif.indexWhere((j) => j.id == jadwalId);
+      PenyaluranBantuanModel? jadwal;
+
+      if (jadwalIndex >= 0) {
+        jadwal = jadwalAktif[jadwalIndex];
+      }
+
+      // Update status di database
       await _supabaseService.completeJadwal(jadwalId);
+
+      // Kirim notifikasi
+      if (jadwal != null && jadwal.nama != null) {
+        final notificationService = Get.find<NotificationService>();
+        await notificationService.sendJadwalStatusNotification(
+          jadwalId: jadwalId,
+          newStatus: 'TERLAKSANA',
+          jadwalNama: jadwal.nama!,
+        );
+      }
+
+      // Reload data
       await loadJadwalData();
+
       Get.snackbar(
         'Sukses',
         'Jadwal berhasil diselesaikan',
@@ -359,15 +753,13 @@ class JadwalPenyaluranController extends GetxController {
   }
 
   Future<void> refreshData() async {
-    isLoading.value = true;
-    try {
-      await loadJadwalData();
-      await loadPermintaanPenjadwalanData();
-    } catch (e) {
-      print('Error refreshing data: $e');
-    } finally {
-      isLoading.value = false;
-    }
+    await Future.wait([
+      loadJadwalData(),
+      loadPermintaanPenjadwalanData(),
+      loadLokasiPenyaluranData(),
+      loadKategoriBantuanData(),
+      loadSkemaBantuanData(),
+    ]);
   }
 
   void changeCategory(int index) {
@@ -431,6 +823,7 @@ class JadwalPenyaluranController extends GetxController {
           'status_penerimaan': 'BELUMMENERIMA',
           'qr_code_hash': qrCodeHash,
           'jumlah_bantuan': jumlahDiterimaPerOrang,
+          'created_at': DateTime.now().toIso8601String(),
         };
 
         // Simpan data penerima ke database

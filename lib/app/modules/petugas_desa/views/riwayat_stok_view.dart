@@ -6,6 +6,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/controllers/riwayat_stok
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:penyaluran_app/app/widgets/widgets.dart';
 
 class RiwayatStokView extends GetView<RiwayatStokController> {
   const RiwayatStokView({super.key});
@@ -353,7 +354,7 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 );
-                              }).toList(),
+                              }),
                             ],
                             onChanged: (value) {
                               if (value != null) {
@@ -543,7 +544,7 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
                               const SizedBox(height: 4),
                               Text(
                                 riwayat.createdAt != null
-                                    ? DateTimeHelper.formatDateTime(
+                                    ? FormatHelper.formatDateTime(
                                         riwayat.createdAt!)
                                     : '-',
                                 style: TextStyle(
@@ -598,7 +599,7 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
                         padding: const EdgeInsets.only(left: 44),
                         child: InkWell(
                           onTap: () =>
-                              _showImageDialog(context, riwayat.fotoBukti!),
+                              ShowImageDialog.show(context, riwayat.fotoBukti!),
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.blue.withOpacity(0.1),
@@ -701,97 +702,6 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
           ),
         ),
       ),
-    );
-  }
-
-  void _showImageDialog(BuildContext context, String imageUrl) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppBar(
-                leading: IconButton(
-                  icon: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                title: const Text(
-                  'Bukti Foto',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                elevation: 0,
-                backgroundColor: AppTheme.primaryColor,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.5,
-                child: InteractiveViewer(
-                  panEnabled: true,
-                  boundaryMargin: const EdgeInsets.all(16),
-                  minScale: 0.5,
-                  maxScale: 4,
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    placeholder: (context, url) => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                    errorWidget: (context, url, error) => Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error, color: Colors.red, size: 48),
-                        const SizedBox(height: 16),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            'Gagal memuat gambar: $error',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.zoom_in, size: 20, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Cubit untuk memperbesar/memperkecil',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -1152,7 +1062,7 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
   Widget _buildPenitipanDetail(
       BuildContext context, Map<String, dynamic> data) {
     final String tanggal = data['created_at'] != null
-        ? DateTimeHelper.formatDateTime(DateTime.parse(data['created_at']))
+        ? FormatHelper.formatDateTime(DateTime.parse(data['created_at']))
         : '-';
 
     final String namaPenitip = data['donatur'] != null
@@ -1357,7 +1267,8 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
                           padding: EdgeInsets.only(
                               right: index < fotoBantuan.length - 1 ? 8.0 : 0),
                           child: InkWell(
-                            onTap: () => _showImageDialog(context, imageUrl),
+                            onTap: () =>
+                                ShowImageDialog.show(context, imageUrl),
                             child: Container(
                               width: 200,
                               decoration: BoxDecoration(
@@ -1442,7 +1353,7 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
   Widget _buildPenerimaanDetail(
       BuildContext context, Map<String, dynamic> data) {
     final String tanggal = data['created_at'] != null
-        ? DateTimeHelper.formatDateTime(DateTime.parse(data['created_at']))
+        ? FormatHelper.formatDateTime(DateTime.parse(data['created_at']))
         : '-';
 
     final String namaPenerima = data['warga'] != null
@@ -1646,7 +1557,7 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
                   ),
                   const SizedBox(height: 12),
                   InkWell(
-                    onTap: () => _showImageDialog(context, buktiPenerimaan),
+                    onTap: () => ShowImageDialog.show(context, buktiPenerimaan),
                     child: Container(
                       height: 180,
                       width: double.infinity,

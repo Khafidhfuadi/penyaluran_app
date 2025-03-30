@@ -6,6 +6,7 @@ abstract class Routes {
   static const login = _Paths.login;
   static const register = _Paths.register;
   static const registerDonatur = _Paths.registerDonatur;
+  static const forgotPassword = _Paths.forgotPassword;
   static const wargaDashboard = _Paths.wargaDashboard;
   static const wargaPenerimaan = _Paths.wargaPenerimaan;
   static const wargaPengaduan = _Paths.wargaPengaduan;
@@ -23,10 +24,12 @@ abstract class Routes {
   static const konfirmasiPenerima = _Paths.konfirmasiPenerima;
   static const pelaksanaanPenyaluran = _Paths.pelaksanaanPenyaluran;
   static const profile = _Paths.profile;
+  static const about = _Paths.about;
   static const riwayatPenitipan = _Paths.riwayatPenitipan;
   static const daftarDonatur = _Paths.daftarDonatur;
   static const detailDonatur = _Paths.detailDonatur;
   static const tambahPenyaluran = _Paths.tambahPenyaluran;
+  static const tambahLokasiPenyaluran = _Paths.tambahLokasiPenyaluran;
   static const daftarPenerimaPenyaluran = _Paths.daftarPenerimaPenyaluran;
   static const detailPenerimaPenyaluran = _Paths.detailPenerimaPenyaluran;
   static const laporanPenyaluran = _Paths.laporanPenyaluran;
@@ -51,6 +54,7 @@ abstract class _Paths {
   static const login = '/login';
   static const register = '/register';
   static const registerDonatur = '/register-donatur';
+  static const forgotPassword = '/forgot-password';
   static const wargaDashboard = '/warga-dashboard';
   static const wargaPenerimaan = '/warga-penerimaan';
   static const wargaPengaduan = '/warga-pengaduan';
@@ -68,10 +72,12 @@ abstract class _Paths {
   static const konfirmasiPenerima = '/daftar-penerima/konfirmasi';
   static const pelaksanaanPenyaluran = '/pelaksanaan-penyaluran';
   static const profile = '/profile';
+  static const about = '/about';
   static const riwayatPenitipan = '/petugas-desa/riwayat-penitipan';
   static const daftarDonatur = '/daftar-donatur';
   static const detailDonatur = '/daftar-donatur/detail';
   static const tambahPenyaluran = '/tambah-penyaluran';
+  static const tambahLokasiPenyaluran = '/tambah-lokasi-penyaluran';
   static const daftarPenerimaPenyaluran = '/daftar-penerima-penyaluran';
   static const detailPenerimaPenyaluran = '/detail-penerima-penyaluran';
   static const laporanPenyaluran = '/laporan-penyaluran';

@@ -7,6 +7,7 @@ import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/data/models/laporan_penyaluran_model.dart';
 import 'package:penyaluran_app/app/data/models/user_model.dart';
 import 'package:penyaluran_app/app/data/models/stok_bantuan_model.dart';
+import 'package:penyaluran_app/app/data/models/lokasi_penyaluran_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:penyaluran_app/app/routes/app_pages.dart';
@@ -44,6 +45,10 @@ class DonaturDashboardController extends GetxController {
 
   // Data untuk stok bantuan yang tersedia
   final RxList<StokBantuanModel> stokBantuan = <StokBantuanModel>[].obs;
+
+  // Data untuk lokasi penyaluran
+  final RxList<LokasiPenyaluranModel> lokasiPenyaluran =
+      <LokasiPenyaluranModel>[].obs;
 
   // Indikator loading
   final RxBool isLoading = false.obs;
@@ -199,6 +204,9 @@ class DonaturDashboardController extends GetxController {
       // Ambil data stok bantuan
       await fetchStokBantuan();
 
+      // Ambil data lokasi penyaluran
+      await fetchLokasiPenyaluran();
+
       // Ambil data notifikasi
       await fetchNotifikasi();
     } catch (e) {
@@ -233,7 +241,7 @@ class DonaturDashboardController extends GetxController {
           .from('penyaluran_bantuan')
           .select(
               '*, lokasi_penyaluran:lokasi_penyaluran_id(*), kategori:kategori_bantuan_id(*), petugas:petugas_id(*)')
-          .order('tanggal_penyaluran', ascending: true);
+          .order('tanggal_penyaluran', ascending: false);
 
       // Konversi ke model lalu filter di sisi client
       final allJadwal = response
@@ -243,9 +251,7 @@ class DonaturDashboardController extends GetxController {
 
       // Filter jadwal yang tanggalnya lebih besar dari hari ini
       jadwalPenyaluran.value = allJadwal
-          .where((jadwal) =>
-              jadwal.tanggalPenyaluran != null &&
-              jadwal.tanggalPenyaluran!.isAfter(now))
+          .where((jadwal) => jadwal.tanggalPenyaluran != null)
           .toList();
     } catch (e) {
       print('Error fetching jadwal penyaluran: $e');
@@ -303,6 +309,23 @@ class DonaturDashboardController extends GetxController {
           .cast<StokBantuanModel>();
     } catch (e) {
       print('Error fetching stok bantuan: $e');
+    }
+  }
+
+  // Ambil data lokasi penyaluran
+  Future<void> fetchLokasiPenyaluran() async {
+    try {
+      final response = await _supabaseService.client
+          .from('lokasi_penyaluran')
+          .select()
+          .eq('is_lokasi_titip', true)
+          .order('nama');
+
+      lokasiPenyaluran.value = (response as List<dynamic>)
+          .map((data) => LokasiPenyaluranModel.fromJson(data))
+          .toList();
+    } catch (e) {
+      print('Error fetching lokasi penyaluran: $e');
     }
   }
 
@@ -386,6 +409,7 @@ class DonaturDashboardController extends GetxController {
     double jumlah,
     String deskripsi,
     String? skemaBantuanId,
+    String? lokasiPenyaluranId,
   ) async {
     try {
       isLoading.value = true;
@@ -426,15 +450,25 @@ class DonaturDashboardController extends GetxController {
         'tanggal_penitipan': DateTime.now().toIso8601String(),
         'foto_bantuan': fotoBantuanUrls,
         'is_uang': selectedStokBantuan.isUang ?? false,
+        'skema_bantuan_id': skemaBantuanId,
+        'lokasi_penyaluran_id': lokasiPenyaluranId,
       };
 
-      // Tambahkan skema bantuan jika ada
-      if (skemaBantuanId != null && skemaBantuanId.isNotEmpty) {
-        data['skema_bantuan_id'] = skemaBantuanId;
-      }
-
       // Simpan ke database
-      await _supabaseService.client.from('penitipan_bantuan').insert(data);
+      final response = await _supabaseService.client
+          .from('penitipan_bantuan')
+          .insert(data)
+          .select('id')
+          .single();
+
+      // Tampilkan pesan sukses
+      Get.snackbar(
+        'Berhasil',
+        'Penitipan bantuan berhasil diinput',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
 
       // Reset foto bantuan setelah berhasil disimpan
       resetFotoBantuan();
@@ -442,19 +476,13 @@ class DonaturDashboardController extends GetxController {
       // Ambil data penitipan bantuan yang baru
       await fetchPenitipanBantuan();
 
-      // Tampilkan pesan sukses
-      Get.snackbar(
-        'Berhasil',
-        'Penitipan bantuan berhasil dikirim dan akan diproses oleh petugas desa',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
+      // Kembali ke halaman utama
+      Get.back();
     } catch (e) {
       print('Error creating penitipan bantuan: $e');
       Get.snackbar(
         'Gagal',
-        'Terjadi kesalahan saat mengirim penitipan bantuan: $e',
+        'Terjadi kesalahan: $e',
         backgroundColor: Colors.red,
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
@@ -475,7 +503,7 @@ class DonaturDashboardController extends GetxController {
           .eq('id', lokasiId)
           .single();
 
-      if (response != null && response['nama'] != null) {
+      if (response['nama'] != null) {
         return response['nama'] as String;
       }
       return null;

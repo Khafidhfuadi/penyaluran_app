@@ -231,12 +231,39 @@ class ProfileView extends GetView<ProfileController> {
   Widget _buildDefaultProfileImage() {
     return CircleAvatar(
       radius: 60,
-      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-      child: const Icon(
-        Icons.person,
-        size: 70,
-        color: AppTheme.primaryColor,
-      ),
+      backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
+      child: Obx(() {
+        final user = controller.user.value;
+        final roleData = controller.roleData.value;
+
+        String displayInitial = '?';
+
+        if (roleData != null && roleData.isNotEmpty) {
+          final roleDataValue = roleData;
+          if (roleDataValue['nama_lengkap'] != null &&
+              roleDataValue['nama_lengkap'].toString().isNotEmpty) {
+            displayInitial = roleDataValue['nama_lengkap']
+                .toString()
+                .substring(0, 1)
+                .toUpperCase();
+          } else if (roleDataValue['nama'] != null &&
+              roleDataValue['nama'].toString().isNotEmpty) {
+            displayInitial =
+                roleDataValue['nama'].toString().substring(0, 1).toUpperCase();
+          }
+        } else if (user != null && user.name != null && user.name!.isNotEmpty) {
+          displayInitial = user.name!.substring(0, 1).toUpperCase();
+        }
+
+        return Text(
+          displayInitial,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.primaryColor,
+            fontSize: 60,
+          ),
+        );
+      }),
     );
   }
 

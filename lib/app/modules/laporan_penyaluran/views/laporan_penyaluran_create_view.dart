@@ -65,7 +65,7 @@ class LaporanPenyaluranCreateView extends GetView<LaporanPenyaluranController> {
                           controller.selectedPenyaluran.value!
                                       .tanggalPenyaluran !=
                                   null
-                              ? DateTimeHelper.formatDateTime(controller
+                              ? FormatHelper.formatDateTime(controller
                                   .selectedPenyaluran.value!.tanggalPenyaluran!)
                               : '-',
                         ),
@@ -73,7 +73,7 @@ class LaporanPenyaluranCreateView extends GetView<LaporanPenyaluranController> {
                           'Tanggal Selesai',
                           controller.selectedPenyaluran.value!.tanggalSelesai !=
                                   null
-                              ? DateTimeHelper.formatDateTime(controller
+                              ? FormatHelper.formatDateTime(controller
                                   .selectedPenyaluran.value!.tanggalSelesai!)
                               : '-',
                         ),

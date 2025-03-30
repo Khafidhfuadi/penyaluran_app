@@ -51,5 +51,11 @@
 	<string>Aplikasi memerlukan akses galeri untuk memilih foto bukti serah terima</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Aplikasi memerlukan akses mikrofon untuk merekam video</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>http</string>
+		<string>https</string>
+		<string>file</string>
+	</array>
 </dict>
 </plist>

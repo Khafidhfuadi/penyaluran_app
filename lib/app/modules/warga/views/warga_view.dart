@@ -20,13 +20,13 @@ class WargaView extends GetView<WargaDashboardController> {
         title: Obx(() {
           switch (controller.activeTabIndex.value) {
             case 0:
-              return const Text('Dashboard Warga');
+              return const Text('Dashboard');
             case 1:
               return const Text('Penerimaan Bantuan');
             case 2:
               return const Text('Pengaduan');
             default:
-              return const Text('Dashboard Warga');
+              return const Text('Dashboard');
           }
         }),
         leading: IconButton(
@@ -164,16 +164,19 @@ class WargaView extends GetView<WargaDashboardController> {
                   child: CircleAvatar(
                     radius: 40,
                     backgroundColor: Colors.white70,
-                    backgroundImage: controller.profilePhotoUrl != null &&
-                            controller.profilePhotoUrl!.isNotEmpty
-                        ? NetworkImage(controller.profilePhotoUrl!)
+                    backgroundImage: controller.fotoProfil.value.isNotEmpty
+                        ? NetworkImage(controller.fotoProfil.value)
                         : null,
-                    child: controller.profilePhotoUrl == null ||
-                            controller.profilePhotoUrl!.isEmpty
-                        ? Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 40,
+                    child: controller.fotoProfil.isEmpty
+                        ? Text(
+                            controller.nama.isNotEmpty
+                                ? controller.nama.substring(0, 1).toUpperCase()
+                                : '?',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 24,
+                            ),
                           )
                         : null,
                   ),
@@ -293,6 +296,15 @@ class WargaView extends GetView<WargaDashboardController> {
                   },
                 ),
                 _buildMenuItem(
+                  icon: Icons.info_outline,
+                  activeIcon: Icons.info,
+                  title: 'Tentang Kami',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.toNamed('/about');
+                  },
+                ),
+                _buildMenuItem(
                   icon: Icons.logout,
                   title: 'Keluar',
                   onTap: () {
@@ -307,7 +319,7 @@ class WargaView extends GetView<WargaDashboardController> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              '© ${DateTime.now().year} Aplikasi Penyaluran Bantuan',
+              '© ${DateTime.now().year} DisalurKita',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey,

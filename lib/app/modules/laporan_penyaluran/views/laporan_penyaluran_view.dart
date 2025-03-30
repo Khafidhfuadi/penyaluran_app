@@ -6,7 +6,6 @@ import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/widgets/custom_app_bar.dart';
 import 'package:penyaluran_app/app/widgets/status_badge.dart';
-import 'package:intl/intl.dart';
 
 class LaporanPenyaluranView extends GetView<LaporanPenyaluranController> {
   const LaporanPenyaluranView({super.key});
@@ -255,8 +254,8 @@ class LaporanPenyaluranView extends GetView<LaporanPenyaluranController> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  StatusBadge(status: laporan.status ?? 'DRAFT'),
+                  // const SizedBox(width: 8),
+                  // StatusBadge(status: laporan.status ?? 'DRAFT'),
                 ],
               ),
             ),
@@ -273,10 +272,11 @@ class LaporanPenyaluranView extends GetView<LaporanPenyaluranController> {
                         Icons.calendar_today,
                         'Tanggal',
                         laporan.tanggalLaporan != null
-                            ? DateTimeHelper.formatDateTime(
+                            ? FormatHelper.formatDateTime(
                                 laporan.tanggalLaporan!)
                             : '-',
                       ),
+                      const SizedBox(width: 16),
                       _buildInfoItem(
                         Icons.description,
                         'Status',
@@ -538,8 +538,8 @@ class LaporanPenyaluranView extends GetView<LaporanPenyaluranController> {
                             const SizedBox(width: 4),
                             Text(
                               penyaluran.tanggalSelesai != null
-                                  ? DateFormat('dd/MM/yyyy')
-                                      .format(penyaluran.tanggalSelesai!)
+                                  ? FormatHelper.formatDateTime(
+                                      penyaluran.tanggalSelesai!)
                                   : '-',
                               style: TextStyle(
                                 fontSize: 12,

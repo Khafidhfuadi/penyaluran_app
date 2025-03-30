@@ -298,7 +298,7 @@ class CalendarViewWidget extends StatelessWidget {
     for (var jadwal in allJadwal) {
       if (jadwal.tanggalPenyaluran != null) {
         DateTime jadwalDate =
-            DateTimeHelper.toLocalDateTime(jadwal.tanggalPenyaluran!);
+            FormatHelper.toLocalDateTime(jadwal.tanggalPenyaluran!);
 
         if (jadwalDate
                 .isAfter(firstDayOfMonth.subtract(const Duration(days: 1))) &&
@@ -346,7 +346,7 @@ class CalendarViewWidget extends StatelessWidget {
 
   void _showAppointmentDetails(BuildContext context, Appointment appointment) {
     final String formattedDate =
-        DateTimeHelper.formatDateIndonesian(appointment.startTime);
+        FormatHelper.formatDateIndonesian(appointment.startTime);
 
     // Dapatkan status dari ID jadwal
     String? status = _getStatusFromAppointmentId(appointment.id);

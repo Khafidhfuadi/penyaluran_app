@@ -14,6 +14,7 @@ export 'cards/info_card.dart';
 // Dialogs
 export 'dialogs/detail_penitipan_dialog.dart';
 export 'dialogs/confirmation_dialog.dart';
+export 'dialogs/show_image_dialog.dart';
 
 // Indicators
 export 'indicators/loading_indicator.dart';

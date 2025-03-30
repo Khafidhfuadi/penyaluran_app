@@ -33,6 +33,58 @@ class DashboardView extends GetView<PetugasDesaDashboardController> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Header DisalurKita dengan logo dan slogan
+                            FadeInAnimation(
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.blue.withOpacity(0.1),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Image.asset(
+                                      'assets/images/logo-disalurkita.png',
+                                      width: 50,
+                                      height: 50,
+                                    ),
+                                    const SizedBox(width: 15),
+                                    const Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'DisalurKita',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF1565C0),
+                                          ),
+                                        ),
+                                        SizedBox(height: 5),
+                                        Text(
+                                          'Salurkan dengan Pasti, Pantau dengan Bukti',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
                             // Header dengan greeting
                             FadeInAnimation(
                               child: GreetingHeader(
@@ -83,7 +135,7 @@ class DashboardView extends GetView<PetugasDesaDashboardController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Jadwal Penyaluran',
+          'Jadwal Penyaluran Hari Ini',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -130,19 +182,25 @@ class DashboardView extends GetView<PetugasDesaDashboardController> {
                 final DateTime tanggal =
                     DateTime.parse(jadwal['tanggal_penyaluran']);
                 final String formattedDate =
-                    DateTimeHelper.formatDateTime(tanggal);
+                    FormatHelper.formatDateTime(tanggal);
                 final kategoriBantuan =
                     jadwal['kategori_bantuan'] as Map<String, dynamic>;
                 final lokasiPenyaluran =
                     jadwal['lokasi_penyaluran'] as Map<String, dynamic>;
 
-                return ScheduleCard(
-                  title: kategoriBantuan['nama'] ?? 'Jadwal Penyaluran',
-                  location: lokasiPenyaluran['nama'] ?? 'Lokasi tidak tersedia',
-                  dateTime: formattedDate,
-                  isToday: true,
-                  onTap: () => Get.toNamed(Routes.detailPenyaluran,
-                      parameters: {'id': jadwal['id']}),
+                return Column(
+                  children: [
+                    if (index > 0) const SizedBox(height: 10),
+                    ScheduleCard(
+                      title: kategoriBantuan['nama'] ?? 'Jadwal Penyaluran',
+                      location:
+                          lokasiPenyaluran['nama'] ?? 'Lokasi tidak tersedia',
+                      dateTime: formattedDate,
+                      isToday: true,
+                      onTap: () => Get.toNamed(Routes.detailPenyaluran,
+                          parameters: {'id': jadwal['id']}),
+                    ),
+                  ],
                 );
               },
             );
@@ -391,8 +449,10 @@ class DashboardView extends GetView<PetugasDesaDashboardController> {
                 final nik = penerima['nik'] ?? 'NIK tidak tersedia';
                 final status = penerima['status'] ?? 'AKTIF';
                 final id = penerima['id'] ?? 'ID tidak tersedia';
+                final fotoProfil = penerima['foto_profil'] ?? null;
 
-                return _buildRecipientItem(name, nik, status, id, textTheme);
+                return _buildRecipientItem(
+                    name, nik, status, id, textTheme, fotoProfil);
               },
             );
           },
@@ -401,8 +461,8 @@ class DashboardView extends GetView<PetugasDesaDashboardController> {
     );
   }
 
-  Widget _buildRecipientItem(
-      String name, String nik, String status, String id, TextTheme textTheme) {
+  Widget _buildRecipientItem(String name, String nik, String status, String id,
+      TextTheme textTheme, String? fotoProfil) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 10),
@@ -428,7 +488,20 @@ class DashboardView extends GetView<PetugasDesaDashboardController> {
             children: [
               CircleAvatar(
                 backgroundColor: Colors.white.withOpacity(0.2),
-                child: const Icon(Icons.person, color: Colors.white),
+                backgroundImage:
+                    fotoProfil != null && fotoProfil.toString().isNotEmpty
+                        ? NetworkImage(fotoProfil)
+                        : null,
+                child: (fotoProfil == null || fotoProfil.toString().isEmpty)
+                    ? Text(
+                        name.toString().substring(0, 1).toUpperCase(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 24,
+                        ),
+                      )
+                    : null,
               ),
               const SizedBox(width: 12),
               Expanded(

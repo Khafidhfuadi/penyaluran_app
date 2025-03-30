@@ -71,6 +71,14 @@ class PenyaluranBantuanModel {
     return null;
   }
 
+  // Mendapatkan foto petugas dari relasi petugas
+  String? get fotoPetugas {
+    if (petugas != null && petugas!['foto_profil'] != null) {
+      return petugas!['foto_profil'];
+    }
+    return null;
+  }
+
   factory PenyaluranBantuanModel.fromRawJson(String str) =>
       PenyaluranBantuanModel.fromJson(json.decode(str));
 
@@ -126,4 +134,49 @@ class PenyaluranBantuanModel {
         "created_at": createdAt?.toUtc().toIso8601String(),
         "updated_at": updatedAt?.toUtc().toIso8601String(),
       };
+
+  // Metode copyWith untuk membuat salinan objek dengan perubahan tertentu
+  PenyaluranBantuanModel copyWith({
+    String? id,
+    String? nama,
+    String? deskripsi,
+    String? petugasId,
+    String? skemaId,
+    String? lokasiPenyaluranId,
+    String? kategoriBantuanId,
+    int? jumlahPenerima,
+    DateTime? tanggalPenyaluran,
+    String? status,
+    String? alasanPembatalan,
+    DateTime? tanggalPembatalan,
+    DateTime? tanggalSelesai,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Map<String, dynamic>? lokasiPenyaluran,
+    Map<String, dynamic>? kategori,
+    Map<String, dynamic>? petugas,
+    int? jumlahBantuan,
+  }) {
+    return PenyaluranBantuanModel(
+      id: id ?? this.id,
+      nama: nama ?? this.nama,
+      deskripsi: deskripsi ?? this.deskripsi,
+      petugasId: petugasId ?? this.petugasId,
+      skemaId: skemaId ?? this.skemaId,
+      lokasiPenyaluranId: lokasiPenyaluranId ?? this.lokasiPenyaluranId,
+      kategoriBantuanId: kategoriBantuanId ?? this.kategoriBantuanId,
+      jumlahPenerima: jumlahPenerima ?? this.jumlahPenerima,
+      tanggalPenyaluran: tanggalPenyaluran ?? this.tanggalPenyaluran,
+      status: status ?? this.status,
+      alasanPembatalan: alasanPembatalan ?? this.alasanPembatalan,
+      tanggalPembatalan: tanggalPembatalan ?? this.tanggalPembatalan,
+      tanggalSelesai: tanggalSelesai ?? this.tanggalSelesai,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      lokasiPenyaluran: lokasiPenyaluran ?? this.lokasiPenyaluran,
+      kategori: kategori ?? this.kategori,
+      petugas: petugas ?? this.petugas,
+      jumlahBantuan: jumlahBantuan ?? this.jumlahBantuan,
+    );
+  }
 }

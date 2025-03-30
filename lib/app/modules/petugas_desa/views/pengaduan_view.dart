@@ -44,7 +44,7 @@ class PengaduanView extends GetView<PengaduanController> {
   Widget _buildLastUpdateInfo(BuildContext context) {
     final lastUpdate = DateTime
         .now(); // Gunakan waktu saat ini atau dari controller jika tersedia
-    final formattedDate = DateTimeHelper.formatDateTimeWithHour(lastUpdate);
+    final formattedDate = FormatHelper.formatDateTimeWithHour(lastUpdate);
 
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
@@ -280,7 +280,7 @@ class PengaduanView extends GetView<PengaduanController> {
                     ),
               ),
               Text(
-                '${DateTimeHelper.formatNumber(filteredPengaduan.length)} item',
+                '${FormatHelper.formatNumber(filteredPengaduan.length)} item',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Colors.grey,
                     ),
@@ -320,7 +320,7 @@ class PengaduanView extends GetView<PengaduanController> {
     // Format tanggal menggunakan DateTimeHelper
     String formattedDate = '';
     if (item.tanggalPengaduan != null) {
-      formattedDate = DateTimeHelper.formatDate(item.tanggalPengaduan);
+      formattedDate = FormatHelper.formatDateTime(item.tanggalPengaduan);
     }
 
     return Card(

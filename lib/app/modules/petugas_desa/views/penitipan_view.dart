@@ -5,6 +5,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/controllers/penitipan_ba
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/widgets/dialogs/detail_penitipan_dialog.dart';
+import 'package:penyaluran_app/app/widgets/widgets.dart';
 import 'dart:io';
 
 class PenitipanView extends GetView<PenitipanBantuanController> {
@@ -72,7 +73,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   context,
                   icon: Icons.pending_actions,
                   title: 'Menunggu',
-                  value: DateTimeHelper.formatNumber(
+                  value: FormatHelper.formatNumber(
                       controller.jumlahMenunggu.value),
                   color: Colors.orange,
                 ),
@@ -82,7 +83,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   context,
                   icon: Icons.check_circle,
                   title: 'Terverifikasi',
-                  value: DateTimeHelper.formatNumber(
+                  value: FormatHelper.formatNumber(
                       controller.jumlahTerverifikasi.value),
                   color: Colors.green,
                 ),
@@ -92,8 +93,8 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   context,
                   icon: Icons.cancel,
                   title: 'Ditolak',
-                  value: DateTimeHelper.formatNumber(
-                      controller.jumlahDitolak.value),
+                  value:
+                      FormatHelper.formatNumber(controller.jumlahDitolak.value),
                   color: Colors.red,
                 ),
               ),
@@ -219,7 +220,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   ),
             ),
             Text(
-              '${DateTimeHelper.formatNumber(filteredList.length)} item',
+              '${FormatHelper.formatNumber(filteredList.length)} item',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey,
                   ),
@@ -360,7 +361,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                     ],
                   ),
                   Text(
-                    DateTimeHelper.formatDate(item.createdAt),
+                    FormatHelper.formatDateTime(item.createdAt),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey.shade700,
                           fontStyle: FontStyle.italic,
@@ -380,15 +381,27 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                   Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                         radius: 20,
-                        child: Text(
-                          donaturNama.substring(0, 1).toUpperCase(),
-                          style: TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                        backgroundImage: item.donatur != null &&
+                                item.donatur!.fotoProfil != null &&
+                                item.donatur!.fotoProfil!.isNotEmpty
+                            ? NetworkImage(item.donatur!.fotoProfil!)
+                            : null,
+                        child: (item.donatur == null ||
+                                item.donatur!.fotoProfil == null ||
+                                item.donatur!.fotoProfil!.isEmpty)
+                            ? Text(
+                                donaturNama.isNotEmpty
+                                    ? donaturNama.substring(0, 1).toUpperCase()
+                                    : '?',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryColor,
+                                  fontSize: 16,
+                                ),
+                              )
+                            : null,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -546,8 +559,8 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
                               const SizedBox(height: 4),
                               Text(
                                 isUang
-                                    ? 'Rp ${DateTimeHelper.formatNumber(item.jumlah)}'
-                                    : '${DateTimeHelper.formatNumber(item.jumlah)} $kategoriSatuan',
+                                    ? 'Rp ${FormatHelper.formatNumber(item.jumlah)}'
+                                    : '${FormatHelper.formatNumber(item.jumlah)} $kategoriSatuan',
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleSmall
@@ -947,7 +960,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
       kategoriSatuan: kategoriSatuan,
       getPetugasDesaNama: (String? id) => controller.getPetugasDesaNama(id),
       showFullScreenImage: (String imageUrl) {
-        DetailPenitipanDialog.showFullScreenImage(context, imageUrl);
+        ShowImageDialog.showFullScreen(context, imageUrl);
       },
     );
   }
@@ -992,7 +1005,7 @@ class PenitipanView extends GetView<PenitipanBantuanController> {
   Widget _buildLastUpdateInfo(BuildContext context) {
     return Obx(() {
       final lastUpdate = controller.lastUpdateTime.value;
-      final formattedDate = DateTimeHelper.formatDateTimeWithHour(lastUpdate);
+      final formattedDate = FormatHelper.formatDateTimeWithHour(lastUpdate);
 
       return Padding(
         padding: const EdgeInsets.only(top: 8.0),

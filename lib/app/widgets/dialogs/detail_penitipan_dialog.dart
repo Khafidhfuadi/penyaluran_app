@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
 import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/theme/app_colors.dart';
+import 'package:penyaluran_app/app/widgets/dialogs/show_image_dialog.dart';
 
 /// Dialog untuk menampilkan detail penitipan bantuan
 ///
@@ -48,7 +49,7 @@ class DetailPenitipanDialog {
               ),
               _buildInfoRow(
                 'Tanggal Penitipan',
-                DateTimeHelper.formatDateTime(
+                FormatHelper.formatDateTime(
                     item.tanggalPenitipan ?? item.createdAt),
               ),
               _buildInfoRow(
@@ -63,7 +64,7 @@ class DetailPenitipanDialog {
               if (item.tanggalVerifikasi != null)
                 _buildInfoRow(
                   'Tanggal Verifikasi',
-                  DateTimeHelper.formatDateTime(item.tanggalVerifikasi),
+                  FormatHelper.formatDateTime(item.tanggalVerifikasi),
                 ),
               if (item.deskripsi != null && item.deskripsi!.isNotEmpty)
                 _buildInfoRow('Deskripsi', item.deskripsi!),
@@ -143,50 +144,7 @@ class DetailPenitipanDialog {
 
   /// Menampilkan gambar dalam layar penuh
   static void showFullScreenImage(BuildContext context, String imageUrl) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.black,
-            iconTheme: const IconThemeData(color: Colors.white),
-          ),
-          body: Container(
-            color: Colors.black,
-            child: Center(
-              child: InteractiveViewer(
-                panEnabled: true,
-                boundaryMargin: const EdgeInsets.all(20),
-                minScale: 0.5,
-                maxScale: 4,
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.contain,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Center(
-                      child: Text(
-                        'Gagal memuat gambar',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    ShowImageDialog.showFullScreen(context, imageUrl);
   }
 
   /// Membangun baris informasi

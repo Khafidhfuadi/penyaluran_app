@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/donatur/controllers/donatur_dashboard_controller.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
+import 'package:penyaluran_app/app/widgets/widgets.dart';
 
 class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
   DonaturRiwayatPenitipanView({super.key});
@@ -60,8 +61,7 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
           final kategoriNama = item.kategoriBantuan?.nama?.toLowerCase() ?? '';
           final deskripsi = item.deskripsi?.toLowerCase() ?? '';
           final tanggal = item.tanggalPenitipan != null
-              ? DateFormat('dd MMMM yyyy', 'id_ID')
-                  .format(item.tanggalPenitipan!)
+              ? FormatHelper.formatDateTime(item.tanggalPenitipan!)
                   .toLowerCase()
               : '';
 
@@ -214,8 +214,7 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
   Widget _buildPenitipanCard(
       BuildContext context, dynamic penitipan, Color statusColor) {
     final formattedDate = penitipan.tanggalPenitipan != null
-        ? DateFormat('dd MMMM yyyy', 'id_ID')
-            .format(penitipan.tanggalPenitipan!)
+        ? FormatHelper.formatDateTime(penitipan.tanggalPenitipan!)
         : 'Tanggal tidak tersedia';
 
     IconData statusIcon;
@@ -435,61 +434,6 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
       return id != null ? 'Petugas Desa' : 'Tidak ada petugas';
     }
 
-    void showFullScreenImage(String imageUrl) {
-      Get.dialog(
-        Dialog(
-          insetPadding: EdgeInsets.zero,
-          child: Container(
-            color: Colors.black,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                InteractiveViewer(
-                  panEnabled: true,
-                  minScale: 0.5,
-                  maxScale: 4,
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.contain,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
-                              : null,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Positioned(
-                  top: 20,
-                  right: 20,
-                  child: GestureDetector(
-                    onTap: () => Get.back(),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     Get.dialog(
       AlertDialog(
         title: const Text('Detail Penitipan'),
@@ -509,8 +453,7 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
               _buildInfoRow(
                 'Tanggal Penitipan',
                 penitipan.tanggalPenitipan != null
-                    ? DateFormat('dd MMMM yyyy', 'id_ID')
-                        .format(penitipan.tanggalPenitipan!)
+                    ? FormatHelper.formatDateTime(penitipan.tanggalPenitipan!)
                     : 'Tanggal tidak tersedia',
               ),
               _buildInfoRow(
@@ -520,8 +463,7 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
               if (penitipan.tanggalVerifikasi != null)
                 _buildInfoRow(
                   'Tanggal Verifikasi',
-                  DateFormat('dd MMMM yyyy HH:mm', 'id_ID')
-                      .format(penitipan.tanggalVerifikasi!),
+                  FormatHelper.formatDateTime(penitipan.tanggalVerifikasi!),
                 ),
               if (penitipan.deskripsi != null &&
                   penitipan.deskripsi!.isNotEmpty)
@@ -543,8 +485,10 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
                 ),
                 const SizedBox(height: 8),
                 GestureDetector(
-                  onTap: () =>
-                      showFullScreenImage(penitipan.fotoBantuan!.first),
+                  onTap: () => ShowImageDialog.showFullScreen(
+                    context,
+                    penitipan.fotoBantuan!.first,
+                  ),
                   child: Container(
                     height: 200,
                     width: double.infinity,
@@ -572,8 +516,10 @@ class DonaturRiwayatPenitipanView extends GetView<DonaturDashboardController> {
                 ),
                 const SizedBox(height: 8),
                 GestureDetector(
-                  onTap: () =>
-                      showFullScreenImage(penitipan.fotoBuktiSerahTerima!),
+                  onTap: () => ShowImageDialog.showFullScreen(
+                    context,
+                    penitipan.fotoBuktiSerahTerima!,
+                  ),
                   child: Container(
                     height: 200,
                     width: double.infinity,

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/donatur/controllers/donatur_dashboard_controller.dart';
 import 'package:penyaluran_app/app/data/models/penyaluran_bantuan_model.dart';
 import 'package:penyaluran_app/app/widgets/section_header.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 
 class DonaturJadwalDetailView extends GetView<DonaturDashboardController> {
-  const DonaturJadwalDetailView({Key? key}) : super(key: key);
+  const DonaturJadwalDetailView({super.key});
 
   @override
   DonaturDashboardController get controller {
@@ -35,7 +35,6 @@ class DonaturJadwalDetailView extends GetView<DonaturDashboardController> {
             _buildDetailSection(jadwal),
             _buildPelaksanaSection(jadwal),
             _buildStatusSection(jadwal),
-            _buildActionSection(jadwal),
           ],
         ),
       ),
@@ -126,8 +125,7 @@ class DonaturJadwalDetailView extends GetView<DonaturDashboardController> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  DateFormat('EEEE, dd MMMM yyyy', 'id_ID')
-                      .format(jadwal.tanggalPenyaluran!),
+                  FormatHelper.formatDateIndonesian(jadwal.tanggalPenyaluran),
                   style: const TextStyle(
                     fontSize: 16,
                     color: Colors.white,
@@ -204,11 +202,26 @@ class DonaturJadwalDetailView extends GetView<DonaturDashboardController> {
                       CircleAvatar(
                         radius: 25,
                         backgroundColor: Colors.blue.shade100,
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.blue.shade700,
-                          size: 30,
-                        ),
+                        backgroundImage: jadwal.fotoPetugas != null &&
+                                jadwal.fotoPetugas.toString().isNotEmpty
+                            ? NetworkImage(jadwal.fotoPetugas as String)
+                            : null,
+                        child: (jadwal.fotoPetugas == null ||
+                                jadwal.fotoPetugas.toString().isEmpty)
+                            ? Text(
+                                jadwal.namaPetugas != null
+                                    ? jadwal.namaPetugas
+                                        .toString()
+                                        .substring(0, 1)
+                                        .toUpperCase()
+                                    : '?',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade700,
+                                  fontSize: 20,
+                                ),
+                              )
+                            : null,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -254,50 +267,87 @@ class DonaturJadwalDetailView extends GetView<DonaturDashboardController> {
         children: [
           const SectionHeader(title: 'Status Penyaluran'),
           const SizedBox(height: 16),
-          _buildStatusTimeline(jadwal),
+          _buildStatusCard(jadwal),
         ],
       ),
     );
   }
 
-  Widget _buildStatusTimeline(PenyaluranBantuanModel jadwal) {
+  Widget _buildStatusCard(PenyaluranBantuanModel jadwal) {
     final status = jadwal.status;
-    final bool isCompleted = status == 'SELESAI';
-    final bool isCancelled = status == 'DIBATALKAN';
-    final bool isInProgress = status == 'DALAM_PROSES';
+    final bool isCompleted = status == 'TERLAKSANA';
+    final bool isCancelled = status == 'BATALTERLAKSANA';
+    final bool isInProgress = status == 'AKTIF';
+    final bool isScheduled = status == 'Dijadwalkan';
+
+    Color statusColor = Colors.blue;
+    IconData statusIcon = Icons.schedule;
+    String statusText = 'Dijadwalkan';
+
+    if (isCompleted) {
+      statusColor = Colors.green;
+      statusIcon = Icons.check_circle;
+      statusText = 'Terlaksana';
+    } else if (isCancelled) {
+      statusColor = Colors.red;
+      statusIcon = Icons.cancel;
+      statusText = 'Batal Terlaksana';
+    } else if (isInProgress) {
+      statusColor = Colors.blue;
+      statusIcon = Icons.sync;
+      statusText = 'Aktif';
+    } else if (isScheduled) {
+      statusColor = Colors.orange;
+      statusIcon = Icons.schedule;
+      statusText = 'Dijadwalkan';
+    }
 
     return Column(
       children: [
-        _buildTimelineItem(
-          title: 'Dijadwalkan',
-          date: jadwal.createdAt != null
-              ? DateFormat('dd MMM yyyy', 'id_ID').format(jadwal.createdAt!)
-              : '-',
-          isCompleted: true,
-          isFirst: true,
-        ),
-        _buildTimelineItem(
-          title: 'Dalam Proses',
-          date: isInProgress || isCompleted
-              ? jadwal.tanggalPenyaluran != null
-                  ? DateFormat('dd MMM yyyy', 'id_ID')
-                      .format(jadwal.tanggalPenyaluran!)
-                  : '-'
-              : '-',
-          isCompleted: isInProgress || isCompleted,
-          isCancelled: isCancelled,
-        ),
-        _buildTimelineItem(
-          title: 'Selesai',
-          date: isCompleted
-              ? jadwal.tanggalSelesai != null
-                  ? DateFormat('dd MMM yyyy', 'id_ID')
-                      .format(jadwal.tanggalSelesai!)
-                  : '-'
-              : '-',
-          isCompleted: isCompleted,
-          isCancelled: isCancelled,
-          isLast: true,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: statusColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: statusColor.withOpacity(0.3)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Icon(statusIcon, color: statusColor, size: 28),
+                  const SizedBox(width: 12),
+                  Text(
+                    statusText,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildStatusDetailItem(
+                title: 'Tanggal Dijadwalkan',
+                value: FormatHelper.formatDateIndonesian(jadwal.createdAt),
+              ),
+              const SizedBox(height: 8),
+              _buildStatusDetailItem(
+                title: 'Tanggal Penyaluran',
+                value:
+                    FormatHelper.formatDateIndonesian(jadwal.tanggalPenyaluran),
+              ),
+              if (isCompleted) ...[
+                const SizedBox(height: 8),
+                _buildStatusDetailItem(
+                  title: 'Tanggal Selesai',
+                  value:
+                      FormatHelper.formatDateIndonesian(jadwal.tanggalSelesai),
+                ),
+              ],
+            ],
+          ),
         ),
         if (isCancelled) ...[
           const SizedBox(height: 16),
@@ -333,7 +383,7 @@ class DonaturJadwalDetailView extends GetView<DonaturDashboardController> {
                 const SizedBox(height: 8),
                 if (jadwal.tanggalPembatalan != null)
                   Text(
-                    'Dibatalkan pada: ${DateFormat('dd MMMM yyyy', 'id_ID').format(jadwal.tanggalPembatalan!)}',
+                    'Dibatalkan pada: ${FormatHelper.formatDateIndonesian(jadwal.tanggalPembatalan)}',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.red.shade700,
@@ -347,156 +397,26 @@ class DonaturJadwalDetailView extends GetView<DonaturDashboardController> {
     );
   }
 
-  Widget _buildTimelineItem({
-    required String title,
-    required String date,
-    required bool isCompleted,
-    bool isFirst = false,
-    bool isLast = false,
-    bool isCancelled = false,
-  }) {
+  Widget _buildStatusDetailItem(
+      {required String title, required String value}) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        SizedBox(
-          width: 20,
-          child: Column(
-            children: [
-              if (!isFirst)
-                Container(
-                  width: 2,
-                  height: 20,
-                  color: isCompleted
-                      ? Colors.green
-                      : isCancelled
-                          ? Colors.red
-                          : Colors.grey.shade300,
-                ),
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isCompleted
-                      ? Colors.green
-                      : isCancelled
-                          ? Colors.red
-                          : Colors.grey.shade300,
-                  border: Border.all(
-                    color: isCompleted
-                        ? Colors.green
-                        : isCancelled
-                            ? Colors.red
-                            : Colors.grey.shade300,
-                    width: 2,
-                  ),
-                ),
-                child: isCompleted
-                    ? const Icon(Icons.check, size: 12, color: Colors.white)
-                    : isCancelled
-                        ? const Icon(Icons.close, size: 12, color: Colors.white)
-                        : null,
-              ),
-              if (!isLast)
-                Container(
-                  width: 2,
-                  height: 20,
-                  color: isCompleted && !isCancelled
-                      ? Colors.green
-                      : Colors.grey.shade300,
-                ),
-            ],
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade700,
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isCompleted
-                        ? Colors.black
-                        : isCancelled
-                            ? Colors.red
-                            : Colors.grey,
-                  ),
-                ),
-                Text(
-                  date,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isCompleted
-                        ? Colors.grey.shade700
-                        : isCancelled
-                            ? Colors.red.shade300
-                            : Colors.grey.shade400,
-                  ),
-                ),
-              ],
-            ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildActionSection(PenyaluranBantuanModel jadwal) {
-    if (jadwal.status == 'DIBATALKAN') {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SectionHeader(title: 'Tindakan'),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _hubungiPetugas(jadwal),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  icon: const Icon(Icons.chat_outlined),
-                  label: const Text('Hubungi Petugas'),
-                ),
-              ),
-              if (jadwal.status == 'SELESAI') ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _lihatLaporan(jadwal),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                      foregroundColor: Colors.blue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    icon: const Icon(Icons.description_outlined),
-                    label: const Text('Lihat Laporan'),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
     );
   }
 

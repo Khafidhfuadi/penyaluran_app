@@ -11,12 +11,12 @@ class FormPengaduanView extends StatefulWidget {
   final List<File>? selectedImages;
 
   const FormPengaduanView({
-    Key? key,
+    super.key,
     required this.uidPenerimaan,
     this.judul,
     this.deskripsi,
     this.selectedImages,
-  }) : super(key: key);
+  });
 
   @override
   State<FormPengaduanView> createState() => _FormPengaduanViewState();
@@ -219,7 +219,7 @@ class _FormPengaduanViewState extends State<FormPengaduanView> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Container(
+                  SizedBox(
                     height: 120,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,

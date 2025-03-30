@@ -5,6 +5,7 @@ import 'package:penyaluran_app/app/data/models/donatur_model.dart';
 import 'package:penyaluran_app/app/data/models/penitipan_bantuan_model.dart';
 import 'package:penyaluran_app/app/widgets/dialogs/detail_penitipan_dialog.dart';
 import 'package:penyaluran_app/app/utils/format_helper.dart';
+import 'package:penyaluran_app/app/widgets/widgets.dart';
 
 class DetailDonaturView extends GetView<DonaturController> {
   const DetailDonaturView({super.key});
@@ -359,7 +360,7 @@ class DetailDonaturView extends GetView<DonaturController> {
                     Icons.calendar_today,
                     'Terdaftar Sejak',
                     donatur.createdAt != null
-                        ? DateTimeHelper.formatDate(donatur.createdAt!)
+                        ? FormatHelper.formatDateTime(donatur.createdAt!)
                         : 'Tidak diketahui',
                   ),
                 ],
@@ -514,7 +515,8 @@ class DetailDonaturView extends GetView<DonaturController> {
   Widget _buildDonasiItem(PenitipanBantuanModel penitipan) {
     final isUang = penitipan.isUang == true;
     final tanggal = penitipan.createdAt != null
-        ? DateTimeHelper.formatDate(penitipan.createdAt!, format: 'dd MMM yyyy')
+        ? FormatHelper.formatDateTime(penitipan.createdAt!,
+            format: 'dd MMM yyyy')
         : 'Tanggal tidak diketahui';
 
     String nilaiDonasi = '';
@@ -626,7 +628,7 @@ class DetailDonaturView extends GetView<DonaturController> {
       getPetugasDesaNama: (String? id) =>
           controller.getPetugasDesaNama(id) ?? 'Petugas tidak diketahui',
       showFullScreenImage: (String imageUrl) {
-        DetailPenitipanDialog.showFullScreenImage(Get.context!, imageUrl);
+        ShowImageDialog.showFullScreen(Get.context!, imageUrl);
       },
     );
   }

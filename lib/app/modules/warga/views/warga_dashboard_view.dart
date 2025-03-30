@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/widgets/section_header.dart';
 
 class WargaDashboardView extends GetView<WargaDashboardController> {
@@ -23,6 +23,54 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header DisalurKita dengan logo dan slogan
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/images/logo-disalurkita.png',
+                        width: 50,
+                        height: 50,
+                      ),
+                      const SizedBox(width: 15),
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'DisalurKita',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1565C0),
+                            ),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            'Salurkan dengan Pasti, Pantau dengan Bukti',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
                 _buildWelcomeSection(),
                 const SizedBox(height: 24),
                 _buildStatisticSection(),
@@ -90,10 +138,17 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
                             ? NetworkImage(controller.profilePhotoUrl!)
                             : null,
                         child: controller.profilePhotoUrl == null
-                            ? Icon(
-                                Icons.person,
-                                color: Colors.blue.shade700,
-                                size: 30,
+                            ? Text(
+                                controller.nama.isNotEmpty
+                                    ? controller.nama
+                                        .substring(0, 1)
+                                        .toUpperCase()
+                                    : '?',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade700,
+                                  fontSize: 24,
+                                ),
                               )
                             : null,
                       ),
@@ -417,12 +472,6 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
   }
 
   Widget _buildPenerimaanSummary() {
-    final currencyFormat = NumberFormat.currency(
-      locale: 'id',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    );
-
     double totalUang = 0;
     Map<String, double> totalNonUang = {};
 
@@ -494,7 +543,7 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
                       icon: Icons.attach_money,
                       color: Colors.green,
                       title: 'Total Bantuan Uang',
-                      value: currencyFormat.format(totalUang),
+                      value: FormatHelper.formatRupiah(totalUang),
                     ),
                   if (totalNonUang.isNotEmpty) ...[
                     if (totalUang > 0)

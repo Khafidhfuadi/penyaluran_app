@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/data/models/pengaduan_model.dart';
 import 'package:penyaluran_app/app/data/models/tindakan_pengaduan_model.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:penyaluran_app/app/widgets/indicators/status_pill.dart';
-import 'package:penyaluran_app/app/widgets/section_header.dart';
 import 'package:penyaluran_app/app/widgets/cards/info_card.dart';
 import 'dart:io';
+import 'package:penyaluran_app/app/widgets/widgets.dart';
 
 class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
   const WargaDetailPengaduanView({super.key});
@@ -670,8 +670,7 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
                 const SizedBox(width: 12),
                 Text(
                   pengaduan.tanggalPengaduan != null
-                      ? DateFormat('dd MMMM yyyy', 'id_ID')
-                          .format(pengaduan.tanggalPengaduan!)
+                      ? FormatHelper.formatDateTime(pengaduan.tanggalPengaduan!)
                       : '-',
                   style: TextStyle(
                     fontSize: 15,
@@ -1309,8 +1308,8 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
                           child: Row(
                             children: tindakan.buktiTindakan!.map((bukti) {
                               return GestureDetector(
-                                onTap: () =>
-                                    showFullScreenImage(context, bukti),
+                                onTap: () => ShowImageDialog.showFullScreen(
+                                    context, bukti),
                                 child: Container(
                                   width: 100,
                                   height: 100,
@@ -1407,8 +1406,8 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
                         Expanded(
                           child: Text(
                             tindakan.tanggalTindakan != null
-                                ? DateFormat('dd MMM yyyy HH:mm', 'id_ID')
-                                    .format(tindakan.tanggalTindakan!)
+                                ? FormatHelper.formatDateTime(
+                                    tindakan.tanggalTindakan!)
                                 : '-',
                             style: TextStyle(
                               fontSize: 12,
@@ -1429,183 +1428,8 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
     );
   }
 
-  void showFullScreenImage(BuildContext context, String imageUrl) {
-    // Buat controller untuk InteractiveViewer
-    final TransformationController transformationController =
-        TransformationController();
-
-    Get.dialog(
-      Dialog(
-        insetPadding: EdgeInsets.zero,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
-              color: Colors.black,
-              child: InteractiveViewer(
-                panEnabled: true,
-                minScale: 0.5,
-                maxScale: 4,
-                transformationController: transformationController,
-                child: Center(
-                  child: Hero(
-                    tag: imageUrl,
-                    child: imageUrl.startsWith('http')
-                        ? Image.network(
-                            imageUrl,
-                            fit: BoxFit.contain,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Center(
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                  value: loadingProgress.expectedTotalBytes !=
-                                          null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                      : null,
-                                ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.broken_image,
-                                      size: 60,
-                                      color: Colors.red,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Gagal memuat gambar',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          )
-                        : Image.file(
-                            File(imageUrl),
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.broken_image,
-                                      size: 60,
-                                      color: Colors.red,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Gagal memuat gambar',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 20,
-              right: 20,
-              child: GestureDetector(
-                onTap: () => Get.back(),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 20,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildImageControlButton(
-                    icon: Icons.zoom_out,
-                    onTap: () {
-                      // Zoom out
-                      final Matrix4 matrix =
-                          transformationController.value.clone();
-                      matrix.scale(0.75);
-                      transformationController.value = matrix;
-                    },
-                  ),
-                  const SizedBox(width: 16),
-                  _buildImageControlButton(
-                    icon: Icons.refresh,
-                    onTap: () {
-                      // Reset
-                      transformationController.value = Matrix4.identity();
-                    },
-                  ),
-                  const SizedBox(width: 16),
-                  _buildImageControlButton(
-                    icon: Icons.zoom_in,
-                    onTap: () {
-                      // Zoom in
-                      final Matrix4 matrix =
-                          transformationController.value.clone();
-                      matrix.scale(1.5);
-                      transformationController.value = matrix;
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageControlButton({
-    required IconData icon,
-    required Function() onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.6),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 24,
-        ),
-      ),
-    );
+  void _showFullScreenImage(BuildContext context, String imagePath) {
+    ShowImageDialog.showFullScreen(context, imagePath);
   }
 }
 
@@ -2056,8 +1880,7 @@ class _TambahTindakanPengaduanViewState
   }
 
   void _showFullScreenImage(BuildContext context, String imagePath) {
-    final wargaDetailView = Get.find<WargaDetailPengaduanView>();
-    wargaDetailView.showFullScreenImage(context, imagePath);
+    ShowImageDialog.showFullScreen(context, imagePath);
   }
 
   Future<void> _simpanTindakan() async {
@@ -2078,22 +1901,6 @@ class _TambahTindakanPengaduanViewState
       });
 
       try {
-        // Di sini kita baru melakukan upload file ke server
-        // Contoh implementasi:
-
-        // 1. Upload semua file bukti tindakan
-        // final List<String> buktiTindakanUrls = await uploadMultipleFiles(buktiTindakanPaths);
-
-        // 2. Simpan data tindakan ke database
-        // await saveTindakanPengaduan(
-        //   pengaduanId: widget.pengaduanId,
-        //   kategoriTindakan: selectedKategori!,
-        //   prioritas: selectedPrioritas!,
-        //   tindakan: tindakanController.text,
-        //   catatan: catatanController.text,
-        //   buktiTindakanUrls: buktiTindakanUrls,
-        // );
-
         // Tampilkan pesan sukses
         Get.back(); // Kembali ke halaman sebelumnya
         Get.snackbar(

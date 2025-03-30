@@ -12,6 +12,7 @@ class LokasiPenyaluranModel {
   final double? latitude;
   final double? longitude;
   final String? petugasDesaId; // Referensi ke PetugasDesa
+  final bool isLokasiTitip; // Field baru untuk menentukan lokasi penitipan
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -27,6 +28,7 @@ class LokasiPenyaluranModel {
     this.latitude,
     this.longitude,
     this.petugasDesaId,
+    this.isLokasiTitip = false, // Nilai default false
     required this.createdAt,
     this.updatedAt,
   });
@@ -49,6 +51,7 @@ class LokasiPenyaluranModel {
         latitude: json["latitude"]?.toDouble(),
         longitude: json["longitude"]?.toDouble(),
         petugasDesaId: json["petugas_desa_id"],
+        isLokasiTitip: json["is_lokasi_titip"] ?? false,
         createdAt: DateTime.parse(json["created_at"]),
         updatedAt: json["updated_at"] == null
             ? null
@@ -67,6 +70,7 @@ class LokasiPenyaluranModel {
         "latitude": latitude,
         "longitude": longitude,
         "petugas_desa_id": petugasDesaId,
+        "is_lokasi_titip": isLokasiTitip,
         "created_at": createdAt.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };

@@ -5,11 +5,15 @@ import 'package:penyaluran_app/app/data/models/notifikasi_model.dart';
 import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/counter_service.dart';
+import 'package:penyaluran_app/app/services/jadwal_update_service.dart';
+import 'dart:async';
 
 class PetugasDesaDashboardController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   final SupabaseService _supabaseService = SupabaseService.to;
   late final CounterService _counterService;
+  late final JadwalUpdateService _jadwalUpdateService;
+  late StreamSubscription _jadwalUpdateSubscription;
 
   final RxBool isLoading = false.obs;
 
@@ -67,16 +71,45 @@ class PetugasDesaDashboardController extends GetxController {
     }
     _counterService = Get.find<CounterService>();
 
+    // Inisialisasi JadwalUpdateService untuk pembaruan realtime
+    if (Get.isRegistered<JadwalUpdateService>()) {
+      _jadwalUpdateService = Get.find<JadwalUpdateService>();
+    } else {
+      _jadwalUpdateService = Get.put(JadwalUpdateService());
+    }
+
+    // Daftarkan controller ini untuk menerima pembaruan
+    _jadwalUpdateService.registerForUpdates('PetugasDesaDashboardController');
+
+    // Berlangganan ke pembaruan jadwal
+    _jadwalUpdateSubscription =
+        _jadwalUpdateService.jadwalUpdateStream.listen(_handleJadwalUpdate);
+
     loadUserProfile();
     loadDashboardData();
     loadNotifikasiData();
-    loadJadwalAktif();
+    loadJadwalHariIni();
   }
 
   @override
   void onClose() {
+    // Berhenti berlangganan pembaruan jadwal
+    _jadwalUpdateSubscription.cancel();
+    // Batalkan pendaftaran controller
+    _jadwalUpdateService
+        .unregisterFromUpdates('PetugasDesaDashboardController');
     searchController.dispose();
     super.onClose();
+  }
+
+  // Handler untuk menerima pembaruan jadwal dari service
+  void _handleJadwalUpdate(Map<String, dynamic> updateData) {
+    if (updateData['type'] == 'status_update' ||
+        updateData['type'] == 'reload_required' ||
+        updateData['type'] == 'check_required') {
+      // Muat ulang data dashboard saat ada perubahan status jadwal
+      loadDashboardData();
+    }
   }
 
   // Metode untuk memuat data profil pengguna dari cache
@@ -155,14 +188,14 @@ class PetugasDesaDashboardController extends GetxController {
     }
   }
 
-  Future<void> loadJadwalAktif() async {
+  Future<void> loadJadwalHariIni() async {
     try {
       final jadwalData = await _supabaseService.getJadwalAktif();
       if (jadwalData != null) {
         jadwalHariIni.value = jadwalData;
       }
     } catch (e) {
-      print('Error loading jadwal hari ini: $e');
+      print('Error loading jadwal data: $e');
     }
   }
 
@@ -173,7 +206,7 @@ class PetugasDesaDashboardController extends GetxController {
         loadUserProfile(),
         loadDashboardData(),
         loadNotifikasiData(),
-        loadJadwalAktif(),
+        loadJadwalHariIni(),
       ]);
     } catch (e) {
       print('Error refreshing data: $e');

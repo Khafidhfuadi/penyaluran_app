@@ -207,7 +207,7 @@ class JadwalSectionWidget extends StatelessWidget {
 
     // Format tanggal dan waktu menggunakan helper
     String formattedDateTime =
-        DateTimeHelper.formatDateTime(jadwal.tanggalPenyaluran);
+        FormatHelper.formatDateTime(jadwal.tanggalPenyaluran);
 
     // Dapatkan nama lokasi dan kategori
     String lokasiName =

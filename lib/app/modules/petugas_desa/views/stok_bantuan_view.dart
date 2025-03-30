@@ -156,7 +156,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                                   ),
                         ),
                         Text(
-                          'Rp ${DateTimeHelper.formatNumber(controller.totalDanaBantuan.value)}',
+                          'Rp ${FormatHelper.formatNumber(controller.totalDanaBantuan.value)}',
                           style:
                               Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -512,8 +512,8 @@ class StokBantuanView extends GetView<StokBantuanController> {
                                 ),
                                 Text(
                                   item.isUang == true
-                                      ? 'Rp ${DateTimeHelper.formatNumber(item.totalStok)}'
-                                      : '${DateTimeHelper.formatNumber(item.totalStok)} ${item.satuan ?? ''}',
+                                      ? 'Rp ${FormatHelper.formatNumber(item.totalStok)}'
+                                      : '${FormatHelper.formatNumber(item.totalStok)} ${item.satuan ?? ''}',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleLarge
@@ -549,7 +549,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                     Expanded(
                       child: Text(
                         item.updatedAt != null
-                            ? 'Diperbarui: ${DateTimeHelper.formatDateTimeWithHour(item.updatedAt!)}'
+                            ? 'Diperbarui: ${FormatHelper.formatDateTimeWithHour(item.updatedAt!)}'
                             : 'Tidak ada data pembaruan',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.grey[600],
@@ -984,8 +984,8 @@ class StokBantuanView extends GetView<StokBantuanController> {
                           const SizedBox(width: 8),
                           Text(
                             isUang
-                                ? 'Rp ${DateTimeHelper.formatNumber(stok.totalStok)}'
-                                : '${DateTimeHelper.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
+                                ? 'Rp ${FormatHelper.formatNumber(stok.totalStok)}'
+                                : '${FormatHelper.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ],
@@ -1175,8 +1175,8 @@ class StokBantuanView extends GetView<StokBantuanController> {
                         SizedBox(width: 4),
                         Text(
                           stok.isUang == true
-                              ? 'Rp ${DateTimeHelper.formatNumber(stok.totalStok)}'
-                              : '${DateTimeHelper.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
+                              ? 'Rp ${FormatHelper.formatNumber(stok.totalStok)}'
+                              : '${FormatHelper.formatNumber(stok.totalStok)} ${stok.satuan ?? ''}',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -1240,7 +1240,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
   Widget _buildLastUpdateInfo(BuildContext context) {
     return Obx(() {
       final lastUpdate = controller.lastUpdateTime.value;
-      final formattedDate = DateTimeHelper.formatDateTimeWithHour(lastUpdate);
+      final formattedDate = FormatHelper.formatDateTimeWithHour(lastUpdate);
 
       return Padding(
         padding: const EdgeInsets.only(top: 8.0),

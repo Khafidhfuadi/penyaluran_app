@@ -198,7 +198,7 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
                 'Tempat, Tanggal Lahir',
                 warga?['tempat_lahir'] != null &&
                         warga?['tanggal_lahir'] != null
-                    ? '${warga!['tempat_lahir']}, ${DateTimeHelper.formatDate(DateTime.parse(warga['tanggal_lahir']), format: 'd MMMM yyyy')}'
+                    ? '${warga!['tempat_lahir']}, ${FormatHelper.formatDateTime(DateTime.parse(warga['tanggal_lahir']), format: 'd MMMM yyyy')}'
                     : 'Bogor, 2 Juni 1990'),
             const Divider(),
 
@@ -236,18 +236,18 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
 
     String tanggalWaktuPenyaluran = '';
     if (widget.tanggalPenyaluran != null) {
-      final tanggal = DateTimeHelper.formatDate(widget.tanggalPenyaluran!);
-      final waktuMulai = DateTimeHelper.formatTime(widget.tanggalPenyaluran!);
-      final waktuSelesai = DateTimeHelper.formatTime(
+      final tanggal = FormatHelper.formatDateTime(widget.tanggalPenyaluran!);
+      final waktuMulai = FormatHelper.formatTime(widget.tanggalPenyaluran!);
+      final waktuSelesai = FormatHelper.formatTime(
           widget.tanggalPenyaluran!.add(const Duration(hours: 1)));
       tanggalWaktuPenyaluran = '$tanggal $waktuMulai-$waktuSelesai';
     } else if (penerima.penyaluranBantuan != null &&
         penerima.penyaluranBantuan!['tanggal_penyaluran'] != null) {
       final tanggalPenyaluran =
           DateTime.parse(penerima.penyaluranBantuan!['tanggal_penyaluran']);
-      final tanggal = DateTimeHelper.formatDate(tanggalPenyaluran);
-      final waktuMulai = DateTimeHelper.formatTime(tanggalPenyaluran);
-      final waktuSelesai = DateTimeHelper.formatTime(
+      final tanggal = FormatHelper.formatDateTime(tanggalPenyaluran);
+      final waktuMulai = FormatHelper.formatTime(tanggalPenyaluran);
+      final waktuSelesai = FormatHelper.formatTime(
           tanggalPenyaluran.add(const Duration(hours: 1)));
       tanggalWaktuPenyaluran = '$tanggal $waktuMulai-$waktuSelesai';
     } else {

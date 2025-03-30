@@ -43,7 +43,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
   // Tambahkan widget untuk menampilkan waktu terakhir update
   Widget _buildLastUpdateInfo(BuildContext context) {
     final lastUpdate = DateTime.now();
-    final formattedDate = DateTimeHelper.formatDateTimeWithHour(lastUpdate);
+    final formattedDate = FormatHelper.formatDateTimeWithHour(lastUpdate);
 
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
@@ -135,7 +135,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                     ),
               ),
               Text(
-                '${DateTimeHelper.formatNumber(filteredPengaduan.length)} item',
+                '${FormatHelper.formatNumber(filteredPengaduan.length)} item',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Colors.grey,
                     ),
@@ -154,9 +154,9 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
     // Format tanggal menggunakan DateTimeHelper
     String formattedDate = '';
     if (item.tanggalPengaduan != null) {
-      formattedDate = DateTimeHelper.formatDate(item.tanggalPengaduan);
+      formattedDate = FormatHelper.formatDateTime(item.tanggalPengaduan);
     } else if (item.createdAt != null) {
-      formattedDate = DateTimeHelper.formatDate(item.createdAt);
+      formattedDate = FormatHelper.formatDateTime(item.createdAt);
     }
 
     Color statusColor = AppTheme.successColor;

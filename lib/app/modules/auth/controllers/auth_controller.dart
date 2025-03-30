@@ -50,6 +50,10 @@ class AuthController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isWargaProfileComplete = false.obs;
 
+  // Variable untuk mengontrol visibility password
+  final RxBool isPasswordHidden = true.obs;
+  final RxBool isConfirmPasswordHidden = true.obs;
+
   // Flag untuk menandai apakah sudah melakukan pengambilan data profil
   final RxBool _hasLoadedProfile = false.obs;
 
@@ -376,6 +380,65 @@ class AuthController extends GetxController {
     return null;
   }
 
+  // Metode untuk reset password
+  Future<void> resetPassword(String email) async {
+    if (email.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Email tidak boleh kosong',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (!GetUtils.isEmail(email)) {
+      Get.snackbar(
+        'Error',
+        'Email tidak valid',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      // Menggunakan Supabase untuk reset password
+      await _authProvider.resetPasswordForEmail(
+        email,
+        redirectTo: 'penyaluranapp://reset-password',
+      );
+
+      Get.snackbar(
+        'Sukses',
+        'Instruksi reset password telah dikirim ke email Anda',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+
+      // Kembali ke halaman login
+      Future.delayed(const Duration(seconds: 3), () {
+        Get.offNamed(Routes.login);
+      });
+    } catch (e) {
+      print('Error saat reset password: $e');
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan saat mengirim reset password. Silakan coba lagi nanti.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   // Metode untuk refresh data user setelah update profil
   Future<void> refreshUserData() async {
     try {
@@ -542,5 +605,15 @@ class AuthController extends GetxController {
     alamatController.clear();
     noHpController.clear();
     jenisController.clear();
+  }
+
+  // Metode untuk toggle visibility password
+  void togglePasswordVisibility() {
+    isPasswordHidden.value = !isPasswordHidden.value;
+  }
+
+  // Metode untuk toggle visibility konfirmasi password
+  void toggleConfirmPasswordVisibility() {
+    isConfirmPasswordHidden.value = !isConfirmPasswordHidden.value;
   }
 }

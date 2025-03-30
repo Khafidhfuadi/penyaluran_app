@@ -11,7 +11,6 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:open_file/open_file.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:penyaluran_app/app/utils/format_helper.dart';
 
@@ -635,7 +634,7 @@ class LaporanPenyaluranController extends GetxController {
                                 fontSize: 12,
                                 color: PdfColors.blue900)),
                         pw.Text(
-                          'Tanggal: ${DateFormat('dd MMMM yyyy').format(DateTime.now())}',
+                          'Tanggal: ${FormatHelper.formatDateTime(DateTime.now())}',
                           style: pw.TextStyle(font: ttf, fontSize: 10),
                         ),
                       ],
@@ -708,8 +707,7 @@ class LaporanPenyaluranController extends GetxController {
                   _buildPdfRow(
                       'Tanggal Laporan',
                       laporan.tanggalLaporan != null
-                          ? DateTimeHelper.formatDateTime(
-                              laporan.tanggalLaporan!)
+                          ? FormatHelper.formatDateTime(laporan.tanggalLaporan!)
                           : '-',
                       ttf,
                       ttfBold),
@@ -731,7 +729,7 @@ class LaporanPenyaluranController extends GetxController {
                   _buildPdfRow(
                       'Tanggal Penyaluran',
                       penyaluran.tanggalPenyaluran != null
-                          ? DateTimeHelper.formatDateTime(
+                          ? FormatHelper.formatDateTime(
                               penyaluran.tanggalPenyaluran!)
                           : '-',
                       ttf,
@@ -739,7 +737,7 @@ class LaporanPenyaluranController extends GetxController {
                   _buildPdfRow(
                       'Tanggal Selesai',
                       penyaluran.tanggalSelesai != null
-                          ? DateTimeHelper.formatDateTime(
+                          ? FormatHelper.formatDateTime(
                               penyaluran.tanggalSelesai!)
                           : '-',
                       ttf,
@@ -902,7 +900,7 @@ class LaporanPenyaluranController extends GetxController {
 
                           final isUang = stokBantuan['is_uang'] == true;
                           final formattedJumlah = isUang
-                              ? 'Rp ${NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0).format(jumlah)}'
+                              ? FormatHelper.formatRupiah(jumlah)
                               : '$jumlah ${stokBantuan['satuan'] ?? ''}';
 
                           return pw.TableRow(
@@ -975,7 +973,7 @@ class LaporanPenyaluranController extends GetxController {
                           final jumlahBantuan = penerima.jumlahBantuan ?? 0;
 
                           final formattedJumlah = isUang
-                              ? 'Rp ${NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0).format(jumlahBantuan)}'
+                              ? FormatHelper.formatRupiah(jumlahBantuan)
                               : '$jumlahBantuan ${penerima.satuan ?? ''}';
 
                           return pw.TableRow(

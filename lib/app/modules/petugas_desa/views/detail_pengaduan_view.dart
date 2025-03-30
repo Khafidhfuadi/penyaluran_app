@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/data/models/pengaduan_model.dart';
 import 'package:penyaluran_app/app/data/models/tindakan_pengaduan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/pengaduan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/widgets/cards/info_card.dart';
 import 'package:penyaluran_app/app/widgets/indicators/status_pill.dart';
-import 'package:penyaluran_app/app/widgets/section_header.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,7 +14,7 @@ import 'dart:io';
 import 'package:penyaluran_app/app/widgets/inputs/dropdown_input.dart';
 import 'package:penyaluran_app/app/widgets/inputs/text_input.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:penyaluran_app/app/routes/app_pages.dart';
+import 'package:penyaluran_app/app/widgets/widgets.dart';
 
 class DetailPengaduanView extends GetView<PengaduanController> {
   const DetailPengaduanView({super.key});
@@ -1092,8 +1091,8 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                           child: Row(
                             children: tindakan.buktiTindakan!.map((bukti) {
                               return GestureDetector(
-                                onTap: () =>
-                                    showFullScreenImage(context, bukti),
+                                onTap: () => ShowImageDialog.showFullScreen(
+                                    context, bukti),
                                 child: Container(
                                   width: 100,
                                   height: 100,
@@ -1190,8 +1189,8 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                         Expanded(
                           child: Text(
                             tindakan.tanggalTindakan != null
-                                ? DateFormat('dd MMM yyyy HH:mm', 'id_ID')
-                                    .format(tindakan.tanggalTindakan!)
+                                ? FormatHelper.formatDateTime(
+                                    tindakan.tanggalTindakan!)
                                 : '-',
                             style: TextStyle(
                               fontSize: 12,
@@ -1669,9 +1668,11 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                                         return Stack(
                                           children: [
                                             GestureDetector(
-                                              onTap: () => showFullScreenImage(
-                                                  stateContext,
-                                                  buktiTindakanPaths[index]),
+                                              onTap: () => ShowImageDialog
+                                                  .showFullScreen(
+                                                      stateContext,
+                                                      buktiTindakanPaths[
+                                                          index]),
                                               child: Container(
                                                 width: 100,
                                                 height: 100,
@@ -2003,63 +2004,6 @@ class DetailPengaduanView extends GetView<PengaduanController> {
     );
   }
 
-  void showFullScreenImage(BuildContext context, String imagePath) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: EdgeInsets.zero,
-          backgroundColor: Colors.transparent,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  color: Colors.black87,
-                ),
-              ),
-              InteractiveViewer(
-                panEnabled: true,
-                boundaryMargin: const EdgeInsets.all(20),
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: CachedNetworkImage(
-                  imageUrl: imagePath,
-                  placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                  errorWidget: (context, url, error) => Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error, color: Colors.white, size: 32),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Gagal memuat gambar',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 20,
-                right: 20,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // Widget untuk menampilkan feedback dan rating warga
   Widget _buildFeedbackSection(BuildContext context, PengaduanModel pengaduan) {
     return Card(
       elevation: 3,
@@ -2348,8 +2292,7 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                 const SizedBox(width: 12),
                 Text(
                   pengaduan.tanggalPengaduan != null
-                      ? DateFormat('dd MMMM yyyy', 'id_ID')
-                          .format(pengaduan.tanggalPengaduan!)
+                      ? FormatHelper.formatDateTime(pengaduan.tanggalPengaduan!)
                       : '-',
                   style: TextStyle(
                     fontSize: 15,
@@ -2376,7 +2319,8 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: GestureDetector(
-                            onTap: () => _showFullScreenImage(context, url),
+                            onTap: () =>
+                                ShowImageDialog.showFullScreen(context, url),
                             child: Container(
                               width: 120,
                               decoration: BoxDecoration(
@@ -2588,58 +2532,5 @@ class DetailPengaduanView extends GetView<PengaduanController> {
         colorText: Colors.white,
       );
     }
-  }
-
-  void _showFullScreenImage(BuildContext context, String imagePath) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: EdgeInsets.zero,
-          backgroundColor: Colors.transparent,
-          child: Stack(
-            children: [
-              InteractiveViewer(
-                panEnabled: true,
-                minScale: 0.5,
-                maxScale: 4,
-                child: Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  color: Colors.black.withOpacity(0.7),
-                  child: Center(
-                    child: imagePath.startsWith('http')
-                        ? CachedNetworkImage(
-                            imageUrl: imagePath,
-                            placeholder: (context, url) => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                            errorWidget: (context, url, error) => const Icon(
-                              Icons.error,
-                              color: Colors.red,
-                              size: 50,
-                            ),
-                          )
-                        : Image.file(File(imagePath)),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 20,
-                right: 20,
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 }

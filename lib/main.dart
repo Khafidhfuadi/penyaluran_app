@@ -9,6 +9,7 @@ import 'package:penyaluran_app/app/modules/auth/controllers/auth_controller.dart
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:syncfusion_localizations/syncfusion_localizations.dart';
+import 'package:penyaluran_app/app/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,11 +28,26 @@ void main() async {
 
 // Inisialisasi service
 Future<void> initServices() async {
-  await Get.putAsync(() => SupabaseService().init());
-  await Get.putAsync(() => AuthService().init());
+  print('Initializing services...');
+  // Inisialisasi SupabaseService dengan pendekatan async
+  final supabaseService =
+      await Get.putAsync(() => SupabaseService().init(), permanent: true);
+  print('SupabaseService initialized: ${supabaseService != null}');
+
+  // Inisialisasi AuthService
+  final authService =
+      await Get.putAsync(() => AuthService().init(), permanent: true);
+  print('AuthService initialized: ${authService != null}');
 
   // Inisialisasi AuthController secara global
-  Get.put(AuthController(), permanent: true);
+  final authController = Get.put(AuthController(), permanent: true);
+  print('AuthController initialized: ${authController != null}');
+
+  // Register NotificationService
+  final notificationService = Get.put(NotificationService(), permanent: true);
+  print('NotificationService initialized: ${notificationService != null}');
+
+  print('All services initialized');
 }
 
 class MyApp extends StatelessWidget {
@@ -40,7 +56,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Penerimaan App',
+      title: 'DisalurKita',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.light, // Default ke tema terang
@@ -60,6 +76,7 @@ class MyApp extends StatelessWidget {
         Locale('id', 'ID'), // Indonesia
         Locale('en', 'US'), // English
       ],
+      // initialBinding tidak diperlukan lagi karena service sudah diinisialisasi di initServices()
     );
   }
 }

@@ -221,15 +221,25 @@ class DaftarPenerimaView extends GetView<PenerimaController> {
                     ),
                     child: CircleAvatar(
                       radius: 35,
-                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                      backgroundImage: penerima['foto_profil'] != null
+                      backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
+                      backgroundImage: penerima['foto_profil'] != null &&
+                              penerima['foto_profil'].toString().isNotEmpty
                           ? NetworkImage(penerima['foto_profil'])
                           : null,
-                      child: penerima['foto_profil'] == null
-                          ? Icon(
-                              Icons.person,
-                              size: 35,
-                              color: AppTheme.primaryColor.withOpacity(0.7),
+                      child: (penerima['foto_profil'] == null ||
+                              penerima['foto_profil'].toString().isEmpty)
+                          ? Text(
+                              penerima['nama_lengkap'] != null
+                                  ? penerima['nama_lengkap']
+                                      .toString()
+                                      .substring(0, 1)
+                                      .toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                                fontSize: 24,
+                              ),
                             )
                           : null,
                     ),
@@ -435,13 +445,24 @@ class PenerimaSearchDelegate extends SearchDelegate {
             },
             leading: CircleAvatar(
               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-              backgroundImage: penerima['foto_profil'] != null
+              backgroundImage: penerima['foto_profil'] != null &&
+                      penerima['foto_profil'].toString().isNotEmpty
                   ? NetworkImage(penerima['foto_profil'])
                   : null,
-              child: penerima['foto_profil'] == null
-                  ? const Icon(
-                      Icons.person,
-                      color: AppTheme.primaryColor,
+              child: (penerima['foto_profil'] == null ||
+                      penerima['foto_profil'].toString().isEmpty)
+                  ? Text(
+                      penerima['nama_lengkap'] != null
+                          ? penerima['nama_lengkap']
+                              .toString()
+                              .substring(0, 1)
+                              .toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                        fontSize: 24,
+                      ),
                     )
                   : null,
             ),

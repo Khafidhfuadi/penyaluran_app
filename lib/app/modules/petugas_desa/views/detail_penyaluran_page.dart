@@ -267,7 +267,7 @@ class DetailPenyaluranPage extends StatelessWidget {
                     Icons.event,
                     'Tanggal Penyaluran',
                     penyaluran.tanggalPenyaluran != null
-                        ? DateTimeHelper.formatDateTime(
+                        ? FormatHelper.formatDateTime(
                             penyaluran.tanggalPenyaluran!)
                         : 'Belum dijadwalkan',
                     AppTheme.secondaryColor),
@@ -280,7 +280,7 @@ class DetailPenyaluranPage extends StatelessWidget {
                       Icons.event_available,
                       'Tanggal Selesai',
                       penyaluran.tanggalSelesai != null
-                          ? DateTimeHelper.formatDateTime(
+                          ? FormatHelper.formatDateTime(
                               penyaluran.tanggalSelesai!)
                           : '-',
                       AppTheme.secondaryColor),
@@ -1065,19 +1065,30 @@ class DetailPenyaluranPage extends StatelessWidget {
                   backgroundColor: sudahMenerima
                       ? statusColor.withOpacity(0.15)
                       : Colors.grey.shade50,
-                  child: Text(
-                    warga != null && warga['nama_lengkap'] != null
-                        ? warga['nama_lengkap']
-                            .toString()
-                            .substring(0, 1)
-                            .toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: sudahMenerima ? statusColor : Colors.grey.shade700,
-                      fontSize: 22,
-                    ),
-                  ),
+                  backgroundImage: warga != null &&
+                          warga['foto_profil'] != null &&
+                          warga['foto_profil'].toString().isNotEmpty
+                      ? NetworkImage(warga['foto_profil'])
+                      : null,
+                  child: (warga == null ||
+                          warga['foto_profil'] == null ||
+                          warga['foto_profil'].toString().isEmpty)
+                      ? Text(
+                          warga != null && warga['nama_lengkap'] != null
+                              ? warga['nama_lengkap']
+                                  .toString()
+                                  .substring(0, 1)
+                                  .toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: sudahMenerima
+                                ? statusColor
+                                : Colors.grey.shade700,
+                            fontSize: 22,
+                          ),
+                        )
+                      : null,
                 ),
               ),
               const SizedBox(width: 16),
@@ -1621,19 +1632,28 @@ class DetailPenyaluranPage extends StatelessWidget {
                     CircleAvatar(
                       radius: 30,
                       backgroundColor: statusColor.withOpacity(0.2),
-                      child: Text(
-                        warga != null && warga['nama_lengkap'] != null
-                            ? warga['nama_lengkap']
-                                .toString()
-                                .substring(0, 1)
-                                .toUpperCase()
-                            : '?',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                          fontSize: 24,
-                        ),
-                      ),
+                      backgroundImage: warga != null &&
+                              warga['foto_profil'] != null &&
+                              warga['foto_profil'].toString().isNotEmpty
+                          ? NetworkImage(warga['foto_profil'])
+                          : null,
+                      child: (warga == null ||
+                              warga['foto_profil'] == null ||
+                              warga['foto_profil'].toString().isEmpty)
+                          ? Text(
+                              warga != null && warga['nama_lengkap'] != null
+                                  ? warga['nama_lengkap']
+                                      .toString()
+                                      .substring(0, 1)
+                                      .toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: statusColor,
+                                fontSize: 24,
+                              ),
+                            )
+                          : null,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -1753,7 +1773,7 @@ class DetailPenyaluranPage extends StatelessWidget {
                       if (penerima.tanggalPenerimaan != null)
                         _buildInfoRow(
                             'Tanggal Penerimaan',
-                            DateTimeHelper.formatDate(
+                            FormatHelper.formatDateTime(
                                 penerima.tanggalPenerimaan!)),
                       if (penerima.jumlahBantuan != null)
                         _buildInfoRow('Jumlah Bantuan',
@@ -1946,7 +1966,7 @@ class DetailPenyaluranPage extends StatelessWidget {
             _buildInfoRow('Status', 'Batal Terlaksana'),
             if (penyaluran.tanggalSelesai != null)
               _buildInfoRow('Tanggal Pembatalan',
-                  DateTimeHelper.formatDateTime(penyaluran.tanggalSelesai!)),
+                  FormatHelper.formatDateTime(penyaluran.tanggalSelesai!)),
             const SizedBox(height: 8),
             const Text(
               'Alasan Pembatalan:',
@@ -2126,7 +2146,7 @@ class DetailPenyaluranPage extends StatelessWidget {
                     _buildInfoRow(
                       'Tanggal Laporan',
                       controller.laporan.value?.tanggalLaporan != null
-                          ? DateTimeHelper.formatDateTime(
+                          ? FormatHelper.formatDateTime(
                               controller.laporan.value!.tanggalLaporan!)
                           : '-',
                     ),

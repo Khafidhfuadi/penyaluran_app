@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 ///
 /// Kelas ini berisi fungsi-fungsi untuk memformat dan memanipulasi
 /// tanggal dan waktu.
-class DateTimeHelper {
+class FormatHelper {
   /// Mengkonversi DateTime dari UTC ke timezone lokal
   static DateTime toLocalDateTime(DateTime utcDateTime) {
     return utcDateTime.toLocal();
@@ -70,7 +70,6 @@ class DateTimeHelper {
   static String formatDateTime(
     DateTime? dateTime, {
     String format = 'dd MMM yyyy HH:mm',
-    String locale = 'id_ID',
     String defaultValue = 'Belum ditentukan',
   }) {
     if (dateTime == null) return defaultValue;
@@ -78,7 +77,7 @@ class DateTimeHelper {
     // Pastikan tanggal dan waktu dalam timezone lokal
     final localDateTime = toLocalDateTime(dateTime);
     try {
-      return DateFormat(format, locale).format(localDateTime);
+      return DateFormat(format).format(localDateTime);
     } catch (e) {
       print('Error formatting date time: $e');
       return localDateTime.toString(); // Fallback to basic format
@@ -197,8 +196,10 @@ class DateTimeHelper {
     final String tanggal = localDateTime.day.toString().padLeft(2, '0');
     final String bulan = namaBulan[localDateTime.month - 1];
     final String tahun = localDateTime.year.toString();
+    final String jam = localDateTime.hour.toString().padLeft(2, '0');
+    final String menit = localDateTime.minute.toString().padLeft(2, '0');
 
-    return '$hari, $tanggal $bulan $tahun';
+    return '$hari, $tanggal $bulan $tahun $jam:$menit';
   }
 
   /// Format angka dengan pemisah ribuan

@@ -562,19 +562,15 @@ class SupabaseService extends GetxService {
     try {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      final tomorrow = today.add(const Duration(days: 1));
       final week = today.add(const Duration(days: 7));
-
-      // Konversi ke UTC untuk query ke database
-      final tomorrowUtc = tomorrow.toUtc().toIso8601String();
-      final weekUtc = week.toUtc().toIso8601String();
 
       final response = await client
           .from('penyaluran_bantuan')
           .select('*')
-          .gte('tanggal_penyaluran', tomorrowUtc)
-          .lt('tanggal_penyaluran', weekUtc)
-          .inFilter('status', ['DIJADWALKAN']);
+          .gte('tanggal_penyaluran', today)
+          .lt('tanggal_penyaluran', week)
+          .inFilter('status', ['DIJADWALKAN']).order('tanggal_penyaluran',
+              ascending: true);
 
       return response;
     } catch (e) {
@@ -651,15 +647,128 @@ class SupabaseService extends GetxService {
   }
 
   // Metode untuk memperbarui status jadwal
-  Future<void> updateJadwalStatus(String jadwalId, String status) async {
+  Future<void> updateJadwalStatus(String jadwalId, String newStatus) async {
     try {
       await client.from('penyaluran_bantuan').update({
-        'status': status,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
+        'status': newStatus,
+        'updated_at': DateTime.now().toUtc().toIso8601String()
       }).eq('id', jadwalId);
+
+      print('Jadwal status updated: $jadwalId -> $newStatus');
     } catch (e) {
       print('Error updating jadwal status: $e');
-      throw e.toString();
+      rethrow;
+    }
+  }
+
+  // Update status jadwal penyaluran secara batch untuk efisiensi
+  Future<void> batchUpdateJadwalStatus(
+      Map<String, String> jadwalUpdates) async {
+    if (jadwalUpdates.isEmpty) return;
+
+    try {
+      print('Attempting batch update for ${jadwalUpdates.length} jadwal');
+      final timestamp = DateTime.now().toUtc().toIso8601String();
+
+      // Format data sesuai dengan yang diharapkan oleh SQL function
+      final List<Map<String, dynamic>> formattedUpdates = jadwalUpdates.entries
+          .map((e) => {'id': e.key, 'status': e.value})
+          .toList();
+
+      print('Formatted updates: $formattedUpdates');
+
+      try {
+        // Coba gunakan RPC dulu - kirim sebagai array dari objek JSON
+        final result = await client.rpc('batch_update_jadwal_status', params: {
+          'jadwal_updates': formattedUpdates,
+          'updated_timestamp': timestamp,
+        });
+
+        print('Batch update via RPC response: $result');
+
+        // Periksa hasil untuk mengkonfirmasi berapa banyak yang berhasil diupdate
+        if (result != null) {
+          final bool success = result['success'] == true;
+          final int updatedCount = result['updated_count'] ?? 0;
+
+          if (success) {
+            print('Successfully updated $updatedCount records via RPC');
+
+            // Log ID yang berhasil diupdate
+            final List<String> successIds =
+                List<String>.from(result['success_ids'] ?? []);
+            if (successIds.isNotEmpty) {
+              print(
+                  'Successfully updated jadwal IDs: ${successIds.join(", ")}');
+            }
+
+            // Jika ada yang gagal, log untuk debugging
+            if (updatedCount < jadwalUpdates.length) {
+              print(
+                  'Warning: ${jadwalUpdates.length - updatedCount} records failed to update');
+
+              // Periksa apakah ada informasi error
+              if (result['errors'] != null) {
+                final int errorCount = result['errors']['count'] ?? 0;
+                if (errorCount > 0) {
+                  final List<String> errorIds =
+                      List<String>.from(result['errors']['ids'] ?? []);
+                  final List<String> errorMessages =
+                      List<String>.from(result['errors']['messages'] ?? []);
+
+                  for (int i = 0; i < errorCount; i++) {
+                    if (i < errorIds.length && i < errorMessages.length) {
+                      print(
+                          'Error updating jadwal ${errorIds[i]}: ${errorMessages[i]}');
+                    }
+                  }
+                }
+              }
+
+              // Update individual yang gagal menggunakan metode satu per satu
+              for (var entry in jadwalUpdates.entries) {
+                if (!successIds.contains(entry.key)) {
+                  try {
+                    await updateJadwalStatus(entry.key, entry.value);
+                    print('Fallback update successful for jadwal ${entry.key}');
+                  } catch (e) {
+                    print(
+                        'Fallback update also failed for jadwal ${entry.key}: $e');
+                  }
+                }
+              }
+            }
+          } else {
+            print(
+                'Batch update reported failure. Falling back to individual updates.');
+            _fallbackToIndividualUpdates(jadwalUpdates);
+          }
+        } else {
+          print(
+              'Batch update returned null result. Falling back to individual updates.');
+          _fallbackToIndividualUpdates(jadwalUpdates);
+        }
+      } catch (rpcError) {
+        print('RPC batch update failed: $rpcError');
+        print('Falling back to individual updates');
+        _fallbackToIndividualUpdates(jadwalUpdates);
+      }
+    } catch (e) {
+      print('Error in batch update process: $e');
+      rethrow;
+    }
+  }
+
+  // Helper function untuk fallback ke individual updates
+  Future<void> _fallbackToIndividualUpdates(
+      Map<String, String> jadwalUpdates) async {
+    for (var entry in jadwalUpdates.entries) {
+      try {
+        await updateJadwalStatus(entry.key, entry.value);
+        print('Individual update successful: ${entry.key} -> ${entry.value}');
+      } catch (updateError) {
+        print('Failed to update jadwal ${entry.key}: $updateError');
+      }
     }
   }
 
@@ -874,7 +983,7 @@ class SupabaseService extends GetxService {
           .select('stok_bantuan_id, jumlah')
           .eq('id', penitipanId);
 
-      if (response == null || response.isEmpty) {
+      if (response.isEmpty) {
         throw 'Data penitipan tidak ditemukan';
       }
 
@@ -1930,8 +2039,8 @@ class SupabaseService extends GetxService {
       }
 
       if (jenisPerubahan != null) {
-        filterString += (filterString.isNotEmpty ? ',' : '') +
-            'jenis_perubahan.eq.$jenisPerubahan';
+        filterString +=
+            '${filterString.isNotEmpty ? ',' : ''}jenis_perubahan.eq.$jenisPerubahan';
       }
 
       final response = await client.from('riwayat_stok').select('''
@@ -2006,7 +2115,7 @@ class SupabaseService extends GetxService {
       print('Stok berhasil ditambahkan dari penitipan');
     } catch (e) {
       print('Error adding stok from penitipan: $e');
-      throw e; // Re-throw untuk penanganan di tingkat yang lebih tinggi
+      rethrow; // Re-throw untuk penanganan di tingkat yang lebih tinggi
     }
   }
 
@@ -2058,7 +2167,7 @@ class SupabaseService extends GetxService {
       print('Stok berhasil dikurangi dari penyaluran');
     } catch (e) {
       print('Error reducing stok from penyaluran: $e');
-      throw e; // Re-throw untuk penanganan di tingkat yang lebih tinggi
+      rethrow; // Re-throw untuk penanganan di tingkat yang lebih tinggi
     }
   }
 
@@ -2075,7 +2184,7 @@ class SupabaseService extends GetxService {
       String fotoBuktiUrl = '';
       if (fotoBuktiPath.isNotEmpty) {
         final String fileName =
-            '${DateTime.now().millisecondsSinceEpoch}_${stokBantuanId}.jpg';
+            '${DateTime.now().millisecondsSinceEpoch}_$stokBantuanId.jpg';
         final fileResponse = await client.storage.from('stok_bukti').upload(
               fileName,
               File(fotoBuktiPath),
@@ -2125,7 +2234,7 @@ class SupabaseService extends GetxService {
       print('Stok berhasil ditambahkan secara manual');
     } catch (e) {
       print('Error adding stok manually: $e');
-      throw e; // Re-throw untuk penanganan di tingkat yang lebih tinggi
+      rethrow; // Re-throw untuk penanganan di tingkat yang lebih tinggi
     }
   }
 
@@ -2164,7 +2273,7 @@ class SupabaseService extends GetxService {
       String fotoBuktiUrl = '';
       if (fotoBuktiPath.isNotEmpty) {
         final String fileName =
-            '${DateTime.now().millisecondsSinceEpoch}_${stokBantuanId}.jpg';
+            '${DateTime.now().millisecondsSinceEpoch}_$stokBantuanId.jpg';
         final fileResponse = await client.storage.from('stok_bukti').upload(
               fileName,
               File(fotoBuktiPath),
@@ -2198,7 +2307,7 @@ class SupabaseService extends GetxService {
       print('Stok berhasil dikurangi secara manual');
     } catch (e) {
       print('Error reducing stok manually: $e');
-      throw e; // Re-throw untuk penanganan di tingkat yang lebih tinggi
+      rethrow; // Re-throw untuk penanganan di tingkat yang lebih tinggi
     }
   }
 

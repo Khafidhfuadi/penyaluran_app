@@ -4,7 +4,6 @@ import 'package:penyaluran_app/app/modules/donatur/controllers/donatur_dashboard
 import 'package:penyaluran_app/app/widgets/section_header.dart';
 import 'package:penyaluran_app/app/data/models/stok_bantuan_model.dart';
 import 'package:penyaluran_app/app/utils/format_helper.dart';
-import 'package:penyaluran_app/app/utils/date_helper.dart';
 
 class DonaturSkemaView extends GetView<DonaturDashboardController> {
   const DonaturSkemaView({super.key});
@@ -549,14 +548,14 @@ class DonaturSkemaView extends GetView<DonaturDashboardController> {
 
     int days = difference.inDays;
     if (days > 0) {
-      return 'Batas waktu: ${days} hari lagi';
+      return 'Batas waktu: $days hari lagi';
     } else {
       int hours = difference.inHours;
       if (hours > 0) {
-        return 'Batas waktu: ${hours} jam lagi';
+        return 'Batas waktu: $hours jam lagi';
       } else {
         int minutes = difference.inMinutes;
-        return 'Batas waktu: ${minutes} menit lagi';
+        return 'Batas waktu: $minutes menit lagi';
       }
     }
   }
@@ -597,20 +596,20 @@ class DonaturSkemaView extends GetView<DonaturDashboardController> {
         }
       }
       // Format nilai sebagai Rupiah menggunakan DateHelper
-      return DateHelper.formatRupiah(nilai);
+      return FormatHelper.formatRupiah(nilai);
     }
 
     // Jika bukan uang, kembalikan nilai + satuan (jika ada)
-    return '${jumlahDiterimaPerOrang} ${stokBantuan.satuan ?? ''}';
+    return '$jumlahDiterimaPerOrang ${stokBantuan.satuan ?? ''}';
   }
 
   String _formatRupiah(dynamic amount) {
     if (amount is num) {
-      return DateHelper.formatRupiah(amount);
+      return FormatHelper.formatRupiah(amount);
     } else if (amount is String) {
       try {
         double nilai = double.parse(amount);
-        return DateHelper.formatRupiah(nilai);
+        return FormatHelper.formatRupiah(nilai);
       } catch (e) {
         return 'Rp ${amount.replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
       }

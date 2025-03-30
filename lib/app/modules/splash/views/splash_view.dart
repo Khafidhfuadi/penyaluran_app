@@ -33,23 +33,20 @@ class _SplashViewState extends State<SplashView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: AppTheme.primaryGradient,
-        ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                'assets/images/logo.png',
-                width: 120,
-                height: 120,
+                'assets/images/logo-disalurkita.png',
+                width: 150,
+                height: 150,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppTheme.primaryColor,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Icon(
@@ -62,24 +59,25 @@ class _SplashViewState extends State<SplashView> {
               ),
               const SizedBox(height: 24),
               const Text(
-                'Aplikasi Penyaluran',
+                'DisalurKita',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: AppTheme.primaryColor,
                 ),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Bantuan Sosial',
+                'Salurkan dengan Pasti, Pantau dengan Bukti',
                 style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
+                  fontSize: 16,
+                  color: AppTheme.primaryColor,
                 ),
               ),
               const SizedBox(height: 48),
               const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
               ),
             ],
           ),

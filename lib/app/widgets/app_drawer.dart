@@ -38,14 +38,20 @@ class AppDrawer extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: Colors.white,
-                  backgroundImage:
-                      avatar != null ? NetworkImage(avatar!) : null,
-                  child: avatar == null
-                      ? const Icon(
-                          Icons.person,
-                          size: 40,
-                          color: AppTheme.primaryColor,
+                  backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
+                  backgroundImage: avatar != null && avatar!.isNotEmpty
+                      ? NetworkImage(avatar!)
+                      : null,
+                  child: (avatar == null || avatar!.isEmpty)
+                      ? Text(
+                          nama.isNotEmpty
+                              ? nama.substring(0, 1).toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
+                            fontSize: 24,
+                          ),
                         )
                       : null,
                 ),

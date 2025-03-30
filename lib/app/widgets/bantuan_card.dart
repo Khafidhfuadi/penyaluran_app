@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/widgets/status_badge.dart';
 
 class BantuanCard extends StatelessWidget {
@@ -17,17 +17,11 @@ class BantuanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      locale: 'id',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    );
-
     // Format jumlah bantuan berdasarkan tipe (uang atau bukan)
     String formattedJumlah = '';
     if (item.jumlahBantuan != null) {
       if (item.isUang == true) {
-        formattedJumlah = currencyFormat.format(item.jumlahBantuan);
+        formattedJumlah = FormatHelper.formatRupiah(item.jumlahBantuan);
       } else {
         formattedJumlah = '${item.jumlahBantuan} ${item.satuan ?? ''}';
       }
@@ -120,8 +114,8 @@ class BantuanCard extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 item.tanggalPenerimaan != null
-                                    ? DateFormat('dd MMMM yyyy', 'id_ID')
-                                        .format(item.tanggalPenerimaan!)
+                                    ? FormatHelper.formatDateTime(
+                                        item.tanggalPenerimaan!)
                                     : '-',
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
@@ -373,8 +367,8 @@ class BantuanCard extends StatelessWidget {
                             Icons.calendar_today,
                             'Tanggal:',
                             item.tanggalPenerimaan != null
-                                ? DateFormat('dd MMMM yyyy', 'id_ID')
-                                    .format(item.tanggalPenerimaan!)
+                                ? FormatHelper.formatDateTime(
+                                    item.tanggalPenerimaan!)
                                 : '-',
                           ),
                           const Divider(height: 16),

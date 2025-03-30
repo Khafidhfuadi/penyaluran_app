@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:penyaluran_app/app/data/models/penerima_penyaluran_model.dart';
 import 'package:penyaluran_app/app/data/models/pengaduan_model.dart';
 import 'package:penyaluran_app/app/modules/warga/controllers/warga_dashboard_controller.dart';
+import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:penyaluran_app/app/widgets/status_badge.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -131,17 +131,11 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
   }
 
   Widget _buildHeaderSection(PenerimaPenyaluranModel penyaluran) {
-    final currencyFormat = NumberFormat.currency(
-      locale: 'id',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    );
-
     // Format jumlah bantuan berdasarkan tipe (uang atau bukan)
     String formattedJumlah = '';
     if (penyaluran.jumlahBantuan != null) {
       if (penyaluran.isUang == true) {
-        formattedJumlah = currencyFormat.format(penyaluran.jumlahBantuan);
+        formattedJumlah = FormatHelper.formatRupiah(penyaluran.jumlahBantuan);
       } else {
         formattedJumlah =
             '${penyaluran.jumlahBantuan} ${penyaluran.satuan ?? ''}';
@@ -390,8 +384,7 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
               icon: Icons.calendar_today,
               title: 'Tanggal Penerimaan',
               value: penyaluran.tanggalPenerimaan != null
-                  ? DateFormat('dd MMMM yyyy', 'id_ID')
-                      .format(penyaluran.tanggalPenerimaan!)
+                  ? FormatHelper.formatDateTime(penyaluran.tanggalPenerimaan!)
                   : 'Belum diterima',
               statusColor: null,
             ),
@@ -400,8 +393,7 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
               icon: Icons.access_time,
               title: 'Waktu Penerimaan',
               value: penyaluran.tanggalPenerimaan != null
-                  ? DateFormat('HH:mm', 'id_ID')
-                      .format(penyaluran.tanggalPenerimaan!)
+                  ? FormatHelper.formatDateTime(penyaluran.tanggalPenerimaan!)
                   : 'Belum diterima',
               statusColor: null,
             ),
@@ -758,8 +750,7 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
               icon: Icons.update,
               title: 'Terakhir Diperbarui',
               value: penyaluran.tanggalPenerimaan != null
-                  ? DateFormat('dd MMMM yyyy HH:mm', 'id_ID')
-                      .format(penyaluran.tanggalPenerimaan!)
+                  ? FormatHelper.formatDateTime(penyaluran.tanggalPenerimaan!)
                   : 'Tidak tersedia',
               statusColor: null,
             ),
@@ -1394,7 +1385,7 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
                     ),
                     const SizedBox(width: 8),
                     const Text(
-                      'Pengaduan Terdaftar',
+                      'Pengaduan',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -1547,8 +1538,7 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
                 const SizedBox(width: 8),
                 Text(
                   pengaduan.tanggalPengaduan != null
-                      ? DateFormat('dd MMMM yyyy HH:mm', 'id_ID')
-                          .format(pengaduan.tanggalPengaduan!)
+                      ? FormatHelper.formatDateTime(pengaduan.tanggalPengaduan!)
                       : 'Tanggal tidak tersedia',
                   style: TextStyle(
                     fontSize: 12,
