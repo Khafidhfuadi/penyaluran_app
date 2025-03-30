@@ -82,16 +82,6 @@ class BantuanCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          item.namaPenyaluran ?? item.keterangan ?? 'Bantuan',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
                           item.kategoriNama ?? 'Bantuan',
                           style: TextStyle(
                             color: Colors.grey.shade700,
@@ -244,22 +234,6 @@ class BantuanCard extends StatelessWidget {
                             color: item.isUang == true
                                 ? Colors.green.shade700
                                 : Colors.blue.shade700,
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              item.namaPenyaluran ??
-                                  item.keterangan ??
-                                  'Bantuan',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: item.isUang == true
-                                    ? Colors.green.shade800
-                                    : Colors.blue.shade800,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
                           ),
                         ],
                       ),

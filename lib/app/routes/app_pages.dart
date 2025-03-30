@@ -207,10 +207,15 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.konfirmasiPenerimaQr,
-      page: () => KonfirmasiPenerimaPage(
-        penerima: Get.arguments['penerima'],
-        tanggalPenyaluran: Get.arguments['tanggal_penyaluran'],
-      ),
+      page: () {
+        final penerima = Get.arguments['penerima'];
+        final String penerimaPenyaluranId = penerima?.id ?? '';
+
+        return KonfirmasiPenerimaPage(
+          penerimaPenyaluranId: penerimaPenyaluranId,
+          tanggalPenyaluran: Get.arguments['tanggal_penyaluran'],
+        );
+      },
       binding: PenyaluranBinding(),
     ),
     GetPage(

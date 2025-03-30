@@ -158,24 +158,6 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    penyaluran.namaPenyaluran ??
-                        penyaluran.keterangan ??
-                        'Bantuan',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
             if (penyaluran.deskripsiPenyaluran != null &&
                 penyaluran.deskripsiPenyaluran!.isNotEmpty)
               Padding(
@@ -450,16 +432,6 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
                     ),
                   ),
                 ],
-              ),
-            ],
-            if (penyaluran.keterangan != null &&
-                penyaluran.keterangan!.isNotEmpty) ...[
-              const Divider(height: 24),
-              _buildDetailItem(
-                icon: Icons.note,
-                title: 'Keterangan',
-                value: penyaluran.keterangan!,
-                statusColor: null,
               ),
             ],
           ],

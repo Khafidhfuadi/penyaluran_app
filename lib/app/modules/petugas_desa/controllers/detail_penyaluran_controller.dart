@@ -604,4 +604,59 @@ class DetailPenyaluranController extends GetxController {
       isExporting.value = false;
     }
   }
+
+  // Fungsi untuk mengambil data penerima penyaluran berdasarkan ID
+  Future<PenerimaPenyaluranModel?> getPenerimaPenyaluranById(
+      String penerimaPenyaluranId) async {
+    try {
+      // Ambil data penerima penyaluran dengan relasinya
+      final data = await _supabaseService.client
+          .from('penerima_penyaluran')
+          .select(
+              '*, warga:warga_id(*), stok_bantuan:stok_bantuan_id(*), penyaluran_bantuan:penyaluran_bantuan_id(*)')
+          .eq('id', penerimaPenyaluranId)
+          .single();
+
+      // Konversi data ke model
+      final Map<String, dynamic> sanitizedData =
+          Map<String, dynamic>.from(data);
+
+      // Konversi jumlah_bantuan ke double jika bertipe String
+      if (sanitizedData['jumlah_bantuan'] is String) {
+        sanitizedData['jumlah_bantuan'] =
+            double.tryParse(sanitizedData['jumlah_bantuan'] as String);
+      }
+
+      return PenerimaPenyaluranModel.fromJson(sanitizedData);
+    } catch (e) {
+      print('Error mengambil data penerima penyaluran: $e');
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan saat mengambil data penerima',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return null;
+    }
+  }
+
+  // Fungsi untuk memuat penyaluran dengan id tertentu
+  Future<void> getDetailPenyaluran(String penyaluranId) async {
+    try {
+      isLoading.value = true;
+
+      // Ambil data penyaluran
+      await loadPenyaluranData(penyaluranId);
+    } catch (e) {
+      print('Error getDetailPenyaluran: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal memuat data detail penyaluran',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }

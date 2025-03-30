@@ -376,7 +376,6 @@ class PelaksanaanPenyaluranController extends GetxController {
           statusPenerimaan: 'DITERIMA',
           tanggalPenerimaan: penerimaPenyaluran[index].tanggalPenerimaan,
           buktiPenerimaan: penerimaPenyaluran[index].buktiPenerimaan,
-          keterangan: penerimaPenyaluran[index].keterangan,
           jumlahBantuan: penerimaPenyaluran[index].jumlahBantuan,
           stokBantuanId: penerimaPenyaluran[index].stokBantuanId,
           warga: penerimaPenyaluran[index].warga,

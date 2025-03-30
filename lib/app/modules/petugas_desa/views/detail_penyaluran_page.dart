@@ -1406,16 +1406,10 @@ class DetailPenyaluranPage extends StatelessWidget {
 
   void _showKonfirmasiPenerimaan(
       BuildContext context, PenerimaPenyaluranModel penerima) {
-    // Dapatkan data jumlah bantuan dari penerima
-    final jumlahBantuan = penerima.jumlahBantuan?.toString() ?? '5';
-
-    // Navigasi ke halaman konfirmasi penerima
+    // Navigasi ke halaman konfirmasi penerima dengan hanya mengirimkan ID
     Get.to(
       () => KonfirmasiPenerimaPage(
-        penerima: penerima,
-        bentukBantuan:
-            null, // Tidak ada data bentuk bantuan yang tersedia langsung
-        jumlahBantuan: jumlahBantuan,
+        penerimaPenyaluranId: penerima.id!,
         tanggalPenyaluran: controller.penyaluran.value?.tanggalPenyaluran,
       ),
     )?.then((result) {
@@ -1778,9 +1772,6 @@ class DetailPenyaluranPage extends StatelessWidget {
                       if (penerima.jumlahBantuan != null)
                         _buildInfoRow('Jumlah Bantuan',
                             penerima.jumlahBantuan.toString()),
-                      if (penerima.keterangan != null &&
-                          penerima.keterangan!.isNotEmpty)
-                        _buildInfoRow('Keterangan', penerima.keterangan!),
                     ],
                   ),
                 ),
