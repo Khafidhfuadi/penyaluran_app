@@ -10,6 +10,7 @@ import 'package:penyaluran_app/app/modules/petugas_desa/views/penitipan_view.dar
 import 'package:penyaluran_app/app/modules/petugas_desa/views/pengaduan_view.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/riwayat_stok_controller.dart';
+import 'package:penyaluran_app/app/widgets/app_drawer.dart';
 
 class PetugasDesaView extends GetView<PetugasDesaController> {
   const PetugasDesaView({super.key});
@@ -190,360 +191,119 @@ class PetugasDesaView extends GetView<PetugasDesaController> {
   }
 
   Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-            ),
-            padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 16,
-                bottom: 24,
-                left: 16,
-                right: 16),
-            width: double.infinity,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Hero(
-                    tag: 'profile-photo',
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.white70,
-                      backgroundImage: controller.profilePhotoUrl != null &&
-                              controller.profilePhotoUrl!.isNotEmpty
-                          ? NetworkImage(controller.profilePhotoUrl!)
-                          : null,
-                      child: (controller.profilePhotoUrl == null ||
-                              controller.profilePhotoUrl!.isEmpty)
-                          ? Text(
-                              controller.nama.isNotEmpty
-                                  ? controller.nama
-                                      .substring(0, 1)
-                                      .toUpperCase()
-                                  : '?',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryColor,
-                                fontSize: 30,
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Halo,',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  controller.nama,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-                SizedBox(height: 4),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        controller.formattedRole,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            controller.desa,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+    return Obx(() {
+      Map<String, List<DrawerMenuItem>> menuCategories = {
+        'Menu Utama': [
+          DrawerMenuItem(
+            icon: Icons.dashboard_outlined,
+            activeIcon: Icons.dashboard,
+            title: 'Dashboard',
+            isSelected: controller.activeTabIndex.value == 0,
+            onTap: () {
+              controller.activeTabIndex.value = 0;
+            },
           ),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _buildMenuCategory('Menu Utama'),
-                Obx(() => _buildMenuItem(
-                      icon: Icons.dashboard_outlined,
-                      activeIcon: Icons.dashboard,
-                      title: 'Dashboard',
-                      isSelected: controller.activeTabIndex.value == 0,
-                      onTap: () {
-                        Navigator.pop(context);
-                        controller.changeTab(0);
-                      },
-                    )),
-                Obx(() => _buildMenuItem(
-                      icon: Icons.handshake_outlined,
-                      activeIcon: Icons.handshake,
-                      title: 'Penyaluran',
-                      isSelected: controller.activeTabIndex.value == 1,
-                      onTap: () {
-                        Navigator.pop(context);
-                        controller.changeTab(1);
-                      },
-                    )),
-                Obx(() => _buildMenuItem(
-                      icon: Icons.inventory_2_outlined,
-                      activeIcon: Icons.inventory_2,
-                      title: 'Penitipan',
-                      isSelected: controller.activeTabIndex.value == 2,
-                      onTap: () {
-                        Navigator.pop(context);
-                        controller.changeTab(2);
-                      },
-                    )),
-                Obx(() => _buildMenuItem(
-                      icon: Icons.warning_amber_outlined,
-                      activeIcon: Icons.warning_amber,
-                      title: 'Pengaduan',
-                      isSelected: controller.activeTabIndex.value == 3,
-                      onTap: () {
-                        Navigator.pop(context);
-                        controller.changeTab(3);
-                      },
-                    )),
-                Obx(() => _buildMenuItem(
-                      icon: Icons.inventory_outlined,
-                      activeIcon: Icons.inventory,
-                      title: 'Stok Bantuan',
-                      isSelected: controller.activeTabIndex.value == 4,
-                      onTap: () {
-                        Navigator.pop(context);
-                        controller.changeTab(4);
-                      },
-                    )),
-                _buildMenuCategory('Kelola Data'),
-                _buildMenuItem(
-                  icon: Icons.person_add_outlined,
-                  activeIcon: Icons.person_add,
-                  title: 'Kelola Penerima',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Get.toNamed('/daftar-penerima');
-                  },
-                ),
-                _buildMenuItem(
-                  icon: Icons.people_outlined,
-                  activeIcon: Icons.people,
-                  title: 'Kelola Donatur',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Get.toNamed('/daftar-donatur');
-                  },
-                ),
-                _buildMenuItem(
-                  icon: Icons.location_on_outlined,
-                  activeIcon: Icons.location_on,
-                  title: 'Lokasi Penyaluran',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Get.toNamed('/lokasi-penyaluran');
-                  },
-                ),
-                _buildMenuItem(
-                  icon: Icons.description_outlined,
-                  activeIcon: Icons.description,
-                  title: 'Laporan Penyaluran',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Get.toNamed('/laporan-penyaluran');
-                  },
-                ),
-                _buildMenuCategory('Pengaturan'),
-                _buildMenuItem(
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
-                  title: 'Profil',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Get.toNamed('/profile');
-                  },
-                ),
-                const Divider(),
-                _buildMenuItem(
-                  icon: Icons.info_outline,
-                  activeIcon: Icons.info,
-                  title: 'Tentang Kami',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Get.toNamed('/about');
-                  },
-                ),
-                _buildMenuItem(
-                  icon: Icons.logout,
-                  title: 'Keluar',
-                  onTap: () {
-                    Navigator.pop(context);
-                    controller.logout();
-                  },
-                  isLogout: true,
-                ),
-              ],
-            ),
+          DrawerMenuItem(
+            icon: Icons.volunteer_activism_outlined,
+            activeIcon: Icons.volunteer_activism,
+            title: 'Penyaluran',
+            isSelected: controller.activeTabIndex.value == 1,
+            badgeCount: controller.jumlahMenunggu.value > 0
+                ? controller.jumlahMenunggu.value
+                : null,
+            badgeColor: Colors.green,
+            onTap: () {
+              controller.activeTabIndex.value = 1;
+            },
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              '© ${DateTime.now().year} DisalurKita',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-              textAlign: TextAlign.center,
-            ),
+          DrawerMenuItem(
+            icon: Icons.inbox_outlined,
+            activeIcon: Icons.inbox,
+            title: 'Penitipan',
+            isSelected: controller.activeTabIndex.value == 2,
+            onTap: () {
+              controller.activeTabIndex.value = 2;
+            },
+          ),
+          DrawerMenuItem(
+            icon: Icons.report_problem_outlined,
+            activeIcon: Icons.report_problem,
+            title: 'Pengaduan',
+            isSelected: controller.activeTabIndex.value == 3,
+            badgeCount: controller.jumlahDiproses.value > 0
+                ? controller.jumlahDiproses.value
+                : null,
+            badgeColor: Colors.orange,
+            onTap: () {
+              controller.activeTabIndex.value = 3;
+            },
+          ),
+          DrawerMenuItem(
+            icon: Icons.inventory_outlined,
+            activeIcon: Icons.inventory,
+            title: 'Stok Bantuan',
+            isSelected: controller.activeTabIndex.value == 4,
+            onTap: () {
+              controller.activeTabIndex.value = 4;
+            },
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildMenuCategory(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Colors.grey[600],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem({
-    required IconData icon,
-    IconData? activeIcon,
-    required String title,
-    bool isSelected = false,
-    String? badge,
-    required Function() onTap,
-    bool isLogout = false,
-  }) {
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? AppTheme.primaryColor.withOpacity(0.1)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      child: ListTile(
-        leading: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(
-              isSelected ? (activeIcon ?? icon) : icon,
-              color: isSelected
-                  ? AppTheme.primaryColor
-                  : isLogout
-                      ? Colors.red
-                      : Colors.grey[700],
-              size: 24,
-            ),
-            if (badge != null)
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  padding: EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    badge,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+        'Pengaturan': [
+          DrawerMenuItem(
+            icon: Icons.notifications_outlined,
+            activeIcon: Icons.notifications,
+            title: 'Notifikasi',
+            badgeCount: controller.jumlahNotifikasiBelumDibaca.value > 0
+                ? controller.jumlahNotifikasiBelumDibaca.value
+                : null,
+            badgeColor: Colors.red,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotifikasiView(),
                 ),
-              ),
-          ],
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected
-                ? AppTheme.primaryColor
-                : isLogout
-                    ? Colors.red
-                    : Colors.grey[800],
-            fontSize: 14,
+              );
+            },
           ),
-        ),
-        onTap: onTap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        visualDensity: VisualDensity.compact,
-        selectedTileColor: AppTheme.primaryColor.withOpacity(0.1),
-        selected: isSelected,
-      ),
-    );
+          DrawerMenuItem(
+            icon: Icons.person_outline,
+            activeIcon: Icons.person,
+            title: 'Profil',
+            onTap: () {
+              Get.toNamed('/profile');
+            },
+          ),
+          DrawerMenuItem(
+            icon: Icons.info_outline,
+            activeIcon: Icons.info,
+            title: 'Tentang Kami',
+            onTap: () {
+              Get.toNamed('/about');
+            },
+          ),
+          DrawerMenuItem(
+            icon: Icons.logout,
+            title: 'Keluar',
+            isLogout: true,
+            onTap: () {
+              controller.logout();
+            },
+          ),
+        ],
+      };
+
+      return AppDrawer(
+        nama: controller.namaLengkap,
+        role: 'Petugas Desa',
+        desa: controller.desa,
+        avatar: controller.profilePhotoUrl,
+        menuItems: const [], // Tidak digunakan karena menggunakan menuCategories
+        menuCategories: menuCategories,
+        onLogout: controller.logout,
+        footerText: '© ${DateTime.now().year} DisalurKita',
+      );
+    });
   }
 
   Widget _buildBottomNavigationBar() {

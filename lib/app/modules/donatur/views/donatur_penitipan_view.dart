@@ -661,7 +661,8 @@ class _FormPenitipanBantuanState extends State<FormPenitipanBantuan> {
                       children: [
                         Expanded(
                           child: _buildInfoItem(
-                            icon: isUang ? Icons.attach_money : Icons.category,
+                            icon:
+                                isUang ? Icons.payment_rounded : Icons.category,
                             label: 'Jenis Bantuan',
                             value: stokNama,
                             iconColor: isUang
@@ -944,7 +945,8 @@ class _FormPenitipanBantuanState extends State<FormPenitipanBantuan> {
                       children: [
                         Expanded(
                           child: _buildInfoItem(
-                            icon: isUang ? Icons.attach_money : Icons.category,
+                            icon:
+                                isUang ? Icons.payment_rounded : Icons.category,
                             label: 'Jenis Bantuan',
                             value: stokNama,
                             iconColor: isUang
@@ -1042,7 +1044,7 @@ class _FormPenitipanBantuanState extends State<FormPenitipanBantuan> {
           children: [
             Icon(
                 // Tampilkan ikon uang jika stok bantuan berbentuk uang
-                isUang ? Icons.attach_money : Icons.numbers,
+                isUang ? Icons.payment_rounded : Icons.numbers,
                 color: Colors.grey.shade700),
             const SizedBox(width: 8),
             Text(
@@ -1660,7 +1662,7 @@ class _FormPenitipanBantuanState extends State<FormPenitipanBantuan> {
                     const Divider(),
                     _buildDetailRow(
                       icon: isUangBantuan
-                          ? Icons.attach_money
+                          ? Icons.payment_rounded
                           : Icons.shopping_bag,
                       label: 'Jumlah',
                       value: jumlahBantuan + (isUangBantuan ? '' : ' item'),

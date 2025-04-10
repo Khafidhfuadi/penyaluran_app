@@ -42,6 +42,7 @@ abstract class Routes {
   static const riwayatPengaduan = _Paths.riwayatPengaduan;
   static const qrScanner = _Paths.qrScanner;
   static const konfirmasiPenerimaQr = _Paths.konfirmasiPenerimaQr;
+  static const jadwalPenyaluran = _Paths.jadwalPenyaluran;
   static const PENGADUAN = '/pengaduan';
   static const TAMBAH_PENGADUAN = '/tambah-pengaduan';
   static const PENGADUAN_DETAIL = '/pengaduan-detail';
@@ -91,6 +92,7 @@ abstract class _Paths {
   static const riwayatPengaduan = '/petugas-desa/riwayat-pengaduan';
   static const qrScanner = '/petugas-desa/qr-scanner';
   static const konfirmasiPenerimaQr = '/petugas-desa/konfirmasi-penerima/:id';
+  static const jadwalPenyaluran = '/petugas-desa/jadwal-penyaluran';
   static const PENGADUAN = '/pengaduan';
   static const TAMBAH_PENGADUAN = '/tambah-pengaduan';
   static const PENGADUAN_DETAIL = '/pengaduan-detail';

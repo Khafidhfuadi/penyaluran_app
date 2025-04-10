@@ -158,18 +158,67 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // nama penyaluran
+            Text(
+              penyaluran.namaPenyaluran ?? 'Nama Penyaluran',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // deskripsi penyaluran
             if (penyaluran.deskripsiPenyaluran != null &&
                 penyaluran.deskripsiPenyaluran!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  penyaluran.deskripsiPenyaluran!,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                  ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.description_outlined,
+                          size: 18,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Deskripsi',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      penyaluran.deskripsiPenyaluran!,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 15,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -197,7 +246,7 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
                     ),
                     child: Icon(
                       penyaluran.isUang == true
-                          ? Icons.attach_money
+                          ? Icons.payment_rounded
                           : Icons.inventory_2,
                       color: penyaluran.isUang == true
                           ? Colors.green
@@ -736,13 +785,17 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
     // Pastikan menggunakan data terbaru dari model dan cetak ke log untuk debugging
     final qrData = penyaluran.qrCodeHash ?? 'invalid-qr-code';
     print('penyaluran.statusPenyaluran ${penyaluran.statusPenyaluran}');
+    print('penyaluran.statusPenerimaan ${penyaluran.statusPenerimaan}');
 
-    // Cek status penyaluran untuk disabled state
-    final bool isDisabled = penyaluran.statusPenyaluran != null &&
-        (penyaluran.statusPenyaluran!.toUpperCase() == 'DIJADWALKAN' ||
-            penyaluran.statusPenyaluran!.toUpperCase() == 'DISETUJUI' ||
-            penyaluran.statusPenyaluran!.toUpperCase() == 'BATALTERLAKSANA' ||
-            penyaluran.statusPenyaluran!.toUpperCase() == 'TERLAKSANA');
+    // Cek status penyaluran dan penerimaan untuk disabled state
+    final bool isDisabled = (penyaluran.statusPenyaluran != null &&
+            (penyaluran.statusPenyaluran!.toUpperCase() == 'DIJADWALKAN' ||
+                penyaluran.statusPenyaluran!.toUpperCase() == 'DISETUJUI' ||
+                penyaluran.statusPenyaluran!.toUpperCase() ==
+                    'BATALTERLAKSANA' ||
+                penyaluran.statusPenyaluran!.toUpperCase() == 'TERLAKSANA')) ||
+        (penyaluran.statusPenerimaan != null &&
+            penyaluran.statusPenerimaan!.toUpperCase() == 'DITERIMA');
 
     final String statusMessage;
     if (isDisabled) {
@@ -752,6 +805,9 @@ class WargaDetailPenerimaanView extends GetView<WargaDashboardController> {
       } else if (penyaluran.statusPenyaluran!.toUpperCase() == 'TERLAKSANA') {
         statusMessage =
             'QR Code sudah digunakan pada penyaluran yang telah terlaksana';
+      } else if (penyaluran.statusPenerimaan != null &&
+          penyaluran.statusPenerimaan!.toUpperCase() == 'DITERIMA') {
+        statusMessage = 'QR Code sudah digunakan karena bantuan telah diterima';
       } else {
         statusMessage =
             'QR Code belum dapat digunakan karena penyaluran belum terlaksana';

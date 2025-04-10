@@ -5,14 +5,10 @@ import 'package:penyaluran_app/app/data/models/tindakan_pengaduan_model.dart';
 import 'package:penyaluran_app/app/modules/petugas_desa/controllers/pengaduan_controller.dart';
 import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/utils/format_helper.dart';
-import 'package:penyaluran_app/app/widgets/cards/info_card.dart';
-import 'package:penyaluran_app/app/widgets/indicators/status_pill.dart';
 import 'package:penyaluran_app/app/services/supabase_service.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:penyaluran_app/app/widgets/inputs/dropdown_input.dart';
-import 'package:penyaluran_app/app/widgets/inputs/text_input.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:penyaluran_app/app/widgets/widgets.dart';
 
@@ -1391,61 +1387,9 @@ class DetailPengaduanView extends GetView<PengaduanController> {
         ? List<String>.from(tindakan.buktiTindakan!)
         : [];
 
-    // Fungsi untuk memilih bukti tindakan
-    Future<void> pickBuktiTindakan(
-        BuildContext dialogContext, bool fromCamera) async {
-      try {
-        final ImagePicker picker = ImagePicker();
-        final XFile? pickedFile = await picker.pickImage(
-          source: fromCamera ? ImageSource.camera : ImageSource.gallery,
-          imageQuality: 80,
-          maxWidth: 1200,
-          maxHeight: 1200,
-          preferredCameraDevice:
-              fromCamera ? CameraDevice.rear : CameraDevice.front,
-        );
-
-        if (pickedFile != null) {
-          // Tampilkan loading dialog
-          showDialog(
-            context: dialogContext,
-            barrierDismissible: false,
-            builder: (BuildContext context) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            },
-          );
-
-          try {
-            // Tambahkan gambar ke daftar
-            buktiTindakanPaths.add(pickedFile.path);
-
-            // Tutup loading dialog
-            Navigator.of(dialogContext, rootNavigator: true).pop();
-
-            // Tutup dialog pilih sumber foto
-            Navigator.of(dialogContext).pop();
-          } catch (e) {
-            // Tutup loading dialog jika terjadi error
-            Navigator.of(dialogContext, rootNavigator: true).pop();
-            rethrow;
-          }
-        }
-      } catch (e) {
-        print('Error picking image: $e');
-        Get.snackbar(
-          'Error',
-          'Gagal mengambil gambar: ${e.toString()}',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
-    }
-
     // Fungsi untuk menampilkan dialog pilih sumber foto
-    void showPilihSumberFoto(BuildContext dialogContext) {
+    void showPilihSumberFoto(
+        BuildContext dialogContext, Function(BuildContext, bool) pickFunction) {
       showDialog(
         context: dialogContext,
         builder: (innerContext) => AlertDialog(
@@ -1456,12 +1400,12 @@ class DetailPengaduanView extends GetView<PengaduanController> {
               ListTile(
                 leading: const Icon(Icons.camera_alt),
                 title: const Text('Kamera'),
-                onTap: () => pickBuktiTindakan(innerContext, true),
+                onTap: () => pickFunction(innerContext, true),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Galeri'),
-                onTap: () => pickBuktiTindakan(innerContext, false),
+                onTap: () => pickFunction(innerContext, false),
               ),
             ],
           ),
@@ -1473,6 +1417,61 @@ class DetailPengaduanView extends GetView<PengaduanController> {
       context: context,
       builder: (dialogContext) =>
           StatefulBuilder(builder: (stateContext, setState) {
+        // Fungsi untuk memilih bukti tindakan dipindahkan ke dalam StatefulBuilder
+        Future<void> pickBuktiTindakan(
+            BuildContext innerContext, bool fromCamera) async {
+          try {
+            final ImagePicker picker = ImagePicker();
+            final XFile? pickedFile = await picker.pickImage(
+              source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+              imageQuality: 80,
+              maxWidth: 1200,
+              maxHeight: 1200,
+              preferredCameraDevice:
+                  fromCamera ? CameraDevice.rear : CameraDevice.front,
+            );
+
+            if (pickedFile != null) {
+              // Tampilkan loading dialog
+              showDialog(
+                context: innerContext,
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                },
+              );
+
+              try {
+                // Tambahkan gambar ke daftar dan update state
+                setState(() {
+                  buktiTindakanPaths.add(pickedFile.path);
+                });
+
+                // Tutup loading dialog
+                Navigator.of(innerContext, rootNavigator: true).pop();
+
+                // Tutup dialog pilih sumber foto
+                Navigator.of(innerContext).pop();
+              } catch (e) {
+                // Tutup loading dialog jika terjadi error
+                Navigator.of(innerContext, rootNavigator: true).pop();
+                rethrow;
+              }
+            }
+          } catch (e) {
+            print('Error picking image: $e');
+            Get.snackbar(
+              'Error',
+              'Gagal mengambil gambar: ${e.toString()}',
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
+        }
+
         return AlertDialog(
           title: Row(
             children: [
@@ -1581,7 +1580,8 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                           children: [
                             if (buktiTindakanPaths.isEmpty)
                               InkWell(
-                                onTap: () => showPilihSumberFoto(stateContext),
+                                onTap: () => showPilihSumberFoto(
+                                    stateContext, pickBuktiTindakan),
                                 child: Container(
                                   height: 150,
                                   width: double.infinity,
@@ -1619,15 +1619,16 @@ class DetailPengaduanView extends GetView<PengaduanController> {
                                     height: 100,
                                     child: ListView.builder(
                                       scrollDirection: Axis.horizontal,
-                                      itemCount: buktiTindakanPaths
-                                          .length, //tombol tambah jika tidak selesai
+                                      itemCount: buktiTindakanPaths.length +
+                                          1, // Tambah 1 untuk tombol tambah
                                       itemBuilder: (context, index) {
                                         if (index ==
                                             buktiTindakanPaths.length) {
                                           // Tombol tambah foto
                                           return InkWell(
                                             onTap: () => showPilihSumberFoto(
-                                                stateContext),
+                                                stateContext,
+                                                pickBuktiTindakan),
                                             child: Container(
                                               width: 100,
                                               margin: const EdgeInsets.only(

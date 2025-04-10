@@ -7,8 +7,6 @@ import 'package:penyaluran_app/app/theme/app_theme.dart';
 import 'package:penyaluran_app/app/utils/format_helper.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:penyaluran_app/app/widgets/indicators/status_pill.dart';
-import 'package:penyaluran_app/app/widgets/cards/info_card.dart';
 import 'dart:io';
 import 'package:penyaluran_app/app/widgets/widgets.dart';
 
@@ -652,6 +650,76 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
                 ),
               ),
             ),
+
+            // Menampilkan foto pengaduan jika ada
+            if (pengaduan.fotoPengaduan != null &&
+                pengaduan.fotoPengaduan!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Foto Pengaduan:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: pengaduan.fotoPengaduan!.map((foto) {
+                      return GestureDetector(
+                        onTap: () => _showFullScreenImage(context, foto),
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade300),
+                            image: DecorationImage(
+                              image: foto.startsWith('http')
+                                  ? NetworkImage(foto)
+                                  : FileImage(File(foto)) as ImageProvider,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.5),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(8),
+                                    bottomRight: Radius.circular(8),
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.zoom_in,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+
             const SizedBox(height: 16),
             Row(
               children: [
@@ -926,7 +994,12 @@ class WargaDetailPengaduanView extends GetView<WargaDashboardController> {
                 'Nama Penyaluran', pengaduan.namaPenyaluran, Icons.assignment),
             _buildInfoItem(
                 'Jenis Bantuan', pengaduan.jenisBantuan, Icons.category),
-            _buildInfoItem('Jumlah Bantuan', pengaduan.jumlahBantuan,
+            _buildInfoItem(
+                'Jumlah Bantuan',
+                pengaduan.isUang == true
+                    ? FormatHelper.formatRupiah(
+                        double.tryParse(pengaduan.jumlahBantuan ?? '0'))
+                    : pengaduan.jumlahBantuan,
                 Icons.shopping_basket),
             _buildInfoItem(
                 'Deskripsi', pengaduan.deskripsiPenyaluran, Icons.description),

@@ -68,7 +68,7 @@ class BantuanCard extends StatelessWidget {
                     ),
                     child: Icon(
                       item.isUang == true
-                          ? Icons.attach_money
+                          ? Icons.payment_rounded
                           : Icons.inventory_2,
                       color: item.isUang == true ? Colors.green : Colors.blue,
                       size: 28,
@@ -81,15 +81,36 @@ class BantuanCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          item.kategoriNama ?? 'Bantuan',
-                          style: TextStyle(
-                            color: Colors.grey.shade700,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                        if (item.namaPenyaluran != null &&
+                            item.namaPenyaluran!.isNotEmpty)
+                          Text(
+                            item.namaPenyaluran!,
+                            style: TextStyle(
+                              color: (item.isUang == true)
+                                  ? Colors.green.shade800
+                                  : Colors.blue.shade800,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
+                        Padding(
+                          padding: EdgeInsets.only(
+                              top: item.namaPenyaluran != null &&
+                                      item.namaPenyaluran!.isNotEmpty
+                                  ? 4
+                                  : 0),
+                          child: Text(
+                            item.kategoriNama ?? 'Bantuan',
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Row(
@@ -229,11 +250,25 @@ class BantuanCard extends StatelessWidget {
                         children: [
                           Icon(
                             item.isUang == true
-                                ? Icons.attach_money
+                                ? Icons.payment_rounded
                                 : Icons.inventory_2,
                             color: item.isUang == true
                                 ? Colors.green.shade700
                                 : Colors.blue.shade700,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              item.namaPenyaluran != null &&
+                                      item.namaPenyaluran!.isNotEmpty
+                                  ? item.namaPenyaluran!
+                                  : "Bantuan ${item.kategoriNama ?? ''}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),

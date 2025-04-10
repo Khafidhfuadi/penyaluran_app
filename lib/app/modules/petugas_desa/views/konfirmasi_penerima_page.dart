@@ -675,7 +675,7 @@ class _KonfirmasiPenerimaPageState extends State<KonfirmasiPenerimaPage> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Icon(
-                          isUang ? Icons.attach_money : Icons.scale_outlined,
+                          isUang ? Icons.payment_rounded : Icons.scale_outlined,
                           color: Colors.green,
                           size: 20,
                         ),

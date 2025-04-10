@@ -263,7 +263,7 @@ class DaftarDonaturView extends GetView<DonaturController> {
                           child: Row(
                             children: [
                               const Icon(
-                                Icons.attach_money,
+                                Icons.payment_rounded,
                                 size: 14,
                                 color: Colors.green,
                               ),

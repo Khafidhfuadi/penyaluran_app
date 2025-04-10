@@ -15,10 +15,6 @@ class WargaPenerimaanView extends GetView<WargaDashboardController> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // Debug print untuk melihat jumlah item
-        print(
-            'DEBUG: Jumlah penerimaan tersedia: ${controller.penerimaPenyaluran.length}');
-
         return RefreshIndicator(
           onRefresh: () async {
             // Tambahkan delay untuk memastikan refresh indicator terlihat
@@ -102,9 +98,7 @@ class WargaPenerimaanView extends GetView<WargaDashboardController> {
   }
 
   Widget _buildPenerimaanList(BuildContext context) {
-    // Debug print untuk melihat jumlah item
-    print(
-        'DEBUG: Membangun ListView dengan ${controller.penerimaPenyaluran.length} item bantuan');
+    // Menggunakan CustomScrollView dan SliverList untuk layout yang lebih stabil
 
     // Menggunakan CustomScrollView dan SliverList untuk layout yang lebih stabil
     return CustomScrollView(
@@ -121,9 +115,6 @@ class WargaPenerimaanView extends GetView<WargaDashboardController> {
                 }
 
                 final item = controller.penerimaPenyaluran[index];
-
-                // Debug
-                print('DEBUG: Membangun item $index dengan id: ${item.id}');
 
                 // Menggunakan SizedBox untuk memberikan batas lebar dan tinggi
                 return SizedBox(

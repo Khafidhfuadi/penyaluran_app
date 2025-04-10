@@ -111,4 +111,9 @@ class PengaduanModel {
     if (jumlah == null) return 'Tidak diketahui';
     return '$jumlah $satuan';
   }
+
+  // Getter untuk memeriksa apakah bantuan berupa uang
+  bool get isUang {
+    return stokBantuan?['is_uang'] == true;
+  }
 }

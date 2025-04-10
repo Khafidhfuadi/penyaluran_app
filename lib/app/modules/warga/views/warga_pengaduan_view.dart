@@ -289,15 +289,22 @@ class WargaPengaduanView extends GetView<WargaDashboardController> {
                                                   Expanded(
                                                     child: _buildInfoItem(
                                                       'Jenis',
-                                                      item.jenisBantuan ??
+                                                      item.stokBantuan?[
+                                                              'nama'] ??
+                                                          item.jenisBantuan ??
                                                           "Tidak tersedia",
                                                     ),
                                                   ),
                                                   Expanded(
                                                     child: _buildInfoItem(
                                                       'Jumlah',
-                                                      item.jumlahBantuan ??
-                                                          "Tidak tersedia",
+                                                      item.isUang
+                                                          ? FormatHelper.formatRupiah(
+                                                              double.tryParse(item
+                                                                      .jumlahBantuan
+                                                                      .toString()) ??
+                                                                  0)
+                                                          : '${item.jumlahBantuan} ${item.stokBantuan?['satuan'] ?? ''}',
                                                     ),
                                                   ),
                                                 ],

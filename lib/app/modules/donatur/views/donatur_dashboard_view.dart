@@ -36,54 +36,6 @@ class DonaturDashboardView extends GetView<DonaturDashboardController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header DisalurKita dengan logo dan slogan
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blue.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        'assets/images/logo-disalurkita.png',
-                        width: 50,
-                        height: 50,
-                      ),
-                      const SizedBox(width: 15),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'DisalurKita',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1565C0),
-                            ),
-                          ),
-                          SizedBox(height: 5),
-                          Text(
-                            'Salurkan dengan Pasti, Pantau dengan Bukti',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
                 _buildWelcomeSection(),
                 const SizedBox(height: 24),
                 _buildStatisticSection(),
@@ -242,29 +194,14 @@ class DonaturDashboardView extends GetView<DonaturDashboardController> {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildActionButton(
-                      icon: Icons.edit_rounded,
-                      label: 'Edit Profil',
-                      color: Colors.blue.shade700,
-                      onTap: () => Get.toNamed(Routes.profile),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildActionButton(
-                      icon: Icons.add_box_rounded,
-                      label: 'Titip Bantuan',
-                      color: Colors.green.shade700,
-                      onTap: () {
-                        // Navigasi ke form penitipan bantuan
-                        controller.activeTabIndex.value = 3;
-                      },
-                    ),
-                  ),
-                ],
+              _buildActionButton(
+                icon: Icons.add_box_rounded,
+                label: 'Titip Bantuan',
+                color: Colors.green.shade700,
+                onTap: () {
+                  // Navigasi ke form penitipan bantuan
+                  controller.activeTabIndex.value = 3;
+                },
               ),
             ],
           ),

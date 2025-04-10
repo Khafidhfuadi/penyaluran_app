@@ -10,6 +10,12 @@ class CalendarViewWidget extends StatelessWidget {
   final JadwalPenyaluranController controller;
   final CalendarController _calendarController = CalendarController();
 
+  // Tambahkan variabel untuk status filter
+  final RxBool _showAllSchedules = true.obs;
+
+  // Tambahkan variabel untuk mode tampilan kalender
+  final Rx<CalendarView> _calendarView = CalendarView.month.obs;
+
   CalendarViewWidget({
     super.key,
     required this.controller,
@@ -47,20 +53,135 @@ class CalendarViewWidget extends StatelessWidget {
                 topRight: Radius.circular(16),
               ),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.calendar_month_rounded,
-                  color: Colors.white,
-                  size: 28,
+                // Title pada baris pertama
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_month_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Kalender Penyaluran',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'Kalender Penyaluran',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+
+                const SizedBox(height: 12),
+
+                // Tombol filter pada baris kedua
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    // Tombol mode tampilan
+                    Obx(() => Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Tooltip(
+                            message: _calendarView.value == CalendarView.month
+                                ? 'Beralih ke tampilan agenda'
+                                : 'Beralih ke tampilan kalender',
+                            child: InkWell(
+                              onTap: () {
+                                _calendarView.value =
+                                    _calendarView.value == CalendarView.month
+                                        ? CalendarView.schedule
+                                        : CalendarView.month;
+
+                                // Update calendar controller dengan tampilan baru
+                                _calendarController.view = _calendarView.value;
+                              },
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _calendarView.value == CalendarView.month
+                                          ? Icons.view_agenda
+                                          : Icons.calendar_month,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _calendarView.value == CalendarView.month
+                                          ? 'Agenda'
+                                          : 'Bulan',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        )),
+
+                    const SizedBox(width: 8),
+
+                    // Tombol filter
+                    Obx(() => Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Tooltip(
+                            message: _showAllSchedules.value
+                                ? 'Tampilkan hanya jadwal bulan ini'
+                                : 'Tampilkan semua jadwal',
+                            child: InkWell(
+                              onTap: () {
+                                _showAllSchedules.value =
+                                    !_showAllSchedules.value;
+                              },
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _showAllSchedules.value
+                                          ? Icons.filter_list
+                                          : Icons.filter_alt,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _showAllSchedules.value
+                                          ? 'Semua'
+                                          : 'Bulan Ini',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        )),
+                  ],
                 ),
               ],
             ),
@@ -71,7 +192,7 @@ class CalendarViewWidget extends StatelessWidget {
               height: MediaQuery.of(context).size.height * 0.65,
               child: Obx(() {
                 return SfCalendar(
-                  view: CalendarView.month,
+                  view: _calendarView.value,
                   controller: _calendarController,
                   initialSelectedDate: DateTime.now(),
                   initialDisplayDate: DateTime.now(),
@@ -115,6 +236,42 @@ class CalendarViewWidget extends StatelessWidget {
                       dayTextStyle: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ),
+                  scheduleViewSettings: ScheduleViewSettings(
+                    appointmentItemHeight: 70,
+                    monthHeaderSettings: MonthHeaderSettings(
+                      height: 50,
+                      backgroundColor: AppTheme.primaryColor,
+                      monthTextStyle: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    weekHeaderSettings: WeekHeaderSettings(
+                      height: 40,
+                      textAlign: TextAlign.center,
+                      backgroundColor: Colors.grey.shade100,
+                      weekTextStyle: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    dayHeaderSettings: DayHeaderSettings(
+                      dayFormat: 'EEEE',
+                      width: 70,
+                      dayTextStyle: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.primaryColor,
+                      ),
+                      dateTextStyle: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                         color: AppTheme.primaryColor,
                       ),
                     ),
@@ -291,6 +448,7 @@ class CalendarViewWidget extends StatelessWidget {
       ...controller.jadwalTerlaksana,
     ];
 
+    // Tambahkan filter berdasarkan _showAllSchedules
     DateTime now = DateTime.now();
     DateTime firstDayOfMonth = DateTime(now.year, now.month, 1);
     DateTime lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
@@ -300,9 +458,14 @@ class CalendarViewWidget extends StatelessWidget {
         DateTime jadwalDate =
             FormatHelper.toLocalDateTime(jadwal.tanggalPenyaluran!);
 
-        if (jadwalDate
-                .isAfter(firstDayOfMonth.subtract(const Duration(days: 1))) &&
-            jadwalDate.isBefore(lastDayOfMonth.add(const Duration(days: 1)))) {
+        // Filter berdasarkan bulan saat ini jika _showAllSchedules.value = false
+        bool shouldShow = _showAllSchedules.value ||
+            (jadwalDate.isAfter(
+                    firstDayOfMonth.subtract(const Duration(days: 1))) &&
+                jadwalDate
+                    .isBefore(lastDayOfMonth.add(const Duration(days: 1))));
+
+        if (shouldShow) {
           Color appointmentColor;
 
           // Periksa status jadwal menggunakan switch-case untuk konsistensi

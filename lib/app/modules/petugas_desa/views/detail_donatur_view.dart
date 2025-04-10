@@ -277,7 +277,7 @@ class DetailDonaturView extends GetView<DonaturController> {
                           child: _buildSummaryCard(
                             title: 'Donasi Uang',
                             value: jumlahDonasiUang.toString(),
-                            icon: Icons.attach_money,
+                            icon: Icons.payment_rounded,
                             color: jenisColor,
                           ),
                         ),

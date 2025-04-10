@@ -2370,4 +2370,39 @@ class SupabaseService extends GetxService {
       return null;
     }
   }
+
+  // Metode untuk mengupdate role user dengan SQL langsung
+  Future<void> updateUserRole(String userId, int roleId) async {
+    try {
+      // Coba update via RPC jika sudah diimplementasikan
+      try {
+        await client.rpc(
+          'update_user_role',
+          params: {
+            'user_id': userId,
+            'role_id_value': roleId,
+          },
+        );
+        print('DEBUG: Berhasil mengupdate role_id user via RPC');
+        return;
+      } catch (e) {
+        print('WARN: RPC update_user_role tidak tersedia: $e');
+      }
+
+      // Jika RPC tidak tersedia, gunakan query SQL langsung ke auth.users jika diizinkan
+      try {
+        print('DEBUG: Mencoba update auth.users langsung');
+        await client
+            .from('auth.users')
+            .update({'role_id': roleId}).eq('id', userId);
+        print('DEBUG: Berhasil mengupdate role_id user via SQL langsung');
+      } catch (e) {
+        print('ERROR: Gagal mengupdate auth.users: $e');
+        print('INFO: Role perlu diupdate manual melalui dashboard Supabase');
+      }
+    } catch (e) {
+      print('ERROR: Gagal mengupdate role user: $e');
+      // Tidak perlu throw exception, kegagalan update role tidak fatal
+    }
+  }
 }

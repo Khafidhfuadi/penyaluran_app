@@ -177,14 +177,13 @@ class AuthProvider {
     String? jenis,
   }) async {
     try {
-      // Step 1: Daftarkan user dengan role_id 3 (donatur)
+      print('DEBUG: Memulai proses registrasi donatur dengan email: $email');
+
+      // Step 1: Daftarkan user tanpa metadata dulu
+      // Karena mungkin ada masalah dengan kolom role_id custom
       final response = await _supabaseService.client.auth.signUp(
         email: email,
         password: password,
-        data: {
-          'role_id': 3, // Otomatis set sebagai donatur
-        },
-        // Tidak menggunakan email redirect karena kita akan auto-confirm
       );
 
       final user = response.user;
@@ -192,59 +191,63 @@ class AuthProvider {
         throw Exception('Gagal membuat akun donatur');
       }
 
-      print('User berhasil terdaftar dengan ID: ${user.id}');
+      print('DEBUG: User berhasil terdaftar dengan ID: ${user.id}');
 
-      // Step 2: Buat data donatur di tabel donatur
-      await _supabaseService.client.from('donatur').insert({
-        'id': user.id,
-        'nama_lengkap': namaLengkap,
-        'alamat': alamat,
-        'no_hp': noHp,
-        'email': email,
-        'jenis': jenis ?? 'Individu',
-        'created_at': DateTime.now().toIso8601String(),
-      });
-
-      // Step 3: Pastikan di tabel profiles_backup juga ada data ini (jika digunakan)
       try {
-        await _supabaseService.client.from('profiles_backup').insert({
+        // Step 2: Buat data donatur di tabel donatur
+        print('DEBUG: Mencoba menyimpan data donatur ke tabel donatur');
+
+        final currentTime = DateTime.now().toIso8601String();
+
+        // Data untuk tabel donatur
+        final donaturData = {
           'id': user.id,
-          'updated_at': DateTime.now().toIso8601String(),
-          'role_id': 3,
-        });
+          'nama_lengkap': namaLengkap,
+          'alamat': alamat,
+          'no_hp': noHp,
+          'email': email,
+          'jenis': jenis ?? 'Individu',
+          'created_at': currentTime,
+          'updated_at': currentTime,
+        };
+
+        // Insert ke tabel donatur
+        print('DEBUG: Inserting data to donatur table');
+        await _supabaseService.client.from('donatur').insert(donaturData);
+        print('DEBUG: Berhasil menyimpan data donatur');
+
+        // Step 3: Coba update role_id user menggunakan service yang lebih aman
+        print('DEBUG: Mencoba mengupdate role_id user');
+        await _supabaseService.updateUserRole(user.id, 3);
       } catch (e) {
-        print('Error menyimpan di profiles_backup: $e');
-        // Lanjutkan proses meskipun ada error di step ini
+        print('ERROR: Gagal menyimpan data donatur: $e');
+        throw Exception('Gagal menyimpan data donatur. Silakan coba lagi.');
       }
 
-      print('Berhasil mendaftarkan donatur: $namaLengkap');
-
-      // Pesan untuk pengembang
       print(
-          'CATATAN: User akan perlu login manual. Jika email konfirmasi masih diperlukan,');
-      print(
-          'nonaktifkan verifikasi email di dashboard Supabase: Authentication > Email Templates > Disable Email Confirmation');
+          'DEBUG: Berhasil mendaftarkan donatur: $namaLengkap dengan ID: ${user.id}');
     } catch (e) {
-      print('Error pada signUpDonatur: $e');
+      print('ERROR: Error pada signUpDonatur: $e');
 
       if (e.toString().contains('User already registered')) {
         throw Exception(
             'Email sudah terdaftar. Silakan gunakan email lain atau login dengan email tersebut.');
+      } else if (e.toString().contains('Database error saving new user')) {
+        throw Exception(
+            'Terjadi kesalahan saat menyimpan data pengguna. Silakan coba lagi atau hubungi administrator.');
+      } else if (e.toString().contains('Error sending confirmation mail')) {
+        print('===== PERHATIAN PENGEMBANG =====');
+        print(
+            'Error ini terjadi karena Supabase gagal mengirim email konfirmasi.');
+        print(
+            'Untuk mengatasi ini, nonaktifkan konfirmasi email di dashboard Supabase:');
+        print(
+            '1. Buka project Supabase > Authentication > Email Templates > Confirmation');
+        print('2. Matikan toggle "Enable email confirmations"');
+        print('==============================');
+        throw Exception(
+            'Gagal mengirim email konfirmasi. Mohon hubungi administrator.');
       } else {
-        // Untuk error konfirmasi email, berikan instruksi yang jelas
-        if (e.toString().contains('Error sending confirmation mail')) {
-          print('===== PERHATIAN PENGEMBANG =====');
-          print(
-              'Error ini terjadi karena Supabase gagal mengirim email konfirmasi.');
-          print(
-              'Untuk mengatasi ini, nonaktifkan konfirmasi email di dashboard Supabase:');
-          print(
-              '1. Buka project Supabase > Authentication > Email Templates > Confirmation');
-          print('2. Matikan toggle "Enable email confirmations"');
-          print('==============================');
-          throw Exception(
-              'Gagal mengirim email konfirmasi. Mohon hubungi administrator.');
-        }
         rethrow;
       }
     }

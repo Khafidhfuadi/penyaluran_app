@@ -521,7 +521,15 @@ class PengaduanView extends GetView<PengaduanController> {
                                       ),
                                     ),
                                     Text(
-                                      '${item.jumlahBantuan} ${item.stokBantuan?['satuan'] ?? ''}',
+                                      item.stokBantuan?['is_uang'] == true
+                                          ? FormatHelper.formatRupiah(
+                                              item.jumlahBantuan is num
+                                                  ? item.jumlahBantuan
+                                                  : double.tryParse(item
+                                                          .jumlahBantuan
+                                                          .toString()) ??
+                                                      0)
+                                          : '${item.jumlahBantuan} ${item.stokBantuan?['satuan'] ?? ''}',
                                       style: TextStyle(
                                         fontWeight: FontWeight.w500,
                                         color: Colors.grey.shade800,

@@ -537,62 +537,114 @@ class AuthController extends GetxController {
     }
 
     isLoading.value = true;
-    try {
-      // Proses registrasi donatur dengan role_id 3
-      await _authProvider.signUpDonatur(
-        email: emailController.text,
-        password: passwordController.text,
-        namaLengkap: namaController.text,
-        alamat: alamatController.text,
-        noHp: noHpController.text,
-        jenis: jenisController.text.isEmpty ? 'Individu' : jenisController.text,
-      );
 
-      Get.snackbar(
-        'Sukses',
-        'Registrasi donatur berhasil! Silakan login dengan akun Anda.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-      );
+    // Kita akan mencoba maksimal 2 kali jika terjadi error
+    int maxAttempts = 2;
+    int attempt = 0;
+    bool success = false;
+    Exception? lastError;
 
-      // Bersihkan form
-      clearDonaturRegistrationForm();
+    while (attempt < maxAttempts && !success) {
+      attempt++;
+      print(
+          'DEBUG: Mencoba pendaftaran donatur (percobaan ke-$attempt dari $maxAttempts)');
 
-      // Arahkan ke halaman login
-      Get.offAllNamed(Routes.login);
-    } catch (e) {
-      print('Error registrasi donatur: $e');
+      try {
+        print('DEBUG: Validasi form berhasil, melanjutkan proses registrasi');
+        print('DEBUG: Email: ${emailController.text}');
+        print('DEBUG: Nama: ${namaController.text}');
+        print('DEBUG: Alamat: ${alamatController.text}');
+        print('DEBUG: No HP: ${noHpController.text}');
+        print(
+            'DEBUG: Jenis: ${jenisController.text.isEmpty ? 'Individu' : jenisController.text}');
 
-      String errorMessage = 'Gagal melakukan registrasi';
+        // Proses registrasi donatur
+        await _authProvider.signUpDonatur(
+          email: emailController.text,
+          password: passwordController.text,
+          namaLengkap: namaController.text,
+          alamat: alamatController.text,
+          noHp: noHpController.text,
+          jenis:
+              jenisController.text.isEmpty ? 'Individu' : jenisController.text,
+        );
 
-      // Tangani error sesuai jenisnya
-      if (e.toString().contains('email konfirmasi')) {
-        errorMessage =
-            'Gagal mengirim email konfirmasi. Mohon periksa alamat email Anda dan coba lagi nanti.';
-      } else if (e.toString().contains('Email sudah terdaftar')) {
-        errorMessage =
-            'Email sudah terdaftar. Silakan gunakan email lain atau login dengan email tersebut.';
-      } else if (e.toString().contains('weak-password')) {
-        errorMessage =
-            'Password terlalu lemah. Gunakan kombinasi huruf, angka, dan simbol.';
-      } else if (e.toString().contains('invalid-email')) {
-        errorMessage = 'Format email tidak valid.';
-      } else {
-        errorMessage = 'Gagal melakukan registrasi: ${e.toString()}';
+        print('DEBUG: Registrasi donatur berhasil');
+        success = true;
+
+        Get.snackbar(
+          'Sukses',
+          'Registrasi donatur berhasil! Silakan login dengan akun Anda.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 5),
+        );
+
+        // Bersihkan form
+        clearDonaturRegistrationForm();
+
+        // Arahkan ke halaman login
+        Get.offAllNamed(Routes.login);
+      } catch (e) {
+        lastError = e is Exception ? e : Exception(e.toString());
+        print('ERROR: Error registrasi donatur (percobaan ke-$attempt): $e');
+        print('ERROR Detail: ${e.runtimeType} - ${e.toString()}');
+
+        // Cek apakah bisa dicoba lagi atau tidak
+        bool canRetry = false;
+        if (e.toString().contains('Database error saving new user')) {
+          canRetry = true; // Error database bisa dicoba lagi
+          print('DEBUG: Error database, akan mencoba lagi');
+          // Delay sedikit sebelum mencoba lagi
+          await Future.delayed(const Duration(seconds: 1));
+        } else if (e.toString().contains('User already registered')) {
+          // Jangan coba lagi jika email sudah terdaftar
+          canRetry = false;
+        }
+
+        if (!canRetry || attempt >= maxAttempts) {
+          // Jika tidak bisa retry atau sudah maksimal, tampilkan error
+          String errorMessage = 'Gagal melakukan registrasi';
+
+          // Tangani error sesuai jenisnya
+          if (e.toString().contains('email konfirmasi')) {
+            errorMessage =
+                'Gagal mengirim email konfirmasi. Mohon periksa alamat email Anda dan coba lagi nanti.';
+          } else if (e.toString().contains('Email sudah terdaftar')) {
+            errorMessage =
+                'Email sudah terdaftar. Silakan gunakan email lain atau login dengan email tersebut.';
+          } else if (e.toString().contains('weak-password')) {
+            errorMessage =
+                'Password terlalu lemah. Gunakan kombinasi huruf, angka, dan simbol.';
+          } else if (e.toString().contains('invalid-email')) {
+            errorMessage = 'Format email tidak valid.';
+          } else if (e.toString().contains('Database error')) {
+            errorMessage =
+                'Terjadi kesalahan pada database. Silakan coba lagi nanti atau hubungi administrator.';
+          } else {
+            errorMessage = 'Gagal melakukan registrasi: ${e.toString()}';
+          }
+
+          Get.snackbar(
+            'Error',
+            errorMessage,
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 7),
+          );
+          break; // Keluar dari loop
+        }
       }
+    }
 
-      Get.snackbar(
-        'Error',
-        errorMessage,
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-      );
-    } finally {
-      isLoading.value = false;
+    isLoading.value = false;
+
+    // Jika gagal setelah mencoba beberapa kali
+    if (!success && lastError != null) {
+      print('ERROR: Pendaftaran gagal setelah $attempt percobaan');
+      // Error sudah ditampilkan di dalam loop
     }
   }
 

@@ -24,7 +24,8 @@ class StokBantuanView extends GetView<StokBantuanController> {
         },
         backgroundColor: AppTheme.primaryColor,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Tambah Stok', style: TextStyle(color: Colors.white)),
+        label: const Text('Tambah Jenis Stok',
+            style: TextStyle(color: Colors.white)),
         elevation: 2,
       ),
     );
@@ -636,7 +637,7 @@ class StokBantuanView extends GetView<StokBantuanController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tambah Stok Bantuan',
+                      'Tambah Jenis Stok Bantuan',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),

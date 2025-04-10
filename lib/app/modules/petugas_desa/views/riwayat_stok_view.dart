@@ -347,10 +347,16 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
                                 ),
                               ),
                               ...controller.daftarStokBantuan.map((stok) {
+                                final bool isUang = stok.isUang ?? false;
+                                final String formattedJumlah = isUang
+                                    ? FormatHelper.formatRupiah(
+                                        stok.totalStok ?? 0)
+                                    : '${stok.totalStok} ${stok.satuan}';
+
                                 return DropdownMenuItem(
                                   value: stok.id,
                                   child: Text(
-                                    stok.nama ?? '-',
+                                    '${stok.nama ?? '-'} ($formattedJumlah)',
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 );
@@ -380,6 +386,9 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
         : 'Tidak diketahui';
     final stokBantuanSatuan =
         riwayat.stokBantuan != null ? riwayat.stokBantuan!['satuan'] ?? '' : '';
+    final bool isUang = riwayat.stokBantuan != null
+        ? riwayat.stokBantuan!['is_uang'] ?? false
+        : false;
     final sumberLabels = {
       'penitipan': 'Penitipan',
       'penerimaan': 'Penerimaan',
@@ -464,7 +473,9 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${riwayat.jumlah?.toStringAsFixed(0) ?? '0'} $stokBantuanSatuan',
+                            isUang
+                                ? FormatHelper.formatRupiah(riwayat.jumlah ?? 0)
+                                : '${riwayat.jumlah?.toStringAsFixed(0) ?? '0'} $stokBantuanSatuan',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: isPenambahan ? Colors.green : Colors.red,
@@ -761,10 +772,13 @@ class RiwayatStokView extends GetView<RiwayatStokController> {
                         value: controller.selectedStokBantuan.value,
                         items: controller.daftarStokBantuan
                             .map((StokBantuanModel stok) {
+                          final bool isUang = stok.isUang ?? false;
+                          final String formattedStok = isUang
+                              ? FormatHelper.formatRupiah(stok.totalStok ?? 0)
+                              : '${stok.totalStok} ${stok.satuan}';
                           return DropdownMenuItem<StokBantuanModel>(
                             value: stok,
-                            child: Text(
-                                '${stok.nama} (${stok.totalStok} ${stok.satuan})'),
+                            child: Text('${stok.nama} ($formattedStok)'),
                           );
                         }).toList(),
                         onChanged: (StokBantuanModel? value) {

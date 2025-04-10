@@ -57,6 +57,15 @@ class PetugasDesaDashboardController extends GetxController {
       userProfile['desa']?['nama'] ??
       (userProfile['desa_id'] != null ? 'Desa' : 'Desa');
 
+  // Getter untuk NIP dari profil pengguna
+  String? get nip =>
+      userProfile['role_data']?['nip'] ?? _authController.roleData?.nip;
+
+  // Getter untuk foto profil dari profil pengguna
+  String? get profileImageUrl =>
+      userProfile['role_data']?['foto_profil'] ??
+      _authController.roleData?.fotoProfil;
+
   // Getter untuk counter dari CounterService
   RxInt get jumlahMenunggu => _counterService.jumlahMenunggu;
   RxInt get jumlahDiproses => _counterService.jumlahDiproses;

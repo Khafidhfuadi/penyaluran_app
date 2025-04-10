@@ -363,7 +363,7 @@ class TambahPenyaluranView extends GetView<JadwalPenyaluranController> {
                                 child: Row(
                                   children: [
                                     isUang.value
-                                        ? const Icon(Icons.attach_money)
+                                        ? const Icon(Icons.payment_rounded)
                                         : const Icon(Icons.inventory_2),
                                     const SizedBox(width: 8),
                                     Expanded(
